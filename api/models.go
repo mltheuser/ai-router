@@ -1,0 +1,52 @@
+package api
+
+// ProviderType distinguishes cloud from local providers.
+type ProviderType string
+
+const (
+	ProviderTypeCloud ProviderType = "cloud"
+	ProviderTypeLocal ProviderType = "local"
+)
+
+// Capability represents a model capability.
+type Capability string
+
+const (
+	CapabilityChat             Capability = "chat"
+	CapabilityEmbed            Capability = "embed"
+	CapabilityStructuredOutput Capability = "structured_output"
+	CapabilityReasoning        Capability = "reasoning"
+	CapabilityTools            Capability = "tools"
+)
+
+// ModelInfo describes a model available through a specific provider.
+type ModelInfo struct {
+	ID           string       `json:"id"`
+	Provider     string       `json:"provider"`
+	ProviderType ProviderType `json:"provider_type"`
+	Capabilities []Capability `json:"capabilities"`
+
+	// Cloud-specific metadata (nil implies unknown, 0 implies free)
+	ContextWindow    int      `json:"context_window,omitempty"`
+	CostPerMInput    *float64 `json:"cost_per_m_input,omitempty"`
+	CostPerMOutput   *float64 `json:"cost_per_m_output,omitempty"`
+
+	// Local-specific metadata (zero values for cloud models)
+	SizeBytes     *int64  `json:"size_bytes,omitempty"`
+}
+
+// HasCapability checks if the model supports a given capability.
+func (m ModelInfo) HasCapability(cap Capability) bool {
+	for _, c := range m.Capabilities {
+		if c == cap {
+			return true
+		}
+	}
+	return false
+}
+
+// ModelList is the response format for listing models (OpenAI-compatible).
+type ModelList struct {
+	Object string      `json:"object"`
+	Data   []ModelInfo `json:"data"`
+}
