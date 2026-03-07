@@ -70,7 +70,7 @@ func (s *ToolCalling) Run(ctx context.Context, baseURL string, modelID string) *
 
 	// Step 1: Ask the model to compute both. A parallel-capable model calls both tools at once.
 	messages := []api.ChatMessage{
-		{Role: api.RoleUser, Content: "What is 2 + 3 and 2 * 3? You must use the add tool and the multiply tool to compute this."},
+		{Role: api.RoleUser, Content: api.TextContent("What is 2 + 3 and 2 * 3? You must use the add tool and the multiply tool to compute this.")},
 	}
 
 	resp, err := doToolRequest(ctx, client, url, api.ChatRequest{
@@ -126,7 +126,7 @@ func (s *ToolCalling) Run(ctx context.Context, baseURL string, modelID string) *
 			if res, ok := toolResults[tc.Function.Name]; ok {
 				messages = append(messages, api.ChatMessage{
 					Role:       api.RoleTool,
-					Content:    res,
+					Content:    api.TextContent(res),
 					ToolCallID: tc.ID,
 				})
 			}
@@ -150,7 +150,7 @@ func (s *ToolCalling) Run(ctx context.Context, baseURL string, modelID string) *
 	}
 
 	// Check: tool result incorporation — final answer must contain both results.
-	content := resp.Choice.Message.Content
+	content := api.TextFromContent(resp.Choice.Message.Content)
 	if content == "" {
 		result.Fail("tool result incorporation", "final response content is empty")
 		return result

@@ -37,7 +37,7 @@ func (s *ChatMultiStep) Run(ctx context.Context, baseURL string, modelID string)
 
 	// Step 1: Initial message — establishes a fact for later recall.
 	messages := []api.ChatMessage{
-		{Role: "user", Content: "My favorite color is blue. Remember this."},
+		{Role: "user", Content: api.TextContent("My favorite color is blue. Remember this.")},
 	}
 
 	resp1, err := doChatRequest(ctx, client, url, modelID, &temperature, messages)
@@ -46,7 +46,7 @@ func (s *ChatMultiStep) Run(ctx context.Context, baseURL string, modelID string)
 		return result
 	}
 
-	if resp1.Choice.Message.Content == "" {
+	if api.TextFromContent(resp1.Choice.Message.Content) == "" {
 		result.Fail("single turn chat completion", "response content is empty")
 		return result
 	}
@@ -59,7 +59,7 @@ func (s *ChatMultiStep) Run(ctx context.Context, baseURL string, modelID string)
 	// Step 2: Follow-up question — tests context recall.
 	messages = append(messages, api.ChatMessage{
 		Role:    "user",
-		Content: "What is my favorite color?",
+		Content: api.TextContent("What is my favorite color?"),
 	})
 
 	resp2, err := doChatRequest(ctx, client, url, modelID, &temperature, messages)
@@ -68,7 +68,7 @@ func (s *ChatMultiStep) Run(ctx context.Context, baseURL string, modelID string)
 		return result
 	}
 
-	content2 := resp2.Choice.Message.Content
+	content2 := api.TextFromContent(resp2.Choice.Message.Content)
 	if content2 == "" {
 		result.Fail("multi-turn context recall", "response content is empty")
 		return result

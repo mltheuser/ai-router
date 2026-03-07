@@ -17,6 +17,7 @@ const (
 	CapabilityStructuredOutput Capability = "structured_output"
 	CapabilityReasoning        Capability = "reasoning"
 	CapabilityTools            Capability = "tools"
+	CapabilityVision           Capability = "vision"
 )
 
 // ModelInfo describes a model available through a specific provider.

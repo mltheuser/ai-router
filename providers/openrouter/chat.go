@@ -17,9 +17,21 @@ type openRouterChatRequest struct {
 	PresencePenalty  *float64                    `json:"presence_penalty,omitempty"`
 	Temperature      *float64                    `json:"temperature,omitempty"`
 	TopP             *float64                    `json:"top_p,omitempty"`
-	ResponseFormat   *api.ResponseFormat         `json:"response_format,omitempty"`
+	ResponseFormat   *openRouterResponseFormat   `json:"response_format,omitempty"`
 	ReasoningEffort  *string                     `json:"reasoning_effort,omitempty"`
 	Tools            []openRouterToolDefinition  `json:"tools,omitempty"`
+}
+
+type openRouterResponseFormat struct {
+	Type       api.ResponseFormatType `json:"type"`
+	JSONSchema *openRouterJSONSchema  `json:"json_schema"`
+}
+
+type openRouterJSONSchema struct {
+	Name        string                 `json:"name"`
+	Description string                 `json:"description,omitempty"`
+	Schema      map[string]interface{} `json:"schema,omitempty"`
+	Strict      bool                   `json:"strict,omitempty"`
 }
 
 // openRouterToolDefinition wraps our flat ToolDefinition in OpenRouter's {"type":"function","function":{...}} format.
@@ -31,9 +43,21 @@ type openRouterToolDefinition struct {
 // openRouterRequestMessage is the outgoing message format for OpenRouter.
 type openRouterRequestMessage struct {
 	Role       string                      `json:"role"`
-	Content    string                      `json:"content"`
+	Content    []openRouterContentPart     `json:"content"`
 	ToolCalls  []openRouterRequestToolCall `json:"tool_calls,omitempty"`
 	ToolCallID string                      `json:"tool_call_id,omitempty"`
+}
+
+// openRouterContentPart represents one entry in the OpenRouter content array.
+// Exactly one of Text or ImageURL should be set, matching the Type field.
+type openRouterContentPart struct {
+	Type     string                      `json:"type"`            // "text" or "image_url"
+	Text     string                      `json:"text,omitempty"`
+	ImageURL *openRouterContentImageURL  `json:"image_url,omitempty"`
+}
+
+type openRouterContentImageURL struct {
+	URL string `json:"url"`
 }
 
 // openRouterRequestToolCall is the outgoing tool call format for OpenRouter.
@@ -117,7 +141,7 @@ func toOpenRouterRequest(req *api.ChatRequest) *openRouterChatRequest {
 		PresencePenalty:  req.PresencePenalty,
 		Temperature:      req.Temperature,
 		TopP:             req.TopP,
-		ResponseFormat:   req.ResponseFormat,
+		ResponseFormat:   toOpenRouterResponseFormat(req.ResponseFormat),
 		ReasoningEffort:  req.ReasoningEffort,
 	}
 
@@ -133,7 +157,7 @@ func toOpenRouterRequest(req *api.ChatRequest) *openRouterChatRequest {
 	for _, m := range req.Messages {
 		msg := openRouterRequestMessage{
 			Role:    m.Role,
-			Content: m.Content,
+			Content: toOpenRouterContent(m.Content),
 		}
 
 		switch m.Role {
@@ -159,6 +183,49 @@ func toOpenRouterRequest(req *api.ChatRequest) *openRouterChatRequest {
 	}
 
 	return orReq
+}
+
+// toOpenRouterContent converts our []ContentPart to OpenRouter's content parts format.
+func toOpenRouterContent(parts []api.ContentPart) []openRouterContentPart {
+	result := make([]openRouterContentPart, 0, len(parts))
+	for _, p := range parts {
+		switch p.Type {
+		case api.ContentPartText:
+			result = append(result, openRouterContentPart{
+				Type: "text",
+				Text: p.Text,
+			})
+		case api.ContentPartImage:
+			result = append(result, openRouterContentPart{
+				Type: "image_url",
+				ImageURL: &openRouterContentImageURL{
+					URL: "data:" + p.MimeType + ";base64," + p.Base64Data,
+				},
+			})
+		}
+	}
+	return result
+}
+
+func toOpenRouterResponseFormat(rf *api.ResponseFormat) *openRouterResponseFormat {
+	if rf == nil {
+		return nil
+	}
+
+	orf := &openRouterResponseFormat{
+		Type: rf.Type,
+	}
+
+	if rf.JSONSchema != nil {
+		orf.JSONSchema = &openRouterJSONSchema{
+			Name:        rf.JSONSchema.Name,
+			Description: rf.JSONSchema.Description,
+			Schema:      rf.JSONSchema.Schema,
+			Strict:      true, // Always enforce strict mode for structured output
+		}
+	}
+
+	return orf
 }
 
 // --- Response translation ---
@@ -188,7 +255,7 @@ func mapOpenRouterResponse(orResp *openRouterChatResponse) *api.ChatResponse {
 		resp.Choice = api.ChatChoice{
 			Message: api.ChatMessage{
 				Role:             c.Message.Role,
-				Content:          c.Message.Content,
+				Content:          api.TextContent(c.Message.Content),
 				ReasoningContent: reasoning,
 			},
 			FinishReason: c.FinishReason,

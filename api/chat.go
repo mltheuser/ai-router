@@ -52,7 +52,6 @@ type JSONSchema struct {
 	Name        string                 `json:"name"`
 	Description string                 `json:"description,omitempty"`
 	Schema      map[string]interface{} `json:"schema,omitempty"`
-	Strict      bool                   `json:"strict,omitempty"`
 }
 
 // ToolDefinition describes a tool the model may call.
@@ -77,17 +76,60 @@ type ToolCallFunction struct {
 	Arguments map[string]interface{} `json:"arguments"`
 }
 
+// ContentPartType discriminates content parts in a multimodal message.
+type ContentPartType string
+
+const (
+	ContentPartText  ContentPartType = "text"
+	ContentPartImage ContentPartType = "image"
+)
+
+// ContentPart is one piece of a multimodal message.
+type ContentPart struct {
+	Type       ContentPartType `json:"type"`
+	Text       string          `json:"text,omitempty"`        // for type=text
+	MimeType   string          `json:"mime_type,omitempty"`   // for type=image (e.g. "image/png", "image/jpeg", "image/webp", "image/gif")
+	Base64Data string          `json:"base64_data,omitempty"` // for type=image (raw base64, no data-URI prefix)
+}
+
+// TextContent creates a text-only content slice (convenience for the common case).
+func TextContent(text string) []ContentPart {
+	return []ContentPart{{Type: ContentPartText, Text: text}}
+}
+
+// TextFromContent extracts and concatenates all text parts from content.
+func TextFromContent(parts []ContentPart) string {
+	var text string
+	for _, p := range parts {
+		if p.Type == ContentPartText {
+			text += p.Text
+		}
+	}
+	return text
+}
+
+// ImagesFromContent extracts all base64 image data strings from content.
+func ImagesFromContent(parts []ContentPart) []string {
+	var images []string
+	for _, p := range parts {
+		if p.Type == ContentPartImage {
+			images = append(images, p.Base64Data)
+		}
+	}
+	return images
+}
+
 // ChatMessage represents a message in a chat conversation.
 // Different roles use different subsets of fields:
-//   - user/system:  Role + Content
+//   - user/system:  Role + Content (text-only or multimodal)
 //   - assistant:    Role + Content (+ ReasoningContent, ToolCalls)
 //   - tool:         Role + Content + ToolCallID
 type ChatMessage struct {
-	Role             string     `json:"role"`
-	Content          string     `json:"content"`
-	ReasoningContent string     `json:"reasoning_content,omitempty"`
-	ToolCalls        []ToolCall `json:"tool_calls,omitempty"`   // assistant only
-	ToolCallID       string     `json:"tool_call_id,omitempty"` // tool result only
+	Role             string        `json:"role"`
+	Content          []ContentPart `json:"content"`
+	ReasoningContent string        `json:"reasoning_content,omitempty"`
+	ToolCalls        []ToolCall    `json:"tool_calls,omitempty"`   // assistant only
+	ToolCallID       string        `json:"tool_call_id,omitempty"` // tool result only
 }
 
 // ChatResponse represents a chat completion response.

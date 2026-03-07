@@ -90,7 +90,7 @@ func (p *Provider) getCapabilities(ctx context.Context, modelName string) ([]api
 		case "tools":
 			caps = append(caps, api.CapabilityTools)
 		case "vision":
-			// Not supported yet
+			caps = append(caps, api.CapabilityVision)
 		case "thinking":
 			caps = append(caps, api.CapabilityReasoning)
 		}

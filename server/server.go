@@ -38,8 +38,8 @@ func New(host string, port int, r *router.Router, catalog *router.ModelCatalog, 
 	s.httpServer = &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", host, port),
 		Handler:      s.withMiddleware(mux),
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 120 * time.Second,
+		ReadTimeout:  10 * time.Minute,
+		WriteTimeout: 10 * time.Minute,
 		IdleTimeout:  60 * time.Second,
 	}
 

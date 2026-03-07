@@ -10,6 +10,32 @@ import (
 	"time"
 )
 
+// --- Debug collector (context-based) ---
+
+type debugCtxKey struct{}
+
+// DebugCollector captures raw HTTP request/response bodies for debug logging.
+// It is passed through context so providers don't need any code changes.
+type DebugCollector struct {
+	RequestMethod string
+	RequestURL    string
+	RequestBody   []byte
+	ResponseBody  []byte
+}
+
+// NewDebugContext returns a child context carrying the given collector.
+func NewDebugContext(ctx context.Context, dc *DebugCollector) context.Context {
+	return context.WithValue(ctx, debugCtxKey{}, dc)
+}
+
+// DebugCollectorFromContext extracts the collector, or nil if absent.
+func DebugCollectorFromContext(ctx context.Context) *DebugCollector {
+	dc, _ := ctx.Value(debugCtxKey{}).(*DebugCollector)
+	return dc
+}
+
+// --- Client ---
+
 // Client wraps HTTP requests with common logic for JSON APIs.
 type Client struct {
 	BaseURL    string
@@ -32,7 +58,7 @@ func New(baseURL string, options ...Option) *Client {
 	c := &Client{
 		BaseURL: baseURL,
 		HTTPClient: &http.Client{
-			Timeout: 60 * time.Second,
+			Timeout: 10 * time.Minute,
 		},
 		Headers: make(map[string]string),
 	}
@@ -64,6 +90,11 @@ func (c *Client) Post(ctx context.Context, path string, body interface{}, result
 	}
 	req.Header.Set("Content-Type", "application/json")
 
+	// Capture request body for debug if collector is present
+	if dc := DebugCollectorFromContext(ctx); dc != nil {
+		dc.RequestBody = data
+	}
+
 	return c.Do(req, result)
 }
 
@@ -71,6 +102,12 @@ func (c *Client) Post(ctx context.Context, path string, body interface{}, result
 func (c *Client) Do(req *http.Request, result interface{}) error {
 	for k, v := range c.Headers {
 		req.Header.Set(k, v)
+	}
+
+	// Capture request metadata for debug if collector is present
+	if dc := DebugCollectorFromContext(req.Context()); dc != nil {
+		dc.RequestMethod = req.Method
+		dc.RequestURL = req.URL.String()
 	}
 
 	resp, err := c.HTTPClient.Do(req)
@@ -82,6 +119,11 @@ func (c *Client) Do(req *http.Request, result interface{}) error {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("reading response: %w", err)
+	}
+
+	// Capture response body for debug if collector is present
+	if dc := DebugCollectorFromContext(req.Context()); dc != nil {
+		dc.ResponseBody = body
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {

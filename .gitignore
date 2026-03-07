@@ -25,3 +25,6 @@ go.work
 # JSON and Log files
 *.json
 *.log
+
+**/build
+**/.gradle

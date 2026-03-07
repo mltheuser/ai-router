@@ -127,6 +127,14 @@ func inferCapabilities(m openRouterModel) []api.Capability {
 	}
 	if hasChatOutput {
 		caps = append(caps, api.CapabilityChat)
+
+		// Check for vision support from input modalities
+		for _, inp := range m.Architecture.InputModalities {
+			if inp == "image" {
+				caps = append(caps, api.CapabilityVision)
+				break
+			}
+		}
 		
 		// Check for structured output and reasoning support
 		for _, p := range m.SupportedParameters {

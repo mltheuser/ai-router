@@ -30,10 +30,11 @@ type ollamaToolDefinition struct {
 // ollamaRequestMessage is the outgoing message format for Ollama.
 // Ollama uses "tool_name" on tool result messages (not "tool_call_id").
 type ollamaRequestMessage struct {
-	Role      string                `json:"role"`
-	Content   string                `json:"content"`
+	Role      string                  `json:"role"`
+	Content   string                  `json:"content"`
+	Images    []string                `json:"images,omitempty"`
 	ToolCalls []ollamaRequestToolCall `json:"tool_calls,omitempty"`
-	ToolName  string                `json:"tool_name,omitempty"`
+	ToolName  string                  `json:"tool_name,omitempty"`
 }
 
 // ollamaRequestToolCall is the outgoing tool call format for Ollama.
@@ -162,7 +163,8 @@ func toOllamaMessages(messages []api.ChatMessage) []ollamaRequestMessage {
 	for i, m := range messages {
 		om := ollamaRequestMessage{
 			Role:    m.Role,
-			Content: m.Content,
+			Content: api.TextFromContent(m.Content),
+			Images:  api.ImagesFromContent(m.Content),
 		}
 
 		switch m.Role {
@@ -206,7 +208,7 @@ func mapResponse(ollamaResp *ollamaChatResponse) *api.ChatResponse {
 			FinishReason: "stop",
 			Message: api.ChatMessage{
 				Role:    ollamaResp.Message.Role,
-				Content: ollamaResp.Message.Content,
+				Content: api.TextContent(ollamaResp.Message.Content),
 			},
 		},
 	}

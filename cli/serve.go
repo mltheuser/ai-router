@@ -13,15 +13,22 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/mltheuser/ai-router/debug"
 	"github.com/mltheuser/ai-router/provider"
 	"github.com/mltheuser/ai-router/router"
 	"github.com/mltheuser/ai-router/server"
 )
 
+var debugMode bool
+
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start the AI Router server",
 	RunE:  runServe,
+}
+
+func init() {
+	serveCmd.Flags().BoolVar(&debugMode, "debug", false, "Enable debug mode: log full request/response lifecycle for every API call")
 }
 
 func runServe(cmd *cobra.Command, args []string) error {
@@ -101,6 +108,15 @@ func runServe(cmd *cobra.Command, args []string) error {
 	}
 	wg.Wait()
 
+	// Wrap providers with debug logging if --debug is enabled
+	if debugMode {
+		logger.Info("Debug mode enabled — full request/response lifecycle will be logged")
+		debugMu := &sync.Mutex{}
+		for i, p := range providers {
+			providers[i] = debug.WrapProvider(p, debugMu, os.Stdout)
+		}
+	}
+
 	// Set up the model catalog with all verified providers
 	catalog := router.NewModelCatalog(logger, providers)
 
@@ -136,3 +152,4 @@ func runServe(cmd *cobra.Command, args []string) error {
 
 	return srv.Start()
 }
+

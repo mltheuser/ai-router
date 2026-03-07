@@ -53,14 +53,13 @@ func (s *StructuredOutput) Run(ctx context.Context, baseURL string, modelID stri
 	reqBody := api.ChatRequest{
 		Model: modelID,
 		Messages: []api.ChatMessage{
-			{Role: "user", Content: "It is 25 degrees celsius in Paris."},
+			{Role: "user", Content: api.TextContent("It is 25 degrees celsius in Paris.")},
 		},
 		ResponseFormat: &api.ResponseFormat{
 			Type: api.ResponseFormatJSONSchema,
 			JSONSchema: &api.JSONSchema{
 				Name:   "weather_response",
 				Schema: schema,
-				Strict: true,
 			},
 		},
 	}
@@ -96,7 +95,7 @@ func (s *StructuredOutput) Run(ctx context.Context, baseURL string, modelID stri
 		return result
 	}
 
-	content := chatResp.Choice.Message.Content
+	content := api.TextFromContent(chatResp.Choice.Message.Content)
 	if content == "" {
 		result.Fail("structured JSON output", "response content is empty")
 		return result

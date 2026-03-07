@@ -37,7 +37,7 @@ func (s *ThinkingScenario) Run(ctx context.Context, baseURL string, modelID stri
 	reqBody := api.ChatRequest{
 		Model: modelID,
 		Messages: []api.ChatMessage{
-			{Role: "user", Content: "Why is the sky blue?"},
+			{Role: "user", Content: api.TextContent("Why is the sky blue?")},
 		},
 		ReasoningEffort: &effort,
 	}
@@ -75,7 +75,7 @@ func (s *ThinkingScenario) Run(ctx context.Context, baseURL string, modelID stri
 
 	msg := chatResp.Choice.Message
 	if msg.ReasoningContent == "" {
-		result.Fail("reasoning trace present", fmt.Sprintf("expected reasoning content, got empty string. Content was: %s", msg.Content))
+		result.Fail("reasoning trace present", fmt.Sprintf("expected reasoning content, got empty string. Content was: %s", api.TextFromContent(msg.Content)))
 		return result
 	}
 
