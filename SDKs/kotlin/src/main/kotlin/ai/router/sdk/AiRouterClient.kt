@@ -10,7 +10,6 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 
 /**
@@ -60,18 +59,12 @@ class AiRouterClient(
     }
 
     /**
-     * Send a chat completion request with structured output and deserialize
-     * the response content directly into [T].
-     *
-     * The [ChatRequest] should have been built with `structuredOutput<T>()` in the DSL
-     * so the server returns JSON matching the schema of [T].
-     *
-     * @param deserializer The [KSerializer] for [T] (e.g. `MyClass.serializer()`).
+     * Send a structured chat completion request and deserialize the response
+     * directly into [T]. Build the request with `structuredChatRequest<T>()`.
      */
-    suspend fun <T> chat(request: ChatRequest, deserializer: KSerializer<T>): T {
-        val response = chat(request)
-        val text = response.textContent
-        return json.decodeFromString(deserializer, text)
+    suspend fun <T> chat(request: StructuredChatRequest<T>): T {
+        val response = chat(request.inner)
+        return json.decodeFromString(request.serializer, response.textContent)
     }
 
     /**

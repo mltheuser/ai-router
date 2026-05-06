@@ -85,10 +85,15 @@ The primary way to verify providers is the centralized, scenario-based E2E runne
 
 -   **Workflow**:
     1.  **Build**: `make build` (Crucial: always rebuild after changes).
-    2.  **Run Server**: `./bin/ai-router serve` (ensure env vars like `AI_ROUTER_OPENROUTER_API_KEY` are set).
+    2.  **Run Server**: `set -a && source .env && set +a && ./bin/ai-router serve --debug`
+        - Cloud provider API keys live in `.env` at the project root (not committed).
+        - Key naming convention matches the server's expected format: `AI_ROUTER_<PROVIDER>_API_KEY` (e.g. `AI_ROUTER_OPENROUTER_API_KEY`).
+        - As new providers are added, their test keys are added to `.env` under the same naming convention.
     3.  **Trigger**: `curl -X POST http://localhost:8787/v1/test -d '{"provider": "ollama"}' | jq .`
+        - Optionally pin a specific model: `curl -X POST http://localhost:8787/v1/test -d '{"provider": "openrouter", "model": "~anthropic/claude-sonnet-latest"}' | jq .`
+        - The `model` value must match the exact ID as returned by `GET /v1/models`. When omitted, the best available model per scenario is auto-selected.
 -   **What happens**: The server self-verifies by running `Verify()`, `ListModels()`, and executing applicable scenarios from `scenarios/`.
--   **Scenarios**: Defined in `scenarios/`. Each scenario declares its `RequiredCapabilities()` and runs a specific functional test.
+-   **Scenarios**: Defined in `scenarios/`. Each scenario declares its `RequiredCapabilities()` and runs a specific functional test. Scenarios are skipped (not failed) when the target model lacks a required capability.
 
 ## Maintenance for Agents
 

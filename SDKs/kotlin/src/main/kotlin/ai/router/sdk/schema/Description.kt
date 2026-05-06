@@ -3,9 +3,9 @@ package ai.router.sdk.schema
 import kotlinx.serialization.SerialInfo
 
 /**
- * Associates a description with a serializable property.
- * This description is included in the generated JSON schema when
- * requesting structured output from an LLM.
+ * Associates a description with a serializable property or class.
+ * The description is included in the generated JSON schema — used for both
+ * structured output response types and tool parameter classes.
  */
 @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
 @SerialInfo

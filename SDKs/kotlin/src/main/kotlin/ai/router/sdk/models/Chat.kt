@@ -1,7 +1,11 @@
 package ai.router.sdk.models
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
 
 // ─── Reasoning effort levels ──────────────────────────────────────────
 
@@ -38,13 +42,13 @@ data class ContentPart(
 data class ToolDefinition(
     val name: String,
     val description: String? = null,
-    val parameters: Map<String, kotlinx.serialization.json.JsonElement>? = null,
+    val parameters: JsonObject? = null,
 )
 
 @Serializable
 data class ToolCallFunction(
     val name: String,
-    val arguments: Map<String, kotlinx.serialization.json.JsonElement>,
+    val arguments: JsonObject,
 )
 
 @Serializable
@@ -52,6 +56,12 @@ data class ToolCall(
     val id: String,
     val function: ToolCallFunction,
 )
+
+@PublishedApi
+internal val toolCallJson = Json { ignoreUnknownKeys = true }
+
+inline fun <reified T> ToolCall.decode(): T =
+    toolCallJson.decodeFromJsonElement(function.arguments)
 
 // ─── Response format / structured output ──────────────────────────────
 
@@ -64,13 +74,20 @@ enum class ResponseFormatType {
 data class JsonSchemaSpec(
     val name: String,
     val description: String? = null,
-    val schema: Map<String, kotlinx.serialization.json.JsonElement>? = null,
+    val schema: JsonObject? = null,
 )
 
 @Serializable
 data class ResponseFormat(
     val type: ResponseFormatType,
     @SerialName("json_schema") val jsonSchema: JsonSchemaSpec? = null,
+)
+
+// ─── Structured chat request ──────────────────────────────────────────
+
+data class StructuredChatRequest<T>(
+    val inner: ChatRequest,
+    val serializer: KSerializer<T>,
 )
 
 // ─── Messages ─────────────────────────────────────────────────────────

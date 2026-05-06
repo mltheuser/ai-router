@@ -32,6 +32,9 @@ client.use {
     })
     println(response.textContent)
 }
+
+// Append @<provider> to pin the request to a specific backend:
+// chatRequest("llama3.2:cloud@openrouter") { ... }
 ```
 
 ## Chat Completion
@@ -66,28 +69,35 @@ val request = chatRequest("llava:local") {
 
 ### Tool Calling
 
+Define parameters as a `@Serializable` class — the SDK generates the JSON Schema automatically.
+Use `@Description` (`ai.router.sdk.schema.Description`) to annotate fields with descriptions for the model.
+
 ```kotlin
+@Serializable
+data class WeatherParams(
+    @Description("The city to check weather for") val city: String,
+    val unit: String = "celsius",
+)
+
 val request = chatRequest("llama3.2:cloud") {
     messages {
         user { text("What's the weather in Berlin?") }
     }
     tools {
-        tool("get_weather", "Get current weather for a city") {
-            put("type", JsonPrimitive("object"))
-            put("properties", JsonObject(mapOf(
-                "city" to JsonObject(mapOf("type" to JsonPrimitive("string")))
-            )))
-            put("required", JsonArray(listOf(JsonPrimitive("city"))))
-        }
+        tool<WeatherParams>("get_weather", "Get current weather for a city")
     }
 }
 
-// After getting tool calls in the response, send results back:
+// Decode the tool call arguments from the response:
+val toolCall = response.choices.message.toolCalls?.first()
+val params = toolCall?.decode<WeatherParams>()
+
+// Send the tool result back:
 val followUp = chatRequest("llama3.2:cloud") {
     messages {
         user { text("What's the weather in Berlin?") }
         // re-add the assistant message with tool_calls from response...
-        tool(callId = "call_abc123") {
+        tool(callId = toolCall?.id ?: "") {
             text("""{"temp_celsius": 22, "condition": "sunny"}""")
         }
     }
@@ -96,21 +106,21 @@ val followUp = chatRequest("llama3.2:cloud") {
 
 ### Structured Output
 
-Define your response shape as a `@Serializable` class and the SDK handles schema generation + response parsing:
+Define your response shape as a `@Serializable` class and use `structuredChatRequest` — the SDK
+generates the schema and deserializes the response automatically.
 
 ```kotlin
 @Serializable
 data class WeatherInfo(val city: String, val tempCelsius: Double, val condition: String)
 
-val request = chatRequest("gpt-4:cloud") {
+val request = structuredChatRequest<WeatherInfo>("gpt-4:cloud") {
     messages {
         system { text("Extract weather information from the text.") }
         user { text("It's 22°C and sunny in Berlin today.") }
     }
-    structuredOutput<WeatherInfo>()
 }
 
-val weather: WeatherInfo = client.chat(request, WeatherInfo.serializer())
+val weather: WeatherInfo = client.chat(request)
 // weather.city == "Berlin", weather.tempCelsius == 22.0, etc.
 ```
 

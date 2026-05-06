@@ -3,6 +3,7 @@ package ai.router.sdk.schema
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.json.*
+import kotlinx.serialization.serializer
 
 /**
  * Derives a JSON Schema from a kotlinx-serialization [SerialDescriptor].
@@ -24,9 +25,13 @@ import kotlinx.serialization.json.*
 object SchemaGenerator {
 
     /**
-     * Generate a JSON Schema [JsonObject] for the given [SerialDescriptor].
+     * Generate a JSON Schema [JsonObject] for the reified type [T].
      */
-    fun generate(descriptor: SerialDescriptor): JsonObject =
+    inline fun <reified T> generate(): JsonObject =
+        generate(serializer<T>().descriptor)
+
+    @PublishedApi
+    internal fun generate(descriptor: SerialDescriptor): JsonObject =
         descriptorToSchema(descriptor)
 
     private fun descriptorToSchema(descriptor: SerialDescriptor): JsonObject {

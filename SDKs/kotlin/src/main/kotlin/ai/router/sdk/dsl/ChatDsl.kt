@@ -2,9 +2,6 @@ package ai.router.sdk.dsl
 
 import ai.router.sdk.models.*
 import ai.router.sdk.schema.SchemaGenerator
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.serializer
 
 /**
@@ -24,6 +21,40 @@ fun chatRequest(model: String, block: ChatRequestBuilder.() -> Unit): ChatReques
     return ChatRequestBuilder(model).apply(block).build()
 }
 
+/**
+ * Entry point for a chat request with typed structured output.
+ *
+ * Sets up the response format from [T]'s schema automatically and pairs the
+ * request with its deserializer so [ai.router.sdk.AiRouterClient.chat] returns
+ * a [T] directly.
+ *
+ * ```kotlin
+ * val request = structuredChatRequest<WeatherInfo>("gpt-4:cloud") {
+ *     messages {
+ *         system { text("Extract weather info.") }
+ *         user { text("It's 22°C and sunny in Berlin.") }
+ *     }
+ * }
+ * val weather: WeatherInfo = client.chat(request)
+ * ```
+ */
+inline fun <reified T> structuredChatRequest(
+    model: String,
+    block: ChatRequestBuilder.() -> Unit = {},
+): StructuredChatRequest<T> {
+    val builder = ChatRequestBuilder(model).apply(block)
+    builder.applyResponseFormat(
+        ResponseFormat(
+            type = ResponseFormatType.JSON_SCHEMA,
+            jsonSchema = JsonSchemaSpec(
+                name = T::class.simpleName ?: "response",
+                schema = SchemaGenerator.generate<T>(),
+            ),
+        )
+    )
+    return StructuredChatRequest(builder.build(), serializer<T>())
+}
+
 // ─── ChatRequest builder ──────────────────────────────────────────────
 
 @DslMarker
@@ -38,7 +69,7 @@ class ChatRequestBuilder(private val model: String) {
     private var frequencyPenalty: Double? = null
     private var presencePenalty: Double? = null
     private var reasoningEffort: ReasoningEffort? = null
-    @PublishedApi internal var responseFormat: ResponseFormat? = null
+    private var responseFormat: ResponseFormat? = null
     private val tools = mutableListOf<ToolDefinition>()
 
     fun messages(block: MessagesBuilder.() -> Unit) {
@@ -52,32 +83,16 @@ class ChatRequestBuilder(private val model: String) {
     fun presencePenalty(value: Double) { presencePenalty = value }
     fun reasoningEffort(value: ReasoningEffort) { reasoningEffort = value }
 
-    /**
-     * Request structured output whose schema is derived automatically
-     * from the `@Serializable` class [T].
-     *
-     * Pair this with `client.chat(request, T.serializer())` to get typed responses.
-     */
-    inline fun <reified T> structuredOutput(
-        name: String = T::class.simpleName ?: "response",
-        description: String? = null,
-    ) {
-        val descriptor = serializer<T>().descriptor
-        val schema = SchemaGenerator.generate(descriptor)
-        responseFormat = ResponseFormat(
-            type = ResponseFormatType.JSON_SCHEMA,
-            jsonSchema = JsonSchemaSpec(
-                name = name,
-                description = description,
-                schema = schema,
-            ),
-        )
-    }
-
     fun tools(block: ToolsBuilder.() -> Unit) {
         tools.addAll(ToolsBuilder().apply(block).build())
     }
 
+    @PublishedApi
+    internal fun applyResponseFormat(format: ResponseFormat) {
+        responseFormat = format
+    }
+
+    @PublishedApi
     internal fun build(): ChatRequest {
         val msgs = messagesBuilder?.build()
             ?: throw IllegalStateException("messages { } block is required")
@@ -160,26 +175,28 @@ class ToolsBuilder {
     private val tools = mutableListOf<ToolDefinition>()
 
     /**
-     * Define a tool the model may call.
+     * Define a tool using a `@Serializable` class for its parameter schema.
      *
-     * @param name Tool function name.
-     * @param description Human-readable description.
-     * @param parametersBlock Lambda to build the JSON schema for parameters.
+     * ```kotlin
+     * @Serializable
+     * data class WeatherParams(
+     *     @Description("The city to check") val city: String,
+     *     val unit: String = "celsius",
+     * )
+     *
+     * tools {
+     *     tool<WeatherParams>("get_weather", "Get current weather for a city")
+     * }
+     * ```
+     *
+     * Decode the arguments from a tool call response with [ai.router.sdk.models.ToolCall.decode].
      */
-    fun tool(
-        name: String,
-        description: String? = null,
-        parametersBlock: (MutableMap<String, JsonElement>.() -> Unit)? = null,
-    ) {
-        val params = if (parametersBlock != null) {
-            val map = mutableMapOf<String, JsonElement>()
-            map.parametersBlock()
-            map
-        } else {
-            null
-        }
-        tools.add(ToolDefinition(name = name, description = description, parameters = params))
+    inline fun <reified T> tool(name: String, description: String? = null) {
+        addTool(ToolDefinition(name = name, description = description, parameters = SchemaGenerator.generate<T>()))
     }
+
+    @PublishedApi
+    internal fun addTool(tool: ToolDefinition) { tools.add(tool) }
 
     internal fun build(): List<ToolDefinition> = tools.toList()
 }
