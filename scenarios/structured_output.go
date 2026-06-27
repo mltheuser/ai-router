@@ -36,7 +36,8 @@ func (s *StructuredOutput) Run(ctx context.Context, baseURL string, modelID stri
 		"type": "object",
 		"properties": map[string]interface{}{
 			"location": map[string]interface{}{
-				"type": "string",
+				"type":        "string",
+				"description": "the location",
 			},
 			"temperature": map[string]interface{}{
 				"type": "number",
