@@ -44,3 +44,7 @@ own standard test-resources location. Duplicating a small fixture across SDKs is
 Each SDK documents its run command in the README's `## Testing` section
 (`./gradlew test`, `pytest`, `cargo test`, …). There is no top-level
 orchestrator: SDKs are tested individually.
+
+Each SDK also runs strict, locally-bootstrapped lint/static-analysis tooling
+and is kept at zero findings; the README's `## Linting` section documents the
+command and config.

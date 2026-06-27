@@ -4,6 +4,14 @@ The project uses a two-tiered approach: unit tests for logic, and a built-in
 scenario runner for end-to-end provider verification. There are no classic
 integration tests.
 
+## Linting
+
+-   **Commands**: `make lint` (report) and `make fmt` (auto-format). Both bootstrap a
+    pinned `golangci-lint` into `./bin` on first run; no global install needed.
+-   **Config**: `.golangci.yml` (v2 schema) at the repo root.
+-   **Scope**: The whole module (`./...`), no external dependencies. The tree is
+    kept at zero findings.
+
 ## Unit Tests
 
 -   **Command**: `make test`

@@ -121,3 +121,18 @@ Run all examples:
 ```bash
 ./gradlew test
 ```
+
+## Linting
+
+Static analysis runs through [detekt](https://detekt.dev/) (with ktlint
+formatting rules folded in via `detekt-formatting`) over both main and test
+sources. The build also enforces `explicitApi()` in strict mode and treats all
+compiler warnings as errors, so the public API surface stays intentional.
+
+```bash
+./gradlew detekt        # report (also runs as part of `./gradlew build`)
+./gradlew detekt --auto-correct   # apply the auto-fixable formatting fixes
+```
+
+Config lives in [detekt.yml](detekt.yml); it builds on detekt's defaults and
+documents every relaxed rule inline.
