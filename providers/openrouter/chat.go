@@ -1,5 +1,3 @@
-// Package openrouter implements the Provider interface for the OpenRouter
-// cloud aggregator.
 package openrouter
 
 import (

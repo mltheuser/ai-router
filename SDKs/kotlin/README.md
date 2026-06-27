@@ -126,7 +126,7 @@ Run all examples:
 
 Static analysis runs through [detekt](https://detekt.dev/) (with ktlint
 formatting rules folded in via `detekt-formatting`) over both main and test
-sources. The build also enforces `explicitApi()` in strict mode and treats all
+sources. The build also enforces explicit API mode (strict) and treats all
 compiler warnings as errors, so the public API surface stays intentional.
 
 ```bash

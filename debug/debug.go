@@ -40,16 +40,12 @@ func WrapProvider(p provider.Provider, mu *sync.Mutex, w io.Writer) provider.Pro
 
 // --- Delegated methods (no debug needed) ---
 
-// Name delegates to the wrapped provider.
 func (d *Provider) Name() string { return d.inner.Name() }
 
-// Type delegates to the wrapped provider.
 func (d *Provider) Type() api.ProviderType { return d.inner.Type() }
 
-// Verify delegates to the wrapped provider.
 func (d *Provider) Verify(ctx context.Context) error { return d.inner.Verify(ctx) }
 
-// ListModels delegates to the wrapped provider.
 func (d *Provider) ListModels(ctx context.Context) ([]api.ModelInfo, error) {
 	return d.inner.ListModels(ctx)
 }

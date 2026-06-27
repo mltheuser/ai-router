@@ -1,3 +1,5 @@
+// Package openrouter implements the Provider interface for the OpenRouter
+// cloud aggregator.
 package openrouter
 
 import (
@@ -26,12 +28,10 @@ func New(apiKey string) *Provider {
 	}
 }
 
-// Name returns the provider's identifier.
 func (p *Provider) Name() string {
 	return "openrouter"
 }
 
-// Type reports that OpenRouter is a cloud provider.
 func (p *Provider) Type() api.ProviderType {
 	return api.ProviderTypeCloud
 }

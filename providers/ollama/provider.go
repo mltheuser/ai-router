@@ -20,12 +20,10 @@ func New() *Provider {
 	}
 }
 
-// Name returns the provider's identifier.
 func (p *Provider) Name() string {
 	return "ollama"
 }
 
-// Type reports that Ollama is a local provider.
 func (p *Provider) Type() api.ProviderType {
 	return api.ProviderTypeLocal
 }

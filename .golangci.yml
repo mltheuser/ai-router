@@ -9,6 +9,14 @@ linters:
     - unparam
     - unconvert
     - misspell
+  settings:
+    revive:
+      rules:
+        # The Provider interface in provider/provider.go is the single source of
+        # truth for what each method does; forcing a doc comment onto every
+        # interface-implementing/delegating method just restates that contract.
+        - name: exported
+          disabled: true
 
 formatters:
   enable:
