@@ -13,12 +13,12 @@ import ai.router.sdk.models.EmbedRequest
  * }
  * ```
  */
-fun embedRequest(model: String, block: EmbedRequestBuilder.() -> Unit): EmbedRequest {
+public fun embedRequest(model: String, block: EmbedRequestBuilder.() -> Unit): EmbedRequest {
     return EmbedRequestBuilder(model).apply(block).build()
 }
 
 @ChatDsl
-class EmbedRequestBuilder(private val model: String) {
+public class EmbedRequestBuilder(private val model: String) {
     private val inputs = mutableListOf<String>()
     private var dimensions: Int? = null
 
@@ -26,11 +26,11 @@ class EmbedRequestBuilder(private val model: String) {
      * Add a text to embed as a separate batch entry.
      * Each [batch] call corresponds to one embedding in the response.
      */
-    fun batch(text: String) {
+    public fun batch(text: String) {
         inputs.add(text)
     }
 
-    fun dimensions(value: Int) {
+    public fun dimensions(value: Int) {
         dimensions = value
     }
 

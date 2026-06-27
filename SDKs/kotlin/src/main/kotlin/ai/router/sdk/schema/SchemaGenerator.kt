@@ -1,8 +1,19 @@
 package ai.router.sdk.schema
 
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.json.*
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.StructureKind
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import kotlinx.serialization.serializer
 
 /**
@@ -22,12 +33,12 @@ import kotlinx.serialization.serializer
  * - CLASS/OBJECT  → `{"type": "object", "properties": {...}, "required": [...]}`
  */
 @OptIn(ExperimentalSerializationApi::class)
-object SchemaGenerator {
+public object SchemaGenerator {
 
     /**
      * Generate a JSON Schema [JsonObject] for the reified type [T].
      */
-    inline fun <reified T> generate(): JsonObject =
+    public inline fun <reified T> generate(): JsonObject =
         generate(serializer<T>().descriptor)
 
     @PublishedApi
@@ -43,27 +54,7 @@ object SchemaGenerator {
         }
 
         return when (d.kind) {
-            // ── Primitives ────────────────────────────────────────────
-            PrimitiveKind.STRING,
-            PrimitiveKind.CHAR -> buildJsonObject {
-                put("type", "string")
-            }
-
-            PrimitiveKind.BOOLEAN -> buildJsonObject {
-                put("type", "boolean")
-            }
-
-            PrimitiveKind.BYTE,
-            PrimitiveKind.SHORT,
-            PrimitiveKind.INT,
-            PrimitiveKind.LONG -> buildJsonObject {
-                put("type", "integer")
-            }
-
-            PrimitiveKind.FLOAT,
-            PrimitiveKind.DOUBLE -> buildJsonObject {
-                put("type", "number")
-            }
+            is PrimitiveKind -> primitiveSchema(d.kind as PrimitiveKind)
 
             // ── Enum ──────────────────────────────────────────────────
             SerialKind.ENUM -> buildJsonObject {
@@ -90,36 +81,52 @@ object SchemaGenerator {
 
             // ── Object / data class ───────────────────────────────────
             StructureKind.CLASS,
-            StructureKind.OBJECT -> buildJsonObject {
-                put("type", "object")
-                val requiredNames = mutableListOf<JsonElement>()
-                putJsonObject("properties") {
-                    for (i in 0 until d.elementsCount) {
-                        val name = d.getElementName(i)
-                        val elemDesc = d.getElementDescriptor(i)
-                        val annotations = d.getElementAnnotations(i)
-                        val descriptionAnn = annotations.filterIsInstance<Description>().firstOrNull()
-
-                        val propSchema = descriptorToSchema(elemDesc)
-                        if (descriptionAnn != null) {
-                            val map = propSchema.toMutableMap()
-                            map["description"] = JsonPrimitive(descriptionAnn.value)
-                            put(name, JsonObject(map))
-                        } else {
-                            put(name, propSchema)
-                        }
-
-                        if (!d.isElementOptional(i) && !elemDesc.isNullable) {
-                            requiredNames.add(JsonPrimitive(name))
-                        }
-                    }
-                }
-                if (requiredNames.isNotEmpty()) {
-                    put("required", JsonArray(requiredNames))
-                }
-            }
+            StructureKind.OBJECT -> objectSchema(d)
 
             else -> buildJsonObject { put("type", "string") }
+        }
+    }
+
+    private fun primitiveSchema(kind: PrimitiveKind): JsonObject = buildJsonObject {
+        val type = when (kind) {
+            PrimitiveKind.BOOLEAN -> "boolean"
+            PrimitiveKind.BYTE,
+            PrimitiveKind.SHORT,
+            PrimitiveKind.INT,
+            PrimitiveKind.LONG -> "integer"
+            PrimitiveKind.FLOAT,
+            PrimitiveKind.DOUBLE -> "number"
+            else -> "string" // STRING, CHAR
+        }
+        put("type", type)
+    }
+
+    private fun objectSchema(d: SerialDescriptor): JsonObject = buildJsonObject {
+        put("type", "object")
+        val requiredNames = mutableListOf<JsonElement>()
+        putJsonObject("properties") {
+            for (i in 0 until d.elementsCount) {
+                val name = d.getElementName(i)
+                val elemDesc = d.getElementDescriptor(i)
+                val descriptionAnn = d.getElementAnnotations(i)
+                    .filterIsInstance<Description>().firstOrNull()
+
+                val propSchema = descriptorToSchema(elemDesc)
+                if (descriptionAnn != null) {
+                    val map = propSchema.toMutableMap()
+                    map["description"] = JsonPrimitive(descriptionAnn.value)
+                    put(name, JsonObject(map))
+                } else {
+                    put(name, propSchema)
+                }
+
+                if (!d.isElementOptional(i) && !elemDesc.isNullable) {
+                    requiredNames.add(JsonPrimitive(name))
+                }
+            }
+        }
+        if (requiredNames.isNotEmpty()) {
+            put("required", JsonArray(requiredNames))
         }
     }
 }

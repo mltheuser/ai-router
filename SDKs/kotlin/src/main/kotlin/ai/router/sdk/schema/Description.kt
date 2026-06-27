@@ -10,4 +10,4 @@ import kotlinx.serialization.SerialInfo
 @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
 @SerialInfo
 @Target(AnnotationTarget.PROPERTY, AnnotationTarget.CLASS)
-annotation class Description(val value: String)
+public annotation class Description(val value: String)

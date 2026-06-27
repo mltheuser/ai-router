@@ -1,0 +1,31 @@
+# detekt configuration for the ai-router Kotlin SDK.
+#
+# Used with `buildUponDefaultConfig = true`, so this file only carries the
+# deltas from detekt's bundled defaults. Anything not mentioned here keeps its
+# default behaviour. Every relaxation below targets the teaching style of the
+# example tests under src/test and is documented with its reason.
+
+build:
+  # Fail the build on the first issue.
+  maxIssues: 0
+
+formatting:
+  # ktlint rules (via detekt-formatting). NoWildcardImports stays ENABLED
+  # (its default) so wildcard imports are reported.
+  active: true
+  NoWildcardImports:
+    active: true
+
+complexity:
+  # The example tests build whole requests inside a single test function, so
+  # they run long by design (documentation first). Relax the method-length cap
+  # for test sources only.
+  LongMethod:
+    excludes: ['**/test/**']
+
+style:
+  # The example tests intentionally hard-code prompts, ports, temperatures and
+  # token counts inline to read as self-contained documentation. Allow magic
+  # numbers in test sources only; main code is still held to the default.
+  MagicNumber:
+    excludes: ['**/test/**']

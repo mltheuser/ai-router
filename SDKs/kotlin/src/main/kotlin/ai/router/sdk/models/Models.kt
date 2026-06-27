@@ -7,29 +7,43 @@ import kotlinx.serialization.Serializable
  * Distinguishes cloud from local providers.
  */
 @Serializable
-enum class ProviderType {
-    @SerialName("cloud") CLOUD,
-    @SerialName("local") LOCAL,
+public enum class ProviderType {
+    @SerialName("cloud")
+    CLOUD,
+
+    @SerialName("local")
+    LOCAL,
 }
 
 /**
  * Model capability flags.
  */
 @Serializable
-enum class Capability {
-    @SerialName("chat") CHAT,
-    @SerialName("embed") EMBED,
-    @SerialName("structured_output") STRUCTURED_OUTPUT,
-    @SerialName("reasoning") REASONING,
-    @SerialName("tools") TOOLS,
-    @SerialName("vision") VISION,
+public enum class Capability {
+    @SerialName("chat")
+    CHAT,
+
+    @SerialName("embed")
+    EMBED,
+
+    @SerialName("structured_output")
+    STRUCTURED_OUTPUT,
+
+    @SerialName("reasoning")
+    REASONING,
+
+    @SerialName("tools")
+    TOOLS,
+
+    @SerialName("vision")
+    VISION,
 }
 
 /**
  * Describes a model available through a specific provider.
  */
 @Serializable
-data class ModelInfo(
+public data class ModelInfo(
     val id: String,
     val provider: String,
     @SerialName("provider_type") val providerType: ProviderType,
@@ -39,14 +53,14 @@ data class ModelInfo(
     @SerialName("cost_per_m_output") val costPerMOutput: Double? = null,
     @SerialName("size_bytes") val sizeBytes: Long? = null,
 ) {
-    fun hasCapability(cap: Capability): Boolean = cap in capabilities
+    public fun hasCapability(cap: Capability): Boolean = cap in capabilities
 }
 
 /**
  * Response format for listing models (OpenAI-compatible).
  */
 @Serializable
-data class ModelList(
+public data class ModelList(
     val `object`: String,
     val data: List<ModelInfo>,
 )

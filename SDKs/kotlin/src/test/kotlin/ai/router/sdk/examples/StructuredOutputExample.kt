@@ -3,9 +3,9 @@ package ai.router.sdk.examples
 import ai.router.sdk.dsl.structuredChatRequest
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
-import kotlin.test.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import kotlin.test.assertTrue
 
 class StructuredOutputExample {
 

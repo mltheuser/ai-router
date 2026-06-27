@@ -1,15 +1,26 @@
 package ai.router.sdk
 
-import ai.router.sdk.models.*
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import ai.router.sdk.models.AiRouterException
+import ai.router.sdk.models.ApiError
+import ai.router.sdk.models.ChatRequest
+import ai.router.sdk.models.ChatResponse
+import ai.router.sdk.models.EmbedRequest
+import ai.router.sdk.models.EmbedResponse
+import ai.router.sdk.models.ErrorResponse
+import ai.router.sdk.models.StructuredChatRequest
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 /**
@@ -26,12 +37,16 @@ import kotlinx.serialization.json.Json
  * @param baseUrl Root URL of the ai-router server (e.g. `http://localhost:8787`).
  * @param httpClient Optional pre-configured Ktor [HttpClient]. If not provided, a default CIO client is created.
  */
-class AiRouterClient(
+public class AiRouterClient(
     private val baseUrl: String,
     private val httpClient: HttpClient = defaultHttpClient(),
 ) : AutoCloseable {
 
-    companion object {
+    private companion object {
+        // LLM calls can run long; allow up to 10 minutes per request.
+        private const val REQUEST_TIMEOUT_MILLIS = 600_000L
+        private const val CONNECT_TIMEOUT_MILLIS = 10_000L
+
         private val json = Json {
             ignoreUnknownKeys = true
             encodeDefaults = false
@@ -43,8 +58,8 @@ class AiRouterClient(
                 json(json)
             }
             install(HttpTimeout) {
-                requestTimeoutMillis = 600_000
-                connectTimeoutMillis = 10_000
+                requestTimeoutMillis = REQUEST_TIMEOUT_MILLIS
+                connectTimeoutMillis = CONNECT_TIMEOUT_MILLIS
             }
         }
     }
@@ -54,7 +69,7 @@ class AiRouterClient(
     /**
      * Send a chat completion request.
      */
-    suspend fun chat(request: ChatRequest): ChatResponse {
+    public suspend fun chat(request: ChatRequest): ChatResponse {
         return post("/v1/chat/completions", request)
     }
 
@@ -62,7 +77,7 @@ class AiRouterClient(
      * Send a structured chat completion request and deserialize the response
      * directly into [T]. Build the request with `structuredChatRequest<T>()`.
      */
-    suspend fun <T> chat(request: StructuredChatRequest<T>): T {
+    public suspend fun <T> chat(request: StructuredChatRequest<T>): T {
         val response = chat(request.inner)
         return json.decodeFromString(request.serializer, response.textContent)
     }
@@ -70,7 +85,7 @@ class AiRouterClient(
     /**
      * Send an embedding request.
      */
-    suspend fun embed(request: EmbedRequest): EmbedResponse {
+    public suspend fun embed(request: EmbedRequest): EmbedResponse {
         return post("/v1/embeddings", request)
     }
 

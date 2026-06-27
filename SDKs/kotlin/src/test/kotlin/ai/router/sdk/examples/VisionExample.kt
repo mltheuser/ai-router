@@ -2,10 +2,10 @@ package ai.router.sdk.examples
 
 import ai.router.sdk.dsl.chatRequest
 import kotlinx.coroutines.runBlocking
-import java.util.Base64
-import kotlin.test.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import java.util.Base64
+import kotlin.test.assertTrue
 
 class VisionExample {
 
@@ -18,14 +18,16 @@ class VisionExample {
         val imageBase64 = Base64.getEncoder().encodeToString(imageBytes)
 
         newExampleClient().use { client ->
-            val response = client.chat(chatRequest(CHAT_MODEL) {
-                messages {
-                    user {
-                        text("Briefly describe this image.")
-                        image(mimeType = "image/png", base64Data = imageBase64)
+            val response = client.chat(
+                chatRequest(CHAT_MODEL) {
+                    messages {
+                        user {
+                            text("Briefly describe this image.")
+                            image(mimeType = "image/png", base64Data = imageBase64)
+                        }
                     }
                 }
-            })
+            )
 
             assertTrue(
                 response.textContent.isNotBlank(),

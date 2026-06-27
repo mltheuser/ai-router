@@ -10,26 +10,36 @@ import kotlinx.serialization.json.decodeFromJsonElement
 // ─── Reasoning effort levels ──────────────────────────────────────────
 
 @Serializable
-enum class ReasoningEffort {
-    @SerialName("none") NONE,
-    @SerialName("low") LOW,
-    @SerialName("medium") MEDIUM,
-    @SerialName("high") HIGH,
+public enum class ReasoningEffort {
+    @SerialName("none")
+    NONE,
+
+    @SerialName("low")
+    LOW,
+
+    @SerialName("medium")
+    MEDIUM,
+
+    @SerialName("high")
+    HIGH,
 }
 
 // ─── Content parts (multimodal) ───────────────────────────────────────
 
 @Serializable
-enum class ContentPartType {
-    @SerialName("text") TEXT,
-    @SerialName("image") IMAGE,
+public enum class ContentPartType {
+    @SerialName("text")
+    TEXT,
+
+    @SerialName("image")
+    IMAGE,
 }
 
 /**
  * One piece of a multimodal message.
  */
 @Serializable
-data class ContentPart(
+public data class ContentPart(
     val type: ContentPartType,
     val text: String? = null,
     @SerialName("mime_type") val mimeType: String? = null,
@@ -39,53 +49,54 @@ data class ContentPart(
 // ─── Tool calling ─────────────────────────────────────────────────────
 
 @Serializable
-data class ToolDefinition(
+public data class ToolDefinition(
     val name: String,
     val description: String? = null,
     val parameters: JsonObject? = null,
 )
 
 @Serializable
-data class ToolCallFunction(
+public data class ToolCallFunction(
     val name: String,
     val arguments: JsonObject,
 )
 
 @Serializable
-data class ToolCall(
+public data class ToolCall(
     val id: String,
     val function: ToolCallFunction,
 )
 
 @PublishedApi
-internal val toolCallJson = Json { ignoreUnknownKeys = true }
+internal val toolCallJson: Json = Json { ignoreUnknownKeys = true }
 
-inline fun <reified T> ToolCall.decode(): T =
+public inline fun <reified T> ToolCall.decode(): T =
     toolCallJson.decodeFromJsonElement(function.arguments)
 
 // ─── Response format / structured output ──────────────────────────────
 
 @Serializable
-enum class ResponseFormatType {
-    @SerialName("json_schema") JSON_SCHEMA,
+public enum class ResponseFormatType {
+    @SerialName("json_schema")
+    JSON_SCHEMA,
 }
 
 @Serializable
-data class JsonSchemaSpec(
+public data class JsonSchemaSpec(
     val name: String,
     val description: String? = null,
     val schema: JsonObject? = null,
 )
 
 @Serializable
-data class ResponseFormat(
+public data class ResponseFormat(
     val type: ResponseFormatType,
     @SerialName("json_schema") val jsonSchema: JsonSchemaSpec? = null,
 )
 
 // ─── Structured chat request ──────────────────────────────────────────
 
-data class StructuredChatRequest<T>(
+public data class StructuredChatRequest<T>(
     val inner: ChatRequest,
     val serializer: KSerializer<T>,
 )
@@ -93,7 +104,7 @@ data class StructuredChatRequest<T>(
 // ─── Messages ─────────────────────────────────────────────────────────
 
 @Serializable
-data class ChatMessage(
+public data class ChatMessage(
     val role: String,
     val content: List<ContentPart>,
     @SerialName("reasoning_content") val reasoningContent: String? = null,
@@ -104,7 +115,7 @@ data class ChatMessage(
 // ─── Request / Response ───────────────────────────────────────────────
 
 @Serializable
-data class ChatRequest(
+public data class ChatRequest(
     val model: String,
     val messages: List<ChatMessage>,
     @SerialName("frequency_penalty") val frequencyPenalty: Double? = null,
@@ -118,13 +129,13 @@ data class ChatRequest(
 )
 
 @Serializable
-data class ChatChoice(
+public data class ChatChoice(
     val message: ChatMessage,
     @SerialName("finish_reason") val finishReason: String,
 )
 
 @Serializable
-data class ChatUsage(
+public data class ChatUsage(
     @SerialName("prompt_tokens") val promptTokens: Int,
     @SerialName("completion_tokens") val completionTokens: Int,
     @SerialName("total_tokens") val totalTokens: Int,
@@ -132,13 +143,13 @@ data class ChatUsage(
 )
 
 @Serializable
-data class ChatResponse(
+public data class ChatResponse(
     val model: String,
     val choices: ChatChoice,
     val usage: ChatUsage,
 ) {
     /** Convenience: the text content of the first choice. */
-    val textContent: String
+    public val textContent: String
         get() = choices.message.content
             .filter { it.type == ContentPartType.TEXT }
             .mapNotNull { it.text }

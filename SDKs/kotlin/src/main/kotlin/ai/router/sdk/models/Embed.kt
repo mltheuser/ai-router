@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  * OpenAI-compatible embedding request.
  */
 @Serializable
-data class EmbedRequest(
+public data class EmbedRequest(
     val model: String,
     val input: List<String>,
     val dimensions: Int? = null,
@@ -17,7 +17,7 @@ data class EmbedRequest(
  * OpenAI-compatible embedding response.
  */
 @Serializable
-data class EmbedResponse(
+public data class EmbedResponse(
     val `object`: String,
     val data: List<EmbedData>,
     val model: String,
@@ -25,14 +25,14 @@ data class EmbedResponse(
 )
 
 @Serializable
-data class EmbedData(
+public data class EmbedData(
     val `object`: String,
     val embedding: List<Double>,
     val index: Int,
 )
 
 @Serializable
-data class EmbedUsage(
+public data class EmbedUsage(
     @SerialName("prompt_tokens") val promptTokens: Int,
     @SerialName("total_tokens") val totalTokens: Int,
 )

@@ -1,6 +1,15 @@
 package ai.router.sdk.dsl
 
-import ai.router.sdk.models.*
+import ai.router.sdk.models.ChatMessage
+import ai.router.sdk.models.ChatRequest
+import ai.router.sdk.models.ContentPart
+import ai.router.sdk.models.ContentPartType
+import ai.router.sdk.models.JsonSchemaSpec
+import ai.router.sdk.models.ReasoningEffort
+import ai.router.sdk.models.ResponseFormat
+import ai.router.sdk.models.ResponseFormatType
+import ai.router.sdk.models.StructuredChatRequest
+import ai.router.sdk.models.ToolDefinition
 import ai.router.sdk.schema.SchemaGenerator
 import kotlinx.serialization.serializer
 
@@ -17,7 +26,7 @@ import kotlinx.serialization.serializer
  * }
  * ```
  */
-fun chatRequest(model: String, block: ChatRequestBuilder.() -> Unit): ChatRequest {
+public fun chatRequest(model: String, block: ChatRequestBuilder.() -> Unit): ChatRequest {
     return ChatRequestBuilder(model).apply(block).build()
 }
 
@@ -38,7 +47,7 @@ fun chatRequest(model: String, block: ChatRequestBuilder.() -> Unit): ChatReques
  * val weather: WeatherInfo = client.chat(request)
  * ```
  */
-inline fun <reified T> structuredChatRequest(
+public inline fun <reified T> structuredChatRequest(
     model: String,
     block: ChatRequestBuilder.() -> Unit = {},
 ): StructuredChatRequest<T> {
@@ -58,10 +67,10 @@ inline fun <reified T> structuredChatRequest(
 // ─── ChatRequest builder ──────────────────────────────────────────────
 
 @DslMarker
-annotation class ChatDsl
+public annotation class ChatDsl
 
 @ChatDsl
-class ChatRequestBuilder(private val model: String) {
+public class ChatRequestBuilder(private val model: String) {
     private var messagesBuilder: MessagesBuilder? = null
     private var temperature: Double? = null
     private var maxTokens: Int? = null
@@ -72,18 +81,18 @@ class ChatRequestBuilder(private val model: String) {
     private var responseFormat: ResponseFormat? = null
     private val tools = mutableListOf<ToolDefinition>()
 
-    fun messages(block: MessagesBuilder.() -> Unit) {
+    public fun messages(block: MessagesBuilder.() -> Unit) {
         messagesBuilder = MessagesBuilder().apply(block)
     }
 
-    fun temperature(value: Double) { temperature = value }
-    fun maxTokens(value: Int) { maxTokens = value }
-    fun topP(value: Double) { topP = value }
-    fun frequencyPenalty(value: Double) { frequencyPenalty = value }
-    fun presencePenalty(value: Double) { presencePenalty = value }
-    fun reasoningEffort(value: ReasoningEffort) { reasoningEffort = value }
+    public fun temperature(value: Double) { temperature = value }
+    public fun maxTokens(value: Int) { maxTokens = value }
+    public fun topP(value: Double) { topP = value }
+    public fun frequencyPenalty(value: Double) { frequencyPenalty = value }
+    public fun presencePenalty(value: Double) { presencePenalty = value }
+    public fun reasoningEffort(value: ReasoningEffort) { reasoningEffort = value }
 
-    fun tools(block: ToolsBuilder.() -> Unit) {
+    public fun tools(block: ToolsBuilder.() -> Unit) {
         tools.addAll(ToolsBuilder().apply(block).build())
     }
 
@@ -95,7 +104,7 @@ class ChatRequestBuilder(private val model: String) {
     @PublishedApi
     internal fun build(): ChatRequest {
         val msgs = messagesBuilder?.build()
-            ?: throw IllegalStateException("messages { } block is required")
+            ?: error("messages { } block is required")
         return ChatRequest(
             model = model,
             messages = msgs,
@@ -114,18 +123,18 @@ class ChatRequestBuilder(private val model: String) {
 // ─── Messages builder ─────────────────────────────────────────────────
 
 @ChatDsl
-class MessagesBuilder {
+public class MessagesBuilder {
     private val messages = mutableListOf<ChatMessage>()
 
-    fun system(block: ContentBuilder.() -> Unit) {
+    public fun system(block: ContentBuilder.() -> Unit) {
         messages.add(buildMessage("system", block))
     }
 
-    fun user(block: ContentBuilder.() -> Unit) {
+    public fun user(block: ContentBuilder.() -> Unit) {
         messages.add(buildMessage("user", block))
     }
 
-    fun assistant(block: ContentBuilder.() -> Unit) {
+    public fun assistant(block: ContentBuilder.() -> Unit) {
         messages.add(buildMessage("assistant", block))
     }
 
@@ -138,7 +147,7 @@ class MessagesBuilder {
      * }
      * ```
      */
-    fun tool(callId: String, block: ContentBuilder.() -> Unit) {
+    public fun tool(callId: String, block: ContentBuilder.() -> Unit) {
         val parts = ContentBuilder().apply(block).build()
         messages.add(ChatMessage(role = "tool", content = parts, toolCallId = callId))
     }
@@ -154,14 +163,14 @@ class MessagesBuilder {
 // ─── Content parts builder ────────────────────────────────────────────
 
 @ChatDsl
-class ContentBuilder {
+public class ContentBuilder {
     private val parts = mutableListOf<ContentPart>()
 
-    fun text(value: String) {
+    public fun text(value: String) {
         parts.add(ContentPart(type = ContentPartType.TEXT, text = value))
     }
 
-    fun image(mimeType: String, base64Data: String) {
+    public fun image(mimeType: String, base64Data: String) {
         parts.add(ContentPart(type = ContentPartType.IMAGE, mimeType = mimeType, base64Data = base64Data))
     }
 
@@ -171,7 +180,7 @@ class ContentBuilder {
 // ─── Tools builder ────────────────────────────────────────────────────
 
 @ChatDsl
-class ToolsBuilder {
+public class ToolsBuilder {
     private val tools = mutableListOf<ToolDefinition>()
 
     /**
@@ -191,7 +200,7 @@ class ToolsBuilder {
      *
      * Decode the arguments from a tool call response with [ai.router.sdk.models.ToolCall.decode].
      */
-    inline fun <reified T> tool(name: String, description: String? = null) {
+    public inline fun <reified T> tool(name: String, description: String? = null) {
         addTool(ToolDefinition(name = name, description = description, parameters = SchemaGenerator.generate<T>()))
     }
 

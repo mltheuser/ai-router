@@ -5,10 +5,10 @@ import ai.router.sdk.models.decode
 import ai.router.sdk.schema.Description
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
-import kotlin.test.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import kotlin.test.assertTrue
 
 class ToolCallingExample {
 
@@ -23,14 +23,16 @@ class ToolCallingExample {
     fun run() = runBlocking {
         newExampleClient().use { client ->
             // Initial request — the model should respond with a tool call.
-            val first = client.chat(chatRequest(CHAT_MODEL) {
-                messages {
-                    user { text("What's the weather in Berlin?") }
+            val first = client.chat(
+                chatRequest(CHAT_MODEL) {
+                    messages {
+                        user { text("What's the weather in Berlin?") }
+                    }
+                    tools {
+                        tool<WeatherParams>("get_weather", "Get current weather for a city")
+                    }
                 }
-                tools {
-                    tool<WeatherParams>("get_weather", "Get current weather for a city")
-                }
-            })
+            )
 
             val toolCall = first.choices.message.toolCalls?.firstOrNull()
             // Local models occasionally decline to call the tool; report a JUnit
@@ -46,15 +48,17 @@ class ToolCallingExample {
             assertTrue(params.city.isNotBlank(), "decoded tool call had blank city: $params")
 
             // Follow-up turn with the tool result attached.
-            val followUp = client.chat(chatRequest(CHAT_MODEL) {
-                messages {
-                    user { text("What's the weather in Berlin?") }
-                    assistant { text("") } // assistant turn that issued the tool call
-                    tool(callId = toolCall.id) {
-                        text("""{"temp_celsius": 22, "condition": "sunny"}""")
+            val followUp = client.chat(
+                chatRequest(CHAT_MODEL) {
+                    messages {
+                        user { text("What's the weather in Berlin?") }
+                        assistant { text("") } // assistant turn that issued the tool call
+                        tool(callId = toolCall.id) {
+                            text("""{"temp_celsius": 22, "condition": "sunny"}""")
+                        }
                     }
                 }
-            })
+            )
 
             assertTrue(
                 followUp.textContent.isNotBlank(),
