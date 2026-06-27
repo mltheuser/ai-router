@@ -14,14 +14,14 @@ type openRouterModelsResponse struct {
 }
 
 type openRouterModel struct {
-	ID            string                    `json:"id"`
-	Name          string                    `json:"name"`
-	Created       int64                     `json:"created"`
-	ContextLength int                       `json:"context_length"`
-	Architecture  openRouterArchitecture    `json:"architecture"`
-	Pricing       openRouterPricing         `json:"pricing"`
-	Description   string                    `json:"description"`
-	SupportedParameters []string            `json:"supported_parameters"`
+	ID                  string                 `json:"id"`
+	Name                string                 `json:"name"`
+	Created             int64                  `json:"created"`
+	ContextLength       int                    `json:"context_length"`
+	Architecture        openRouterArchitecture `json:"architecture"`
+	Pricing             openRouterPricing      `json:"pricing"`
+	Description         string                 `json:"description"`
+	SupportedParameters []string               `json:"supported_parameters"`
 }
 
 type openRouterArchitecture struct {
@@ -64,7 +64,7 @@ func (p *Provider) ListModels(ctx context.Context) ([]api.ModelInfo, error) {
 	for _, m := range chatResp.Data {
 		info := convertModel(m, p.Name())
 		models = append(models, info)
-		
+
 		// check for reasoning effort support
 		for _, param := range m.SupportedParameters {
 			if param == "reasoning_effort" {
@@ -135,7 +135,7 @@ func inferCapabilities(m openRouterModel) []api.Capability {
 				break
 			}
 		}
-		
+
 		// Check for structured output and reasoning support
 		for _, p := range m.SupportedParameters {
 			switch p {

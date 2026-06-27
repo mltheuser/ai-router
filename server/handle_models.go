@@ -21,19 +21,19 @@ func (s *Server) handleListModels(w http.ResponseWriter, r *http.Request) {
 		provType = &pt
 	}
 
-	var cap *api.Capability
+	var capability *api.Capability
 	if c := r.URL.Query().Get("capability"); c != "" {
 		cp := api.Capability(c)
 		if cp != api.CapabilityChat && cp != api.CapabilityEmbed {
 			api.WriteError(w, http.StatusBadRequest, "capability must be 'chat' or 'embed'")
 			return
 		}
-		cap = &cp
+		capability = &cp
 	}
 
 	search := r.URL.Query().Get("search")
 
-	models := s.catalog.AllModels(provType, cap)
+	models := s.catalog.AllModels(provType, capability)
 
 	// Apply search filter
 	if search != "" {
@@ -56,7 +56,7 @@ func (s *Server) handleListModels(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 // handleRefreshModels handles POST /v1/models/refresh.
@@ -64,5 +64,5 @@ func (s *Server) handleRefreshModels(w http.ResponseWriter, r *http.Request) {
 	s.catalog.RefreshAll(r.Context())
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status":"refreshed"}`))
+	_, _ = w.Write([]byte(`{"status":"refreshed"}`))
 }

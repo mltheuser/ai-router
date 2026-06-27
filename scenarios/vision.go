@@ -15,20 +15,20 @@ import (
 
 func init() {
 	testImageBase64 = base64.StdEncoding.EncodeToString(testImageBytes)
-	Register(&VisionDescription{})
+	Register(&visionDescription{})
 }
 
-type VisionDescription struct{}
+type visionDescription struct{}
 
-func (s *VisionDescription) Name() string {
+func (s *visionDescription) Name() string {
 	return "vision_description"
 }
 
-func (s *VisionDescription) Description() string {
+func (s *visionDescription) Description() string {
 	return "Verifies that vision models can describe an image"
 }
 
-func (s *VisionDescription) RequiredCapabilities() []api.Capability {
+func (s *visionDescription) RequiredCapabilities() []api.Capability {
 	return []api.Capability{api.CapabilityChat, api.CapabilityVision}
 }
 
@@ -36,7 +36,7 @@ func (s *VisionDescription) RequiredCapabilities() []api.Capability {
 var testImageBytes []byte
 var testImageBase64 string
 
-func (s *VisionDescription) Run(ctx context.Context, baseURL string, modelID string) *api.ScenarioResult {
+func (s *visionDescription) Run(ctx context.Context, baseURL string, modelID string) *api.ScenarioResult {
 	url := fmt.Sprintf("%s/v1/chat/completions", baseURL)
 	result := api.NewResult()
 
@@ -71,7 +71,7 @@ func (s *VisionDescription) Run(ctx context.Context, baseURL string, modelID str
 		result.Fail("vision image description", fmt.Sprintf("request failed: %v", err))
 		return result
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		result.Fail("vision image description", fmt.Sprintf("unexpected status code: %d", resp.StatusCode))

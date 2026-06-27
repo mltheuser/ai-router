@@ -1,3 +1,5 @@
+// Package openrouter implements the Provider interface for the OpenRouter
+// cloud aggregator.
 package openrouter
 
 import (
@@ -10,16 +12,16 @@ import (
 // --- OpenRouter wire types (request) ---
 
 type openRouterChatRequest struct {
-	Model            string                      `json:"model"`
-	Messages         []openRouterRequestMessage  `json:"messages"`
-	FrequencyPenalty *float64                    `json:"frequency_penalty,omitempty"`
-	MaxTokens        *int                        `json:"max_tokens,omitempty"`
-	PresencePenalty  *float64                    `json:"presence_penalty,omitempty"`
-	Temperature      *float64                    `json:"temperature,omitempty"`
-	TopP             *float64                    `json:"top_p,omitempty"`
-	ResponseFormat   *openRouterResponseFormat   `json:"response_format,omitempty"`
-	ReasoningEffort  *string                     `json:"reasoning_effort,omitempty"`
-	Tools            []openRouterToolDefinition  `json:"tools,omitempty"`
+	Model            string                     `json:"model"`
+	Messages         []openRouterRequestMessage `json:"messages"`
+	FrequencyPenalty *float64                   `json:"frequency_penalty,omitempty"`
+	MaxTokens        *int                       `json:"max_tokens,omitempty"`
+	PresencePenalty  *float64                   `json:"presence_penalty,omitempty"`
+	Temperature      *float64                   `json:"temperature,omitempty"`
+	TopP             *float64                   `json:"top_p,omitempty"`
+	ResponseFormat   *openRouterResponseFormat  `json:"response_format,omitempty"`
+	ReasoningEffort  *string                    `json:"reasoning_effort,omitempty"`
+	Tools            []openRouterToolDefinition `json:"tools,omitempty"`
 }
 
 type openRouterResponseFormat struct {
@@ -51,9 +53,9 @@ type openRouterRequestMessage struct {
 // openRouterContentPart represents one entry in the OpenRouter content array.
 // Exactly one of Text or ImageURL should be set, matching the Type field.
 type openRouterContentPart struct {
-	Type     string                      `json:"type"`            // "text" or "image_url"
-	Text     string                      `json:"text,omitempty"`
-	ImageURL *openRouterContentImageURL  `json:"image_url,omitempty"`
+	Type     string                     `json:"type"` // "text" or "image_url"
+	Text     string                     `json:"text,omitempty"`
+	ImageURL *openRouterContentImageURL `json:"image_url,omitempty"`
 }
 
 type openRouterContentImageURL struct {
@@ -63,9 +65,9 @@ type openRouterContentImageURL struct {
 // openRouterRequestToolCall is the outgoing tool call format for OpenRouter.
 // OpenRouter (OpenAI-compatible) serializes arguments as a JSON string.
 type openRouterRequestToolCall struct {
-	ID       string                         `json:"id"`
-	Type     string                         `json:"type"`
-	Function openRouterRequestToolCallFunc  `json:"function"`
+	ID       string                        `json:"id"`
+	Type     string                        `json:"type"`
+	Function openRouterRequestToolCallFunc `json:"function"`
 }
 
 type openRouterRequestToolCallFunc struct {
@@ -76,23 +78,23 @@ type openRouterRequestToolCallFunc struct {
 // --- OpenRouter wire types (response) ---
 
 type openRouterChatChoice struct {
-	Index        int                    `json:"index"`
-	Message      openRouterMessage      `json:"message"`
-	FinishReason string                 `json:"finish_reason"`
+	Index        int               `json:"index"`
+	Message      openRouterMessage `json:"message"`
+	FinishReason string            `json:"finish_reason"`
 }
 
 type openRouterMessage struct {
-	Role      string                    `json:"role"`
-	Content   string                    `json:"content"`
-	Reasoning string                    `json:"reasoning,omitempty"`
-	Thinking  string                    `json:"thinking,omitempty"`
+	Role      string                       `json:"role"`
+	Content   string                       `json:"content"`
+	Reasoning string                       `json:"reasoning,omitempty"`
+	Thinking  string                       `json:"thinking,omitempty"`
 	ToolCalls []openRouterResponseToolCall `json:"tool_calls,omitempty"`
 }
 
 type openRouterResponseToolCall struct {
-	ID       string                          `json:"id"`
-	Type     string                          `json:"type"`
-	Function openRouterResponseToolCallFunc  `json:"function"`
+	ID       string                         `json:"id"`
+	Type     string                         `json:"type"`
+	Function openRouterResponseToolCallFunc `json:"function"`
 }
 
 type openRouterResponseToolCallFunc struct {
@@ -101,9 +103,9 @@ type openRouterResponseToolCallFunc struct {
 }
 
 type openRouterUsage struct {
-	PromptTokens     int `json:"prompt_tokens"`
-	CompletionTokens int `json:"completion_tokens"`
-	TotalTokens      int `json:"total_tokens"`
+	PromptTokens            int `json:"prompt_tokens"`
+	CompletionTokens        int `json:"completion_tokens"`
+	TotalTokens             int `json:"total_tokens"`
 	CompletionTokensDetails *struct {
 		ReasoningTokens int `json:"reasoning_tokens"`
 	} `json:"completion_tokens_details,omitempty"`
@@ -120,6 +122,8 @@ type openRouterChatResponse struct {
 
 // --- Chat implementation ---
 
+// Chat sends a chat completion request to OpenRouter and maps the response
+// back to the shared API type.
 func (p *Provider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatResponse, error) {
 	orReq := toOpenRouterRequest(req)
 

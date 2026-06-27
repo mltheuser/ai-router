@@ -26,26 +26,26 @@ func (p *StubProvider) Type() api.ProviderType {
 	return p.pType
 }
 
-func (p *StubProvider) Verify(ctx context.Context) error {
+func (p *StubProvider) Verify(_ context.Context) error {
 	return nil
 }
 
-func (p *StubProvider) ListModels(ctx context.Context) ([]api.ModelInfo, error) {
+func (p *StubProvider) ListModels(_ context.Context) ([]api.ModelInfo, error) {
 	return p.models, nil
 }
 
-func (p *StubProvider) Embed(ctx context.Context, req *api.EmbedRequest) (*api.EmbedResponse, error) {
+func (p *StubProvider) Embed(_ context.Context, _ *api.EmbedRequest) (*api.EmbedResponse, error) {
 	return nil, fmt.Errorf("not supported")
 }
 
-func (p *StubProvider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatResponse, error) {
+func (p *StubProvider) Chat(_ context.Context, _ *api.ChatRequest) (*api.ChatResponse, error) {
 	return nil, fmt.Errorf("not supported")
 }
 
 func TestSelectBestCandidate(t *testing.T) {
 	c1 := 0.01
 	c2 := 0.02
-	
+
 	cloudModels := []api.ModelInfo{
 		{ID: "m1", Provider: "p1", ProviderType: api.ProviderTypeCloud, CostPerMInput: &c2},
 		{ID: "m1", Provider: "p2", ProviderType: api.ProviderTypeCloud, CostPerMInput: &c1}, // Cheapest
@@ -61,7 +61,7 @@ func TestSelectBestCandidate(t *testing.T) {
 
 	s1 := int64(100)
 	s2 := int64(200)
-	
+
 	localModels := []api.ModelInfo{
 		{ID: "m2", Provider: "p3", ProviderType: api.ProviderTypeLocal, SizeBytes: &s2},
 		{ID: "m2", Provider: "p4", ProviderType: api.ProviderTypeLocal, SizeBytes: &s1}, // Smallest
@@ -74,7 +74,7 @@ func TestSelectBestCandidate(t *testing.T) {
 	if bestLocal.Provider != "p4" {
 		t.Errorf("expected p4 (smallest), got %s", bestLocal.Provider)
 	}
-	
+
 	// Test error case
 	_, err = SelectBestCandidate(localModels, "invalid_tag")
 	if err == nil {
@@ -105,7 +105,7 @@ func TestResolve(t *testing.T) {
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	catalog := NewModelCatalog(logger, []provider.Provider{cloudP, localP})
-	
+
 	// Manually populate catalog to avoid async Initialize in unit test if possible,
 	// but Initialize is robust so let's use it.
 	if err := catalog.Initialize(context.Background()); err != nil {

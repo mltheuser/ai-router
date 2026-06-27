@@ -1,3 +1,5 @@
+// Package scenarios holds the self-contained end-to-end test scenarios run by
+// the server's /v1/test endpoint to verify live provider capabilities.
 package scenarios
 
 import (
@@ -12,24 +14,24 @@ import (
 )
 
 func init() {
-	Register(&ChatMultiStep{})
+	Register(&chatMultiStep{})
 }
 
-type ChatMultiStep struct{}
+type chatMultiStep struct{}
 
-func (s *ChatMultiStep) Name() string {
+func (s *chatMultiStep) Name() string {
 	return "chat_multi_step"
 }
 
-func (s *ChatMultiStep) Description() string {
+func (s *chatMultiStep) Description() string {
 	return "Verifies basic chat completion and multi-step conversation recall"
 }
 
-func (s *ChatMultiStep) RequiredCapabilities() []api.Capability {
+func (s *chatMultiStep) RequiredCapabilities() []api.Capability {
 	return []api.Capability{api.CapabilityChat}
 }
 
-func (s *ChatMultiStep) Run(ctx context.Context, baseURL string, modelID string) *api.ScenarioResult {
+func (s *chatMultiStep) Run(ctx context.Context, baseURL string, modelID string) *api.ScenarioResult {
 	url := fmt.Sprintf("%s/v1/chat/completions", baseURL)
 	client := http.DefaultClient
 	temperature := 0.7
@@ -107,7 +109,7 @@ func doChatRequest(ctx context.Context, client *http.Client, url, modelID string
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)

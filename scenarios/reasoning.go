@@ -11,24 +11,24 @@ import (
 )
 
 func init() {
-	Register(&ThinkingScenario{})
+	Register(&thinkingScenario{})
 }
 
-type ThinkingScenario struct{}
+type thinkingScenario struct{}
 
-func (s *ThinkingScenario) Name() string {
+func (s *thinkingScenario) Name() string {
 	return "thinking"
 }
 
-func (s *ThinkingScenario) Description() string {
+func (s *thinkingScenario) Description() string {
 	return "Verifies that reasoning models return a reasoning trace"
 }
 
-func (s *ThinkingScenario) RequiredCapabilities() []api.Capability {
+func (s *thinkingScenario) RequiredCapabilities() []api.Capability {
 	return []api.Capability{api.CapabilityReasoning}
 }
 
-func (s *ThinkingScenario) Run(ctx context.Context, baseURL string, modelID string) *api.ScenarioResult {
+func (s *thinkingScenario) Run(ctx context.Context, baseURL string, modelID string) *api.ScenarioResult {
 	url := fmt.Sprintf("%s/v1/chat/completions", baseURL)
 	result := api.NewResult()
 
@@ -60,7 +60,7 @@ func (s *ThinkingScenario) Run(ctx context.Context, baseURL string, modelID stri
 		result.Fail("reasoning trace present", fmt.Sprintf("request failed: %v", err))
 		return result
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		result.Fail("reasoning trace present", fmt.Sprintf("unexpected status code: %d", resp.StatusCode))

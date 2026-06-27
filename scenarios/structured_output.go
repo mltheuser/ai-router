@@ -11,24 +11,24 @@ import (
 )
 
 func init() {
-	Register(&StructuredOutput{})
+	Register(&structuredOutput{})
 }
 
-type StructuredOutput struct{}
+type structuredOutput struct{}
 
-func (s *StructuredOutput) Name() string {
+func (s *structuredOutput) Name() string {
 	return "structured_output"
 }
 
-func (s *StructuredOutput) Description() string {
+func (s *structuredOutput) Description() string {
 	return "Verifies structured output functionality"
 }
 
-func (s *StructuredOutput) RequiredCapabilities() []api.Capability {
+func (s *structuredOutput) RequiredCapabilities() []api.Capability {
 	return []api.Capability{api.CapabilityChat, api.CapabilityStructuredOutput}
 }
 
-func (s *StructuredOutput) Run(ctx context.Context, baseURL string, modelID string) *api.ScenarioResult {
+func (s *structuredOutput) Run(ctx context.Context, baseURL string, modelID string) *api.ScenarioResult {
 	url := fmt.Sprintf("%s/v1/chat/completions", baseURL)
 	result := api.NewResult()
 
@@ -83,7 +83,7 @@ func (s *StructuredOutput) Run(ctx context.Context, baseURL string, modelID stri
 		result.Fail("structured JSON output", fmt.Sprintf("request failed: %v", err))
 		return result
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		result.Fail("structured JSON output", fmt.Sprintf("unexpected status code: %d", resp.StatusCode))

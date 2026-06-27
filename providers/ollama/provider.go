@@ -1,3 +1,4 @@
+// Package ollama implements the Provider interface for a local Ollama runner.
 package ollama
 
 import (
@@ -19,10 +20,12 @@ func New() *Provider {
 	}
 }
 
+// Name returns the provider's identifier.
 func (p *Provider) Name() string {
 	return "ollama"
 }
 
+// Type reports that Ollama is a local provider.
 func (p *Provider) Type() api.ProviderType {
 	return api.ProviderTypeLocal
 }
@@ -38,6 +41,6 @@ func (p *Provider) Verify(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	return nil
 }

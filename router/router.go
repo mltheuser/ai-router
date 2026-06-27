@@ -21,8 +21,8 @@ func NewRouter(catalog *ModelCatalog) *Router {
 
 // ResolveResult contains the resolved provider and cleaned model ID.
 type ResolveResult struct {
-	Provider provider.Provider
-	ModelID  string // model ID without the :tag and @provider parts
+	Provider  provider.Provider
+	ModelID   string // model ID without the :tag and @provider parts
 	ModelInfo api.ModelInfo
 }
 
@@ -122,7 +122,7 @@ func SelectBestCandidate(candidates []api.ModelInfo, tag api.ProviderType) (api.
 	if len(candidates) == 0 {
 		return api.ModelInfo{}, fmt.Errorf("no candidates provided")
 	}
-	
+
 	if len(candidates) == 1 {
 		return candidates[0], nil
 	}

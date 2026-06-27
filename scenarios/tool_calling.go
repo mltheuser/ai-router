@@ -12,24 +12,24 @@ import (
 )
 
 func init() {
-	Register(&ToolCalling{})
+	Register(&toolCalling{})
 }
 
-type ToolCalling struct{}
+type toolCalling struct{}
 
-func (s *ToolCalling) Name() string {
+func (s *toolCalling) Name() string {
 	return "tool_calling"
 }
 
-func (s *ToolCalling) Description() string {
+func (s *toolCalling) Description() string {
 	return "Verifies tool calling (single and parallel): model invokes tools and incorporates the results"
 }
 
-func (s *ToolCalling) RequiredCapabilities() []api.Capability {
+func (s *toolCalling) RequiredCapabilities() []api.Capability {
 	return []api.Capability{api.CapabilityChat, api.CapabilityTools}
 }
 
-func (s *ToolCalling) Run(ctx context.Context, baseURL string, modelID string) *api.ScenarioResult {
+func (s *toolCalling) Run(ctx context.Context, baseURL string, modelID string) *api.ScenarioResult {
 	url := fmt.Sprintf("%s/v1/chat/completions", baseURL)
 	client := http.DefaultClient
 	result := api.NewResult()
@@ -214,7 +214,7 @@ func doToolRequest(ctx context.Context, client *http.Client, url string, reqBody
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)

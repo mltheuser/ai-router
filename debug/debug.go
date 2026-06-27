@@ -1,3 +1,6 @@
+// Package debug provides a Provider decorator that logs the full request
+// lifecycle (shared API request/response plus the provider-specific HTTP
+// exchange) for troubleshooting.
 package debug
 
 import (
@@ -37,13 +40,23 @@ func WrapProvider(p provider.Provider, mu *sync.Mutex, w io.Writer) provider.Pro
 
 // --- Delegated methods (no debug needed) ---
 
-func (d *Provider) Name() string                                          { return d.inner.Name() }
-func (d *Provider) Type() api.ProviderType                                { return d.inner.Type() }
-func (d *Provider) Verify(ctx context.Context) error                      { return d.inner.Verify(ctx) }
-func (d *Provider) ListModels(ctx context.Context) ([]api.ModelInfo, error) { return d.inner.ListModels(ctx) }
+// Name delegates to the wrapped provider.
+func (d *Provider) Name() string { return d.inner.Name() }
+
+// Type delegates to the wrapped provider.
+func (d *Provider) Type() api.ProviderType { return d.inner.Type() }
+
+// Verify delegates to the wrapped provider.
+func (d *Provider) Verify(ctx context.Context) error { return d.inner.Verify(ctx) }
+
+// ListModels delegates to the wrapped provider.
+func (d *Provider) ListModels(ctx context.Context) ([]api.ModelInfo, error) {
+	return d.inner.ListModels(ctx)
+}
 
 // --- Debug-instrumented methods ---
 
+// Chat delegates to the wrapped provider and logs the full request lifecycle.
 func (d *Provider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatResponse, error) {
 	reqJSON := marshalPretty(req)
 
@@ -59,6 +72,7 @@ func (d *Provider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatRes
 	return resp, err
 }
 
+// Embed delegates to the wrapped provider and logs the full request lifecycle.
 func (d *Provider) Embed(ctx context.Context, req *api.EmbedRequest) (*api.EmbedResponse, error) {
 	reqJSON := marshalPretty(req)
 
@@ -121,7 +135,7 @@ func (d *Provider) printBlock(op string, dc *httpclient.DebugCollector, inReq, o
 
 	// Atomic write: lock so concurrent requests don't interleave
 	d.mu.Lock()
-	d.w.Write(buf.Bytes())
+	_, _ = d.w.Write(buf.Bytes())
 	d.mu.Unlock()
 }
 

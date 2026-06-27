@@ -11,7 +11,7 @@ import (
 type embedRequest struct {
 	Model      string   `json:"model"`
 	Input      []string `json:"input"`
-	Dimensions     *int        `json:"dimensions,omitempty"`
+	Dimensions *int     `json:"dimensions,omitempty"`
 }
 
 // embedResponse is the Ollama OpenAI-compatible embedding response.

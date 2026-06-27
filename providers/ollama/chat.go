@@ -23,7 +23,7 @@ type ollamaChatRequest struct {
 
 // ollamaToolDefinition wraps our flat ToolDefinition in Ollama's {"type":"function","function":{...}} format.
 type ollamaToolDefinition struct {
-	Type     string           `json:"type"`
+	Type     string             `json:"type"`
 	Function api.ToolDefinition `json:"function"`
 }
 
@@ -40,8 +40,8 @@ type ollamaRequestMessage struct {
 // ollamaRequestToolCall is the outgoing tool call format for Ollama.
 // Ollama uses an "index" field inside function, not "id" at the top level.
 type ollamaRequestToolCall struct {
-	Type     string                     `json:"type"`
-	Function ollamaRequestToolCallFunc  `json:"function"`
+	Type     string                    `json:"type"`
+	Function ollamaRequestToolCallFunc `json:"function"`
 }
 
 type ollamaRequestToolCallFunc struct {
@@ -72,15 +72,15 @@ type ollamaChatResponse struct {
 }
 
 type ollamaMessage struct {
-	Role      string              `json:"role"`
-	Content   string              `json:"content"`
-	Thinking  string              `json:"thinking,omitempty"`
+	Role      string                   `json:"role"`
+	Content   string                   `json:"content"`
+	Thinking  string                   `json:"thinking,omitempty"`
 	ToolCalls []ollamaResponseToolCall `json:"tool_calls,omitempty"`
 }
 
 type ollamaResponseToolCall struct {
-	Type     string                      `json:"type"`
-	Function ollamaResponseToolCallFunc  `json:"function"`
+	Type     string                     `json:"type"`
+	Function ollamaResponseToolCallFunc `json:"function"`
 }
 
 type ollamaResponseToolCallFunc struct {
@@ -91,6 +91,8 @@ type ollamaResponseToolCallFunc struct {
 
 // --- Chat implementation ---
 
+// Chat sends a chat completion request to Ollama and maps the response back
+// to the shared API type.
 func (p *Provider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatResponse, error) {
 	ollamaReq := ollamaChatRequest{
 		Model:    req.Model,

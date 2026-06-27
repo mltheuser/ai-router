@@ -11,12 +11,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/spf13/cobra"
-
 	"github.com/mltheuser/ai-router/debug"
 	"github.com/mltheuser/ai-router/provider"
 	"github.com/mltheuser/ai-router/router"
 	"github.com/mltheuser/ai-router/server"
+	"github.com/spf13/cobra"
 )
 
 var debugMode bool
@@ -31,7 +30,7 @@ func init() {
 	serveCmd.Flags().BoolVar(&debugMode, "debug", false, "Enable debug mode: log full request/response lifecycle for every API call")
 }
 
-func runServe(cmd *cobra.Command, args []string) error {
+func runServe(_ *cobra.Command, _ []string) error {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 
 	// Set up registry
@@ -58,7 +57,7 @@ func runServe(cmd *cobra.Command, args []string) error {
 					logger.Warn("Failed to create cloud provider", "provider", name, "error", err)
 					return
 				}
-				
+
 				// Verify before registering
 				verifyCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 				err = p.Verify(verifyCtx)
@@ -126,7 +125,7 @@ func runServe(cmd *cobra.Command, args []string) error {
 
 	logger.Info("Polling providers for available models...")
 	// We'll trust Initialize to handle verification and skipping unavailable providers
-	if err := catalog.Initialize(ctx); err != nil { 
+	if err := catalog.Initialize(ctx); err != nil {
 		logger.Warn("Catalog initialization issue", "error", err)
 	}
 
@@ -145,11 +144,10 @@ func runServe(cmd *cobra.Command, args []string) error {
 		<-sigCh
 		logger.Info("Received shutdown signal")
 		cancel()
-		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second) 
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer shutdownCancel()
-		srv.Shutdown(shutdownCtx)
+		_ = srv.Shutdown(shutdownCtx)
 	}()
 
 	return srv.Start()
 }
-

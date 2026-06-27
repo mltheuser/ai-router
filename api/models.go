@@ -3,6 +3,7 @@ package api
 // ProviderType distinguishes cloud from local providers.
 type ProviderType string
 
+// Provider types.
 const (
 	ProviderTypeCloud ProviderType = "cloud"
 	ProviderTypeLocal ProviderType = "local"
@@ -11,6 +12,7 @@ const (
 // Capability represents a model capability.
 type Capability string
 
+// Model capabilities.
 const (
 	CapabilityChat             Capability = "chat"
 	CapabilityEmbed            Capability = "embed"
@@ -28,18 +30,18 @@ type ModelInfo struct {
 	Capabilities []Capability `json:"capabilities"`
 
 	// Cloud-specific metadata (nil implies unknown, 0 implies free)
-	ContextWindow    int      `json:"context_window,omitempty"`
-	CostPerMInput    *float64 `json:"cost_per_m_input,omitempty"`
-	CostPerMOutput   *float64 `json:"cost_per_m_output,omitempty"`
+	ContextWindow  int      `json:"context_window,omitempty"`
+	CostPerMInput  *float64 `json:"cost_per_m_input,omitempty"`
+	CostPerMOutput *float64 `json:"cost_per_m_output,omitempty"`
 
 	// Local-specific metadata (zero values for cloud models)
-	SizeBytes     *int64  `json:"size_bytes,omitempty"`
+	SizeBytes *int64 `json:"size_bytes,omitempty"`
 }
 
 // HasCapability checks if the model supports a given capability.
-func (m ModelInfo) HasCapability(cap Capability) bool {
+func (m ModelInfo) HasCapability(capability Capability) bool {
 	for _, c := range m.Capabilities {
-		if c == cap {
+		if c == capability {
 			return true
 		}
 	}

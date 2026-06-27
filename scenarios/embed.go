@@ -12,24 +12,24 @@ import (
 )
 
 func init() {
-	Register(&EmbedBatchSimilarity{})
+	Register(&embedBatchSimilarity{})
 }
 
-type EmbedBatchSimilarity struct{}
+type embedBatchSimilarity struct{}
 
-func (s *EmbedBatchSimilarity) Name() string {
+func (s *embedBatchSimilarity) Name() string {
 	return "embed_batch_similarity"
 }
 
-func (s *EmbedBatchSimilarity) Description() string {
+func (s *embedBatchSimilarity) Description() string {
 	return "Verifies batch embedding similarity and optional dimension control"
 }
 
-func (s *EmbedBatchSimilarity) RequiredCapabilities() []api.Capability {
+func (s *embedBatchSimilarity) RequiredCapabilities() []api.Capability {
 	return []api.Capability{api.CapabilityEmbed}
 }
 
-func (s *EmbedBatchSimilarity) Run(ctx context.Context, baseURL string, modelID string) *api.ScenarioResult {
+func (s *embedBatchSimilarity) Run(ctx context.Context, baseURL string, modelID string) *api.ScenarioResult {
 	url := fmt.Sprintf("%s/v1/embeddings", baseURL)
 	client := http.DefaultClient
 	result := api.NewResult()
@@ -119,7 +119,7 @@ func doEmbedRequest(ctx context.Context, client *http.Client, url, modelID strin
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)

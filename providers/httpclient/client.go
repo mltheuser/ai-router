@@ -1,3 +1,5 @@
+// Package httpclient provides a small JSON-over-HTTP client shared by the
+// provider implementations, with optional context-based debug capture.
 package httpclient
 
 import (
@@ -114,7 +116,7 @@ func (c *Client) Do(req *http.Request, result interface{}) error {
 	if err != nil {
 		return fmt.Errorf("executing request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

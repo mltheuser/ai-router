@@ -58,11 +58,11 @@ func (p *Provider) ListModels(ctx context.Context) ([]api.ModelInfo, error) {
 		}
 
 		models = append(models, api.ModelInfo{
-			ID:            m.Name,
-			Provider:      p.Name(),
-			ProviderType:  api.ProviderTypeLocal,
-			Capabilities:  caps,
-			SizeBytes:     int64Ptr(m.Size),
+			ID:           m.Name,
+			Provider:     p.Name(),
+			ProviderType: api.ProviderTypeLocal,
+			Capabilities: caps,
+			SizeBytes:    int64Ptr(m.Size),
 			// Local models are free
 			CostPerMInput:  float64Ptr(0),
 			CostPerMOutput: float64Ptr(0),
@@ -102,6 +102,7 @@ func (p *Provider) getCapabilities(ctx context.Context, modelName string) ([]api
 func float64Ptr(v float64) *float64 {
 	return &v
 }
+
 func int64Ptr(v int64) *int64 {
 	return &v
 }

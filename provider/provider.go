@@ -1,3 +1,6 @@
+// Package provider defines the Provider interface that every backend
+// implements, plus the registry machinery that maps provider names to
+// factories.
 package provider
 
 import (
@@ -29,7 +32,3 @@ type Provider interface {
 	// Chat generates a chat completion for the given request.
 	Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatResponse, error)
 }
-
-
-
-

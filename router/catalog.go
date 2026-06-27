@@ -1,3 +1,5 @@
+// Package router resolves model strings to providers and maintains the
+// catalog of available models.
 package router
 
 import (
@@ -100,7 +102,9 @@ func (c *ModelCatalog) backgroundRefreshLoop(ctx context.Context) {
 				c.mu.RUnlock()
 
 				if time.Since(lastRefresh) >= ttl {
-					go c.refreshProvider(ctx, name, p)
+					go func(name string, p provider.Provider) {
+						_ = c.refreshProvider(ctx, name, p)
+					}(name, p)
 				}
 			}
 		}
@@ -115,7 +119,7 @@ func (c *ModelCatalog) RefreshAll(ctx context.Context) {
 		wg.Add(1)
 		go func(name string, p provider.Provider) {
 			defer wg.Done()
-			c.refreshProvider(ctx, name, p)
+			_ = c.refreshProvider(ctx, name, p)
 		}(name, p)
 	}
 	wg.Wait()

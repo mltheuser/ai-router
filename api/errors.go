@@ -8,42 +8,44 @@ import (
 
 // Sentinel errors for provider implementations.
 var (
-	ErrNotSupported       = fmt.Errorf("capability not supported by this provider")
-	ErrModelNotFound      = fmt.Errorf("model not found")
+	ErrNotSupported        = fmt.Errorf("capability not supported by this provider")
+	ErrModelNotFound       = fmt.Errorf("model not found")
 	ErrProviderUnavailable = fmt.Errorf("provider unavailable")
 )
 
-// APIError represents an OpenAI-compatible error response.
-type APIError struct {
+// Error represents an OpenAI-compatible error response.
+type Error struct {
 	StatusCode int    `json:"-"`
 	Type       string `json:"type"`
 	Message    string `json:"message"`
 	Code       string `json:"code,omitempty"`
 }
 
-func (e *APIError) Error() string {
+func (e *Error) Error() string {
 	return fmt.Sprintf("%s: %s", e.Type, e.Message)
 }
 
 // ErrorResponse is the top-level error response wrapper.
 type ErrorResponse struct {
-	Error APIError `json:"error"`
+	Error Error `json:"error"`
 }
 
 // WriteError writes an OpenAI-compatible error response to the http.ResponseWriter.
 func WriteError(w http.ResponseWriter, statusCode int, message string) {
-	errType := "invalid_request_error"
-	switch {
-	case statusCode == http.StatusNotFound:
+	var errType string
+	switch statusCode {
+	case http.StatusNotFound:
 		errType = "not_found_error"
-	case statusCode == http.StatusInternalServerError:
+	case http.StatusInternalServerError:
 		errType = "server_error"
-	case statusCode == http.StatusServiceUnavailable:
+	case http.StatusServiceUnavailable:
 		errType = "service_unavailable"
+	default:
+		errType = "invalid_request_error"
 	}
 
 	resp := ErrorResponse{
-		Error: APIError{
+		Error: Error{
 			Type:    errType,
 			Message: message,
 		},
@@ -51,5 +53,5 @@ func WriteError(w http.ResponseWriter, statusCode int, message string) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(resp)
+	_ = json.NewEncoder(w).Encode(resp)
 }

@@ -1,7 +1,5 @@
 package api
 
-
-
 // EmbedRequest represents an OpenAI-compatible embedding request.
 type EmbedRequest struct {
 	Model      string   `json:"model"`

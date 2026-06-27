@@ -11,15 +11,15 @@ import (
 type embedRequest struct {
 	Model      string   `json:"model"`
 	Input      []string `json:"input"`
-	Dimensions     *int     `json:"dimensions,omitempty"`
+	Dimensions *int     `json:"dimensions,omitempty"`
 }
 
 // embedResponse is the OpenRouter-specific embedding response (OpenAI-compatible).
 type embedResponse struct {
-	Object string          `json:"object"`
-	Data   []embedData     `json:"data"`
-	Model  string          `json:"model"`
-	Usage  embedUsage      `json:"usage"`
+	Object string      `json:"object"`
+	Data   []embedData `json:"data"`
+	Model  string      `json:"model"`
+	Usage  embedUsage  `json:"usage"`
 }
 
 type embedData struct {

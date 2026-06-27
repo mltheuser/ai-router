@@ -1,5 +1,6 @@
 package api
 
+// TestRequest is the body of a POST /v1/test request.
 type TestRequest struct {
 	Provider string `json:"provider"`
 	// Model is the raw model identifier (e.g. "llama3.2") without routing
@@ -8,8 +9,10 @@ type TestRequest struct {
 	Model string `json:"model,omitempty"`
 }
 
+// TestStatus is the outcome of a single check.
 type TestStatus string
 
+// Test statuses.
 const (
 	StatusPass    TestStatus = "pass"
 	StatusFail    TestStatus = "fail"
@@ -24,17 +27,20 @@ type Check struct {
 	Error       string     `json:"error,omitempty"`
 }
 
+// ProviderHealth holds the baseline health checks run against a provider.
 type ProviderHealth struct {
 	Verify     Check `json:"verify"`
 	ListModels Check `json:"list_models"`
 }
 
+// TestReport is the full result of a POST /v1/test run.
 type TestReport struct {
 	Provider  string           `json:"provider"`
 	Checks    ProviderHealth   `json:"checks"`
 	Scenarios []ScenarioResult `json:"scenarios"`
 }
 
+// ScenarioResult holds the checks accumulated by a single scenario run.
 type ScenarioResult struct {
 	Name   string  `json:"name"`
 	Model  string  `json:"model,omitempty"`

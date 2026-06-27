@@ -25,9 +25,7 @@ type Scenario interface {
 	Run(ctx context.Context, baseURL string, modelID string) *api.ScenarioResult
 }
 
-var (
-	registry = make(map[string]Scenario)
-)
+var registry = make(map[string]Scenario)
 
 // Register adds a scenario to the global registry.
 func Register(s Scenario) {

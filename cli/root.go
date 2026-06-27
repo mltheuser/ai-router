@@ -1,3 +1,4 @@
+// Package cli wires up the cobra command tree for the ai-router binary.
 package cli
 
 import (

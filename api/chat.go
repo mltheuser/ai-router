@@ -1,3 +1,5 @@
+// Package api holds the shared, provider-independent request/response types
+// and error helpers used across the router, server, and provider packages.
 package api
 
 // Message roles.
@@ -18,25 +20,26 @@ const (
 
 // ChatRequest represents a chat completion request.
 type ChatRequest struct {
-	Model            string           `json:"model"`
-	Messages         []ChatMessage    `json:"messages"`
+	Model    string        `json:"model"`
+	Messages []ChatMessage `json:"messages"`
 	// Generation parameters
-	FrequencyPenalty *float64         `json:"frequency_penalty,omitempty"`
-	MaxTokens        *int             `json:"max_tokens,omitempty"`
-	PresencePenalty  *float64         `json:"presence_penalty,omitempty"`
-	Temperature      *float64         `json:"temperature,omitempty"`
-	TopP             *float64         `json:"top_p,omitempty"`
+	FrequencyPenalty *float64 `json:"frequency_penalty,omitempty"`
+	MaxTokens        *int     `json:"max_tokens,omitempty"`
+	PresencePenalty  *float64 `json:"presence_penalty,omitempty"`
+	Temperature      *float64 `json:"temperature,omitempty"`
+	TopP             *float64 `json:"top_p,omitempty"`
 	// Structured Output
-	ResponseFormat   *ResponseFormat  `json:"response_format,omitempty"`
+	ResponseFormat *ResponseFormat `json:"response_format,omitempty"`
 	// Reasoning
-	ReasoningEffort  *string          `json:"reasoning_effort,omitempty"`
+	ReasoningEffort *string `json:"reasoning_effort,omitempty"`
 	// Tool Calling
-	Tools            []ToolDefinition `json:"tools,omitempty"`
+	Tools []ToolDefinition `json:"tools,omitempty"`
 }
 
 // ResponseFormatType represents the type of response format.
 type ResponseFormatType string
 
+// Supported response format types.
 const (
 	ResponseFormatJSONSchema ResponseFormatType = "json_schema"
 )
@@ -79,6 +82,7 @@ type ToolCallFunction struct {
 // ContentPartType discriminates content parts in a multimodal message.
 type ContentPartType string
 
+// Content part types for multimodal messages.
 const (
 	ContentPartText  ContentPartType = "text"
 	ContentPartImage ContentPartType = "image"
