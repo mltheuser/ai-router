@@ -44,8 +44,8 @@ Every provider implements the `Provider` interface — `Name`, `Type`, `Verify`,
 2.  Implement the `Provider` interface.
 3.  **Register the provider**: Edit `router/registry.go` and add a registration call in `DefaultRegistry()`.
 
-### Testing
-Two tiers: unit tests (`make test`) for logic, and a built-in scenario runner (`POST /v1/test`) that verifies live providers end to end. See [TESTING.md](TESTING.md) — read when running either suite or running the server locally.
+### Verification
+Lint and test before finishing a change: `make lint` / `make fmt`, `make test`, and the live scenario runner (`POST /v1/test`). See [TESTING.md](TESTING.md) — read when linting, running the tests, or running the server locally.
 
 ## Maintenance for Agents
 
