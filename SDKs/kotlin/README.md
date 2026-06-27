@@ -110,8 +110,8 @@ drift-detection suite for changes to the server or the SDK.
 
 Prerequisites:
 
-- A running ai-router server. See the project root [`AGENT.md`](../../AGENT.md)
-  for setup.
+- A running ai-router server. See the project's [testing guide](../../TESTING.md)
+  for how to build and run one.
 - A provider with the models referenced in
   [ExampleSetup.kt](src/test/kotlin/ai/router/sdk/examples/ExampleSetup.kt).
   Adjust the constants as needed.
