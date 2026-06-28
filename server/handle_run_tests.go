@@ -15,12 +15,12 @@ import (
 func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
 	var req api.TestRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		api.WriteBadRequest(w, "Invalid request body")
+		api.WriteBadRequest(w, "invalid request body")
 		return
 	}
 
 	if req.Provider == "" {
-		api.WriteBadRequest(w, "Provider is required")
+		api.WriteBadRequest(w, "provider is required")
 		return
 	}
 

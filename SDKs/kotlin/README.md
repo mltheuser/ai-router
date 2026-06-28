@@ -105,8 +105,7 @@ their client through a shared factory that demonstrates this pattern — see
 The example files in
 [src/test/kotlin/ai/router/sdk/examples/](src/test/kotlin/ai/router/sdk/examples/)
 are runnable JUnit tests that exercise every documented usage pattern against
-a live ai-router server. They serve double duty as documentation and as a
-drift-detection suite for changes to the server or the SDK.
+a live ai-router server.
 
 Prerequisites:
 

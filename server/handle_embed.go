@@ -12,10 +12,10 @@ func (s *Server) handleEmbed(w http.ResponseWriter, r *http.Request) {
 	var req api.EmbedRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		if typeErr, ok := err.(*json.UnmarshalTypeError); ok && typeErr.Field == "input" {
-			api.WriteBadRequest(w, "Invalid request body: 'input' must be an array of strings (batch mode)")
+			api.WriteBadRequest(w, "invalid request body: 'input' must be an array of strings (batch mode)")
 			return
 		}
-		api.WriteBadRequest(w, "Invalid request body: "+err.Error())
+		api.WriteBadRequest(w, "invalid request body: "+err.Error())
 		return
 	}
 

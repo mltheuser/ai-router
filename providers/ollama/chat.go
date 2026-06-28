@@ -237,15 +237,13 @@ func mapResponse(ollamaResp *ollamaChatResponse) *api.ChatResponse {
 
 // --- Helpers ---
 
-// mapFinishReason maps Ollama's done_reason to the shared FinishReason. Only
-// "length" and "stop" are meaningful generation outcomes; lifecycle/unknown
-// values (e.g. "load", "unload", empty) default to stop.
+// mapFinishReason maps Ollama's done_reason to the shared FinishReason.
+// "length" indicates truncation; "stop", lifecycle values (e.g. "load",
+// "unload"), and empty all resolve to stop.
 func mapFinishReason(doneReason string) api.FinishReason {
 	switch doneReason {
 	case "length":
 		return api.FinishReasonLength
-	case "stop":
-		return api.FinishReasonStop
 	default:
 		return api.FinishReasonStop
 	}

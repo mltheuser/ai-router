@@ -58,7 +58,6 @@ func WriteError(w http.ResponseWriter, err error) {
 	if errors.As(err, &domain) {
 		out.StatusCode = domain.StatusCode
 		out.Type = domain.Type
-		out.Message = err.Error()
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(out.StatusCode)
