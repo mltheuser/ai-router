@@ -105,6 +105,9 @@ public data class StructuredChatRequest<T>(
 
 @Serializable
 public data class ChatMessage(
+    // Plain String, not a closed enum: role is a passthrough value (the Go server models it
+    // as an open string type), so an enum would throw on any unlisted value during
+    // deserialization. A @JvmInline value class with constants is the type-safe alternative.
     val role: String,
     val content: List<ContentPart>,
     @SerialName("reasoning_content") val reasoningContent: String? = null,
@@ -124,14 +127,8 @@ public data class ChatRequest(
     val temperature: Double? = null,
     @SerialName("top_p") val topP: Double? = null,
     @SerialName("response_format") val responseFormat: ResponseFormat? = null,
-    @SerialName("reasoning_effort") val reasoningEffort: String? = null,
+    @SerialName("reasoning_effort") val reasoningEffort: ReasoningEffort? = null,
     val tools: List<ToolDefinition>? = null,
-)
-
-@Serializable
-public data class ChatChoice(
-    val message: ChatMessage,
-    @SerialName("finish_reason") val finishReason: String,
 )
 
 @Serializable
@@ -145,12 +142,16 @@ public data class ChatUsage(
 @Serializable
 public data class ChatResponse(
     val model: String,
-    val choices: ChatChoice,
+    val message: ChatMessage,
+    // Plain String, not a closed enum: finish_reason is a passthrough value (providers may
+    // return "error" or native values), so an enum would throw on an unlisted value during
+    // deserialization. A @JvmInline value class with constants is the type-safe alternative.
+    @SerialName("finish_reason") val finishReason: String,
     val usage: ChatUsage,
 ) {
-    /** Convenience: the text content of the first choice. */
+    /** Convenience: the text content of the response message. */
     public val textContent: String
-        get() = choices.message.content
+        get() = message.content
             .filter { it.type == ContentPartType.TEXT }
             .mapNotNull { it.text }
             .joinToString("")

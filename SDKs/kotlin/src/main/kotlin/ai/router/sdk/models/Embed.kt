@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * OpenAI-compatible embedding request.
+ * Embedding request.
  */
 @Serializable
 public data class EmbedRequest(
@@ -14,7 +14,7 @@ public data class EmbedRequest(
 )
 
 /**
- * OpenAI-compatible embedding response.
+ * Embedding response.
  */
 @Serializable
 public data class EmbedResponse(

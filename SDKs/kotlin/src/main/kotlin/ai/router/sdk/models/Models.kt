@@ -57,7 +57,7 @@ public data class ModelInfo(
 }
 
 /**
- * Response format for listing models (OpenAI-compatible).
+ * Response format for listing models.
  */
 @Serializable
 public data class ModelList(

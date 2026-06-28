@@ -3,7 +3,7 @@ package ai.router.sdk.models
 import kotlinx.serialization.Serializable
 
 /**
- * OpenAI-compatible API error body.
+ * API error body.
  */
 @Serializable
 public data class ApiError(

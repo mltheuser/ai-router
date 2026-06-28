@@ -21,13 +21,13 @@ class MultiTurnExample {
                         user { text("What's my name?") }
                     }
                     temperature(0.7)
-                    maxTokens(512)
+                    maxTokens(2048)
                 }
             )
 
             assertTrue(
                 response.textContent.isNotBlank(),
-                "expected non-empty text content (finish_reason=${response.choices.finishReason})",
+                "expected non-empty text content (finish_reason=${response.finishReason})",
             )
         }
     }

@@ -113,7 +113,7 @@ public class ChatRequestBuilder(private val model: String) {
             topP = topP,
             frequencyPenalty = frequencyPenalty,
             presencePenalty = presencePenalty,
-            reasoningEffort = reasoningEffort?.name?.lowercase(),
+            reasoningEffort = reasoningEffort,
             responseFormat = responseFormat,
             tools = tools.ifEmpty { null },
         )

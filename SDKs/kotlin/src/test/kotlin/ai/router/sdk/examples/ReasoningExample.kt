@@ -24,10 +24,10 @@ class ReasoningExample {
 
             assertTrue(
                 response.textContent.isNotBlank(),
-                "expected non-empty answer (finish_reason=${response.choices.finishReason})",
+                "expected non-empty answer (finish_reason=${response.finishReason})",
             )
             assertTrue(
-                !response.choices.message.reasoningContent.isNullOrBlank(),
+                !response.message.reasoningContent.isNullOrBlank(),
                 "expected reasoning trace from a reasoning-capable model",
             )
         }

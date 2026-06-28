@@ -31,7 +31,7 @@ class VisionExample {
 
             assertTrue(
                 response.textContent.isNotBlank(),
-                "expected non-empty text content (finish_reason=${response.choices.finishReason})",
+                "expected non-empty text content (finish_reason=${response.finishReason})",
             )
         }
     }

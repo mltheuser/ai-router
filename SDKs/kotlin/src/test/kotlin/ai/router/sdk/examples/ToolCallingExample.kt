@@ -34,12 +34,12 @@ class ToolCallingExample {
                 }
             )
 
-            val toolCall = first.choices.message.toolCalls?.firstOrNull()
+            val toolCall = first.message.toolCalls?.firstOrNull()
             // Local models occasionally decline to call the tool; report a JUnit
             // skip rather than silently passing or flaking the test.
             assumeTrue(
                 toolCall != null,
-                "model produced no tool call (finish_reason=${first.choices.finishReason})",
+                "model produced no tool call (finish_reason=${first.finishReason})",
             )
             requireNotNull(toolCall)
 
@@ -62,7 +62,7 @@ class ToolCallingExample {
 
             assertTrue(
                 followUp.textContent.isNotBlank(),
-                "expected a non-empty follow-up reply (finish_reason=${followUp.choices.finishReason})",
+                "expected a non-empty follow-up reply (finish_reason=${followUp.finishReason})",
             )
         }
     }
