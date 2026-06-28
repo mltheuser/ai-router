@@ -73,7 +73,7 @@ See [StructuredOutputExample.kt](src/test/kotlin/ai/router/sdk/examples/Structur
 
 Request a reasoning-capable model with a target effort level and read both
 the visible answer and the model's reasoning trace separately
-(via `response.choices.message.reasoningContent`).
+(via `response.message.reasoningContent`).
 
 See [ReasoningExample.kt](src/test/kotlin/ai/router/sdk/examples/ReasoningExample.kt).
 

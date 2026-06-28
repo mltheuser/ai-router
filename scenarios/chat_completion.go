@@ -48,7 +48,7 @@ func (s *chatMultiStep) Run(ctx context.Context, baseURL string, modelID string)
 		return result
 	}
 
-	if api.TextFromContent(resp1.Choice.Message.Content) == "" {
+	if api.TextFromContent(resp1.Message.Content) == "" {
 		result.Fail("single turn chat completion", "response content is empty")
 		return result
 	}
@@ -56,7 +56,7 @@ func (s *chatMultiStep) Run(ctx context.Context, baseURL string, modelID string)
 	result.Pass("single turn chat completion")
 
 	// Append assistant response to conversation history.
-	messages = append(messages, resp1.Choice.Message)
+	messages = append(messages, resp1.Message)
 
 	// Step 2: Follow-up question — tests context recall.
 	messages = append(messages, api.ChatMessage{
@@ -70,7 +70,7 @@ func (s *chatMultiStep) Run(ctx context.Context, baseURL string, modelID string)
 		return result
 	}
 
-	content2 := api.TextFromContent(resp2.Choice.Message.Content)
+	content2 := api.TextFromContent(resp2.Message.Content)
 	if content2 == "" {
 		result.Fail("multi-turn context recall", "response content is empty")
 		return result

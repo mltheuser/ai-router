@@ -2,18 +2,13 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 )
 
-// Sentinel errors for provider implementations.
-var (
-	ErrNotSupported        = fmt.Errorf("capability not supported by this provider")
-	ErrModelNotFound       = fmt.Errorf("model not found")
-	ErrProviderUnavailable = fmt.Errorf("provider unavailable")
-)
-
-// Error represents an OpenAI-compatible error response.
+// Error is both the JSON error wire shape and a classifiable domain error: it
+// carries the HTTP status and error type alongside the message, so an error's
+// full mapping lives in one place.
 type Error struct {
 	StatusCode int    `json:"-"`
 	Type       string `json:"type"`
@@ -21,37 +16,56 @@ type Error struct {
 	Code       string `json:"code,omitempty"`
 }
 
-func (e *Error) Error() string {
-	return fmt.Sprintf("%s: %s", e.Type, e.Message)
-}
+func (e *Error) Error() string { return e.Message }
+
+// Sentinel domain errors. Each carries its own HTTP status and error type.
+var (
+	ErrNotSupported        = NewError(http.StatusBadRequest, "capability not supported by this provider")
+	ErrModelNotFound       = NewError(http.StatusNotFound, "model not found")
+	ErrProviderUnavailable = NewError(http.StatusServiceUnavailable, "provider unavailable")
+	ErrInvalidModel        = NewError(http.StatusBadRequest, "invalid model string")
+)
 
 // ErrorResponse is the top-level error response wrapper.
 type ErrorResponse struct {
 	Error Error `json:"error"`
 }
 
-// WriteError writes an OpenAI-compatible error response to the http.ResponseWriter.
-func WriteError(w http.ResponseWriter, statusCode int, message string) {
-	var errType string
+// NewError builds an *Error, deriving the error type string from the status code.
+func NewError(statusCode int, message string) *Error {
+	return &Error{StatusCode: statusCode, Type: typeForStatus(statusCode), Message: message}
+}
+
+func typeForStatus(statusCode int) string {
 	switch statusCode {
 	case http.StatusNotFound:
-		errType = "not_found_error"
+		return "not_found_error"
 	case http.StatusInternalServerError:
-		errType = "server_error"
+		return "server_error"
 	case http.StatusServiceUnavailable:
-		errType = "service_unavailable"
+		return "service_unavailable"
 	default:
-		errType = "invalid_request_error"
+		return "invalid_request_error"
 	}
+}
 
-	resp := ErrorResponse{
-		Error: Error{
-			Type:    errType,
-			Message: message,
-		},
+// WriteError writes err as a JSON error response. If err is, or wraps, an
+// *Error, that error's status and type are used; otherwise err is treated as an
+// internal server error. The full (possibly wrapped) message is preserved.
+func WriteError(w http.ResponseWriter, err error) {
+	out := Error{StatusCode: http.StatusInternalServerError, Type: "server_error", Message: err.Error()}
+	var domain *Error
+	if errors.As(err, &domain) {
+		out.StatusCode = domain.StatusCode
+		out.Type = domain.Type
+		out.Message = err.Error()
 	}
-
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	_ = json.NewEncoder(w).Encode(resp)
+	w.WriteHeader(out.StatusCode)
+	_ = json.NewEncoder(w).Encode(ErrorResponse{Error: out})
+}
+
+// WriteBadRequest writes an error response with StatusBadRequest.
+func WriteBadRequest(w http.ResponseWriter, message string) {
+	WriteError(w, NewError(http.StatusBadRequest, message))
 }

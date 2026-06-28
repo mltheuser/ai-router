@@ -84,7 +84,7 @@ func (s *visionDescription) Run(ctx context.Context, baseURL string, modelID str
 		return result
 	}
 
-	content := api.TextFromContent(chatResp.Choice.Message.Content)
+	content := api.TextFromContent(chatResp.Message.Content)
 	if content == "" {
 		result.Fail("vision image description", "response content is empty")
 		return result

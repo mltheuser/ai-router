@@ -2,20 +2,42 @@
 // and error helpers used across the router, server, and provider packages.
 package api
 
+// Role identifies the author of a chat message.
+type Role string
+
 // Message roles.
 const (
-	RoleSystem    = "system"
-	RoleUser      = "user"
-	RoleAssistant = "assistant"
-	RoleTool      = "tool"
+	RoleSystem    Role = "system"
+	RoleUser      Role = "user"
+	RoleAssistant Role = "assistant"
+	RoleTool      Role = "tool"
 )
+
+// ReasoningEffort controls how much reasoning a model performs.
+type ReasoningEffort string
 
 // Reasoning effort levels.
 const (
-	ReasoningEffortNone   = "none"
-	ReasoningEffortLow    = "low"
-	ReasoningEffortMedium = "medium"
-	ReasoningEffortHigh   = "high"
+	ReasoningEffortNone   ReasoningEffort = "none"
+	ReasoningEffortLow    ReasoningEffort = "low"
+	ReasoningEffortMedium ReasoningEffort = "medium"
+	ReasoningEffortHigh   ReasoningEffort = "high"
+)
+
+// FinishReason explains why the model stopped generating.
+//
+// The named constants cover the values the router produces directly, but the
+// type is passthrough-friendly: providers may return any string and it is
+// forwarded unchanged, so callers must not treat it as a closed set.
+type FinishReason string
+
+// Known finish reasons.
+const (
+	FinishReasonStop          FinishReason = "stop"
+	FinishReasonToolCalls     FinishReason = "tool_calls"
+	FinishReasonLength        FinishReason = "length"
+	FinishReasonContentFilter FinishReason = "content_filter"
+	FinishReasonError         FinishReason = "error"
 )
 
 // ChatRequest represents a chat completion request.
@@ -31,7 +53,7 @@ type ChatRequest struct {
 	// Structured Output
 	ResponseFormat *ResponseFormat `json:"response_format,omitempty"`
 	// Reasoning
-	ReasoningEffort *string `json:"reasoning_effort,omitempty"`
+	ReasoningEffort *ReasoningEffort `json:"reasoning_effort,omitempty"`
 	// Tool Calling
 	Tools []ToolDefinition `json:"tools,omitempty"`
 }
@@ -129,7 +151,7 @@ func ImagesFromContent(parts []ContentPart) []string {
 //   - assistant:    Role + Content (+ ReasoningContent, ToolCalls)
 //   - tool:         Role + Content + ToolCallID
 type ChatMessage struct {
-	Role             string        `json:"role"`
+	Role             Role          `json:"role"`
 	Content          []ContentPart `json:"content"`
 	ReasoningContent string        `json:"reasoning_content,omitempty"`
 	ToolCalls        []ToolCall    `json:"tool_calls,omitempty"`   // assistant only
@@ -137,16 +159,12 @@ type ChatMessage struct {
 }
 
 // ChatResponse represents a chat completion response.
+// Multi-completion is intentionally unsupported: a request yields a single message.
 type ChatResponse struct {
-	Model  string     `json:"model"`
-	Choice ChatChoice `json:"choices"`
-	Usage  ChatUsage  `json:"usage"`
-}
-
-// ChatChoice represents a single choice in a chat completion response.
-type ChatChoice struct {
-	Message      ChatMessage `json:"message"`
-	FinishReason string      `json:"finish_reason"`
+	Model        string       `json:"model"`
+	Message      ChatMessage  `json:"message"`
+	FinishReason FinishReason `json:"finish_reason"`
+	Usage        ChatUsage    `json:"usage"`
 }
 
 // ChatUsage represents token usage for a chat completion request.

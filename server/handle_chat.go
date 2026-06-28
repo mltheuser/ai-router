@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/mltheuser/ai-router/api"
@@ -12,7 +11,11 @@ import (
 func (s *Server) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	var req api.ChatRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		api.WriteBadRequest(w, "invalid request body")
+		return
+	}
+
+	if !validateChatRequest(w, &req) {
 		return
 	}
 
@@ -20,13 +23,7 @@ func (s *Server) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	// Chat completions is the "chat" capability
 	resolution, err := s.router.Resolve(req.Model, api.CapabilityChat)
 	if err != nil {
-		if errors.Is(err, api.ErrModelNotFound) {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else if errors.Is(err, api.ErrNotSupported) {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		api.WriteError(w, err)
 		return
 	}
 
@@ -36,9 +33,7 @@ func (s *Server) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	// Forward the request to the resolved provider
 	resp, err := resolution.Provider.Chat(r.Context(), &req)
 	if err != nil {
-		// Determine suitable status code based on error type?
-		// For now, internal server error is safe.
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		api.WriteError(w, err)
 		return
 	}
 
@@ -47,4 +42,33 @@ func (s *Server) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 		// Too late to write header error
 		return
 	}
+}
+
+// validateChatRequest checks inbound enum fields and writes a 400 JSON error if
+// any are invalid. It returns false when a response has already been written.
+func validateChatRequest(w http.ResponseWriter, req *api.ChatRequest) bool {
+	if len(req.Messages) == 0 {
+		api.WriteBadRequest(w, "messages is required")
+		return false
+	}
+
+	if req.ReasoningEffort != nil {
+		switch *req.ReasoningEffort {
+		case api.ReasoningEffortNone, api.ReasoningEffortLow, api.ReasoningEffortMedium, api.ReasoningEffortHigh:
+		default:
+			api.WriteBadRequest(w, "reasoning_effort must be one of: none, low, medium, high")
+			return false
+		}
+	}
+
+	for _, m := range req.Messages {
+		switch m.Role {
+		case api.RoleSystem, api.RoleUser, api.RoleAssistant, api.RoleTool:
+		default:
+			api.WriteBadRequest(w, "message role must be one of: system, user, assistant, tool")
+			return false
+		}
+	}
+
+	return true
 }

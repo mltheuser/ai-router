@@ -64,6 +64,7 @@ type ollamaChatResponse struct {
 	CreatedAt       string        `json:"created_at"`
 	Message         ollamaMessage `json:"message"`
 	Done            bool          `json:"done"`
+	DoneReason      string        `json:"done_reason"`
 	PromptEvalCount int           `json:"prompt_eval_count"`
 	EvalCount       int           `json:"eval_count"`
 	TotalDuration   int64         `json:"total_duration"`
@@ -106,7 +107,7 @@ func (p *Provider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatRes
 		if *req.ReasoningEffort == api.ReasoningEffortNone {
 			ollamaReq.Think = false
 		} else {
-			ollamaReq.Think = *req.ReasoningEffort
+			ollamaReq.Think = string(*req.ReasoningEffort)
 		}
 	}
 
@@ -164,7 +165,7 @@ func toOllamaMessages(messages []api.ChatMessage) []ollamaRequestMessage {
 	result := make([]ollamaRequestMessage, len(messages))
 	for i, m := range messages {
 		om := ollamaRequestMessage{
-			Role:    m.Role,
+			Role:    string(m.Role),
 			Content: api.TextFromContent(m.Content),
 			Images:  api.ImagesFromContent(m.Content),
 		}
@@ -206,23 +207,21 @@ func mapResponse(ollamaResp *ollamaChatResponse) *api.ChatResponse {
 			CompletionTokens: ollamaResp.EvalCount,
 			TotalTokens:      ollamaResp.PromptEvalCount + ollamaResp.EvalCount,
 		},
-		Choice: api.ChatChoice{
-			FinishReason: "stop",
-			Message: api.ChatMessage{
-				Role:    ollamaResp.Message.Role,
-				Content: api.TextContent(ollamaResp.Message.Content),
-			},
+		FinishReason: mapFinishReason(ollamaResp.DoneReason),
+		Message: api.ChatMessage{
+			Role:    api.Role(ollamaResp.Message.Role),
+			Content: api.TextContent(ollamaResp.Message.Content),
 		},
 	}
 
 	if ollamaResp.Message.Thinking != "" {
-		resp.Choice.Message.ReasoningContent = ollamaResp.Message.Thinking
+		resp.Message.ReasoningContent = ollamaResp.Message.Thinking
 	}
 
 	// Map tool calls: convert Ollama's index-based calls to ID-based shared format.
 	if len(ollamaResp.Message.ToolCalls) > 0 {
 		for _, tc := range ollamaResp.Message.ToolCalls {
-			resp.Choice.Message.ToolCalls = append(resp.Choice.Message.ToolCalls, api.ToolCall{
+			resp.Message.ToolCalls = append(resp.Message.ToolCalls, api.ToolCall{
 				ID: fmt.Sprintf("%d", tc.Function.Index),
 				Function: api.ToolCallFunction{
 					Name:      tc.Function.Name,
@@ -230,13 +229,27 @@ func mapResponse(ollamaResp *ollamaChatResponse) *api.ChatResponse {
 				},
 			})
 		}
-		resp.Choice.FinishReason = "tool_calls"
+		resp.FinishReason = api.FinishReasonToolCalls
 	}
 
 	return &resp
 }
 
 // --- Helpers ---
+
+// mapFinishReason maps Ollama's done_reason to the shared FinishReason. Only
+// "length" and "stop" are meaningful generation outcomes; lifecycle/unknown
+// values (e.g. "load", "unload", empty) default to stop.
+func mapFinishReason(doneReason string) api.FinishReason {
+	switch doneReason {
+	case "length":
+		return api.FinishReasonLength
+	case "stop":
+		return api.FinishReasonStop
+	default:
+		return api.FinishReasonStop
+	}
+}
 
 func isUnsupportedThinkValueError(err error) bool {
 	msg := err.Error()

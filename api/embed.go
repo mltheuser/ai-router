@@ -1,13 +1,13 @@
 package api
 
-// EmbedRequest represents an OpenAI-compatible embedding request.
+// EmbedRequest represents an embedding request.
 type EmbedRequest struct {
 	Model      string   `json:"model"`
 	Input      []string `json:"input"`
 	Dimensions *int     `json:"dimensions,omitempty"`
 }
 
-// EmbedResponse represents an OpenAI-compatible embedding response.
+// EmbedResponse represents an embedding response.
 type EmbedResponse struct {
 	Object string      `json:"object"`
 	Data   []EmbedData `json:"data"`

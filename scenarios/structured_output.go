@@ -96,7 +96,7 @@ func (s *structuredOutput) Run(ctx context.Context, baseURL string, modelID stri
 		return result
 	}
 
-	content := api.TextFromContent(chatResp.Choice.Message.Content)
+	content := api.TextFromContent(chatResp.Message.Content)
 	if content == "" {
 		result.Fail("structured JSON output", "response content is empty")
 		return result

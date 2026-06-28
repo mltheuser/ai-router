@@ -13,7 +13,7 @@ var rootCmd = &cobra.Command{
 	Short: "Unified LLM router — one API for all providers",
 	Long: `ai-router is a unified LLM gateway that routes requests to multiple
 cloud providers (OpenRouter, Google, Anthropic) and local runners (Ollama, vLLM)
-through a single OpenAI-compatible API.`,
+through a single, purpose-built API.`,
 }
 
 // Execute runs the root command.

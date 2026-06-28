@@ -1,5 +1,5 @@
 // Package server implements the HTTP server and request handlers that expose
-// the OpenAI-compatible API and the built-in scenario test runner.
+// the ai-router API and the built-in scenario test runner.
 package server
 
 import (

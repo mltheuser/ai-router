@@ -33,7 +33,7 @@ func (s *thinkingScenario) Run(ctx context.Context, baseURL string, modelID stri
 	result := api.NewResult()
 
 	// We set reasoning effort to ensure the provider handles the parameter
-	effort := "low"
+	effort := api.ReasoningEffortLow
 	reqBody := api.ChatRequest{
 		Model: modelID,
 		Messages: []api.ChatMessage{
@@ -73,7 +73,7 @@ func (s *thinkingScenario) Run(ctx context.Context, baseURL string, modelID stri
 		return result
 	}
 
-	msg := chatResp.Choice.Message
+	msg := chatResp.Message
 	if msg.ReasoningContent == "" {
 		result.Fail("reasoning trace present", fmt.Sprintf("expected reasoning content, got empty string. Content was: %s", api.TextFromContent(msg.Content)))
 		return result

@@ -84,17 +84,17 @@ func (s *toolCalling) Run(ctx context.Context, baseURL string, modelID string) *
 	}
 
 	// Verify the model requested at least one tool call.
-	if resp.Choice.FinishReason != "tool_calls" {
-		result.Fail("tool invocation request", fmt.Sprintf("expected finish_reason 'tool_calls', got '%s'", resp.Choice.FinishReason))
+	if resp.FinishReason != api.FinishReasonToolCalls {
+		result.Fail("tool invocation request", fmt.Sprintf("expected finish_reason 'tool_calls', got '%s'", resp.FinishReason))
 		return result
 	}
-	if len(resp.Choice.Message.ToolCalls) == 0 {
+	if len(resp.Message.ToolCalls) == 0 {
 		result.Fail("tool invocation request", "no tool_calls in response")
 		return result
 	}
 
 	// Classify tool calls from the first response.
-	firstCalls := resp.Choice.Message.ToolCalls
+	firstCalls := resp.Message.ToolCalls
 	hasAdd, hasMultiply := findToolCalls(firstCalls)
 
 	// Check: parallel tool calling — both tools called in a single response.
@@ -119,10 +119,10 @@ func (s *toolCalling) Run(ctx context.Context, baseURL string, modelID string) *
 	const maxIterations = 2
 	for i := 0; i < maxIterations; i++ {
 		// Append the assistant message with its tool calls.
-		messages = append(messages, resp.Choice.Message)
+		messages = append(messages, resp.Message)
 
 		// Build tool result messages for every recognized call.
-		for _, tc := range resp.Choice.Message.ToolCalls {
+		for _, tc := range resp.Message.ToolCalls {
 			if res, ok := toolResults[tc.Function.Name]; ok {
 				messages = append(messages, api.ChatMessage{
 					Role:       api.RoleTool,
@@ -144,13 +144,13 @@ func (s *toolCalling) Run(ctx context.Context, baseURL string, modelID string) *
 		}
 
 		// If model is done calling tools, break to final verification.
-		if resp.Choice.FinishReason != "tool_calls" {
+		if resp.FinishReason != api.FinishReasonToolCalls {
 			break
 		}
 	}
 
 	// Check: tool result incorporation — final answer must contain both results.
-	content := api.TextFromContent(resp.Choice.Message.Content)
+	content := api.TextFromContent(resp.Message.Content)
 	if content == "" {
 		result.Fail("tool result incorporation", "final response content is empty")
 		return result

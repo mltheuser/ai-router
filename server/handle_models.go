@@ -15,7 +15,7 @@ func (s *Server) handleListModels(w http.ResponseWriter, r *http.Request) {
 	if t := r.URL.Query().Get("type"); t != "" {
 		pt := api.ProviderType(t)
 		if pt != api.ProviderTypeCloud && pt != api.ProviderTypeLocal {
-			api.WriteError(w, http.StatusBadRequest, "type must be 'cloud' or 'local'")
+			api.WriteBadRequest(w, "type must be 'cloud' or 'local'")
 			return
 		}
 		provType = &pt
@@ -25,7 +25,7 @@ func (s *Server) handleListModels(w http.ResponseWriter, r *http.Request) {
 	if c := r.URL.Query().Get("capability"); c != "" {
 		cp := api.Capability(c)
 		if cp != api.CapabilityChat && cp != api.CapabilityEmbed {
-			api.WriteError(w, http.StatusBadRequest, "capability must be 'chat' or 'embed'")
+			api.WriteBadRequest(w, "capability must be 'chat' or 'embed'")
 			return
 		}
 		capability = &cp

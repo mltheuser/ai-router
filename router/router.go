@@ -103,14 +103,14 @@ func parseModelString(s string) (modelID string, tag api.ProviderType, pinned st
 		case "local":
 			tag = api.ProviderTypeLocal
 		default:
-			return "", "", "", fmt.Errorf("invalid tag '%s': must be 'cloud' or 'local'", tagStr)
+			return "", "", "", fmt.Errorf("%w: invalid tag '%s': must be 'cloud' or 'local'", api.ErrInvalidModel, tagStr)
 		}
 	} else {
-		return "", "", "", fmt.Errorf("model '%s' missing required tag: use '%s:cloud' or '%s:local'", s, s, s)
+		return "", "", "", fmt.Errorf("%w: model '%s' missing required tag: use '%s:cloud' or '%s:local'", api.ErrInvalidModel, s, s, s)
 	}
 
 	if modelID == "" {
-		return "", "", "", fmt.Errorf("empty model ID")
+		return "", "", "", fmt.Errorf("%w: empty model ID", api.ErrInvalidModel)
 	}
 
 	return modelID, tag, pinned, nil

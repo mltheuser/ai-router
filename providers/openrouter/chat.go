@@ -144,7 +144,7 @@ func toOpenRouterRequest(req *api.ChatRequest) *openRouterChatRequest {
 		Temperature:      req.Temperature,
 		TopP:             req.TopP,
 		ResponseFormat:   toOpenRouterResponseFormat(req.ResponseFormat),
-		ReasoningEffort:  req.ReasoningEffort,
+		ReasoningEffort:  (*string)(req.ReasoningEffort),
 	}
 
 	// Wrap tools in {"type":"function","function":{...}}
@@ -158,7 +158,7 @@ func toOpenRouterRequest(req *api.ChatRequest) *openRouterChatRequest {
 	// Transform messages
 	for _, m := range req.Messages {
 		msg := openRouterRequestMessage{
-			Role:    m.Role,
+			Role:    string(m.Role),
 			Content: toOpenRouterContent(m.Content),
 		}
 
@@ -254,20 +254,18 @@ func mapOpenRouterResponse(orResp *openRouterChatResponse) *api.ChatResponse {
 			reasoning = c.Message.Thinking
 		}
 
-		resp.Choice = api.ChatChoice{
-			Message: api.ChatMessage{
-				Role:             c.Message.Role,
-				Content:          api.TextContent(c.Message.Content),
-				ReasoningContent: reasoning,
-			},
-			FinishReason: c.FinishReason,
+		resp.Message = api.ChatMessage{
+			Role:             api.Role(c.Message.Role),
+			Content:          api.TextContent(c.Message.Content),
+			ReasoningContent: reasoning,
 		}
+		resp.FinishReason = api.FinishReason(c.FinishReason)
 
 		// Map tool calls: parse JSON-string arguments → map
 		if len(c.Message.ToolCalls) > 0 {
-			resp.Choice.FinishReason = "tool_calls"
+			resp.FinishReason = api.FinishReasonToolCalls
 			for _, tc := range c.Message.ToolCalls {
-				resp.Choice.Message.ToolCalls = append(resp.Choice.Message.ToolCalls, api.ToolCall{
+				resp.Message.ToolCalls = append(resp.Message.ToolCalls, api.ToolCall{
 					ID: tc.ID,
 					Function: api.ToolCallFunction{
 						Name:      tc.Function.Name,

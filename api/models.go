@@ -48,7 +48,7 @@ func (m ModelInfo) HasCapability(capability Capability) bool {
 	return false
 }
 
-// ModelList is the response format for listing models (OpenAI-compatible).
+// ModelList is the response format for listing models.
 type ModelList struct {
 	Object string      `json:"object"`
 	Data   []ModelInfo `json:"data"`
