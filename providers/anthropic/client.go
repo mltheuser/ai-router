@@ -32,3 +32,8 @@ func newClient(apiKey string) *client {
 func (c *client) get(ctx context.Context, path string, result interface{}) error {
 	return c.Get(ctx, path, result)
 }
+
+// post is a convenience wrapper around the shared client's Post method.
+func (c *client) post(ctx context.Context, path string, body interface{}, result interface{}) error {
+	return c.Post(ctx, path, body, result)
+}
