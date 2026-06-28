@@ -53,7 +53,7 @@ type keyData struct {
 func (p *Provider) Verify(ctx context.Context) error {
 	var resp keyResponse
 	if err := p.client.get(ctx, "/key", &resp); err != nil {
-		return fmt.Errorf("invalid API key: %w", err)
+		return fmt.Errorf("openrouter verification failed: %w", err)
 	}
 	return nil
 }

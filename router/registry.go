@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/mltheuser/ai-router/provider"
+	"github.com/mltheuser/ai-router/providers/anthropic"
 	"github.com/mltheuser/ai-router/providers/ollama"
 	"github.com/mltheuser/ai-router/providers/openrouter"
 )
@@ -13,6 +14,10 @@ func DefaultRegistry() *provider.Registry {
 	// Cloud providers
 	r.RegisterCloud("openrouter", func(apiKey string) provider.Provider {
 		return openrouter.New(apiKey)
+	})
+
+	r.RegisterCloud("anthropic", func(apiKey string) provider.Provider {
+		return anthropic.New(apiKey)
 	})
 
 	// Local runners
