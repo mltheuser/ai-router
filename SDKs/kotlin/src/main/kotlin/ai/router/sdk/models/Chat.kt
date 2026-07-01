@@ -135,7 +135,8 @@ public data class ChatUsage(
     @SerialName("prompt_tokens") val promptTokens: Int,
     @SerialName("completion_tokens") val completionTokens: Int,
     @SerialName("total_tokens") val totalTokens: Int,
-    @SerialName("reasoning_tokens") val reasoningTokens: Int = 0,
+    @SerialName("reasoning_tokens") val reasoningTokens: Int,
+    @SerialName("cache_read_tokens") val cacheReadTokens: Int,
 )
 
 @Serializable

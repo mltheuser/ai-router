@@ -107,6 +107,9 @@ type openRouterUsage struct {
 	CompletionTokensDetails *struct {
 		ReasoningTokens int `json:"reasoning_tokens"`
 	} `json:"completion_tokens_details,omitempty"`
+	PromptTokensDetails *struct {
+		CachedTokens int `json:"cached_tokens"`
+	} `json:"prompt_tokens_details,omitempty"`
 }
 
 type openRouterChatResponse struct {
@@ -244,6 +247,13 @@ func mapOpenRouterResponse(orResp *openRouterChatResponse) *api.ChatResponse {
 
 	if orResp.Usage.CompletionTokensDetails != nil {
 		resp.Usage.ReasoningTokens = orResp.Usage.CompletionTokensDetails.ReasoningTokens
+	}
+
+	// prompt_tokens already includes cached tokens,
+	// so PromptTokens stays unchanged and cached reads are surfaced
+	// separately.
+	if orResp.Usage.PromptTokensDetails != nil {
+		resp.Usage.CacheReadTokens = orResp.Usage.PromptTokensDetails.CachedTokens
 	}
 
 	if len(orResp.Choices) > 0 {

@@ -206,6 +206,7 @@ func mapResponse(ollamaResp *ollamaChatResponse) *api.ChatResponse {
 			PromptTokens:     ollamaResp.PromptEvalCount,
 			CompletionTokens: ollamaResp.EvalCount,
 			TotalTokens:      ollamaResp.PromptEvalCount + ollamaResp.EvalCount,
+			// Ollama has no prompt caching.
 		},
 		FinishReason: mapFinishReason(ollamaResp.DoneReason),
 		Message: api.ChatMessage{

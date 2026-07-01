@@ -172,5 +172,6 @@ type ChatUsage struct {
 	PromptTokens     int `json:"prompt_tokens"`
 	CompletionTokens int `json:"completion_tokens"`
 	TotalTokens      int `json:"total_tokens"`
-	ReasoningTokens  int `json:"reasoning_tokens,omitempty"`
+	ReasoningTokens  int `json:"reasoning_tokens"`
+	CacheReadTokens  int `json:"cache_read_tokens"`
 }
