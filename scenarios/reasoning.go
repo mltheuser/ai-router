@@ -32,12 +32,19 @@ func (s *thinkingScenario) Run(ctx context.Context, baseURL string, modelID stri
 	url := fmt.Sprintf("%s/v1/chat/completions", baseURL)
 	result := api.NewResult()
 
-	// We set reasoning effort to ensure the provider handles the parameter
-	effort := api.ReasoningEffortLow
+	// We set reasoning effort to ensure the provider handles the parameter.
+	// The prompt must be a NOVEL constraint puzzle, not a canonical brain-teaser:
+	// models with adaptive thinking (e.g. Anthropic) answer famous problems
+	// without emitting a reasoning trace, whereas a puzzle
+	// they can't pattern-match to a memorized answer reliably engages thinking.
+	effort := api.ReasoningEffortHigh
 	reqBody := api.ChatRequest{
 		Model: modelID,
 		Messages: []api.ChatMessage{
-			{Role: "user", Content: api.TextContent("Why is the sky blue?")},
+			{
+				Role:    "user",
+				Content: api.TextContent("Three friends - Ana, Ben, and Cy - each have a different pet (cat, dog, fish) and live in houses 1, 2, 3. Ana is not in house 1. The dog owner is in house 2. Ben owns the fish. Cy is not in house 3. Who owns the cat and in which house? Reason step by step."),
+			},
 		},
 		ReasoningEffort: &effort,
 	}
