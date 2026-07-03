@@ -41,8 +41,12 @@ public object SchemaGenerator {
     public inline fun <reified T> generate(): JsonObject =
         generate(serializer<T>().descriptor)
 
-    @PublishedApi
-    internal fun generate(descriptor: SerialDescriptor): JsonObject =
+    /**
+     * Generate a JSON Schema [JsonObject] for an explicit [descriptor] —
+     * for call sites where the type is not reifiable, e.g. a serializer
+     * held generically.
+     */
+    public fun generate(descriptor: SerialDescriptor): JsonObject =
         descriptorToSchema(descriptor)
 
     private fun descriptorToSchema(descriptor: SerialDescriptor): JsonObject {
