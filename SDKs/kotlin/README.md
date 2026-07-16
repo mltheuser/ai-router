@@ -85,6 +85,18 @@ provider.
 
 See [EmbeddingsExample.kt](src/test/kotlin/ai/router/sdk/examples/EmbeddingsExample.kt).
 
+### Listing Models
+
+Fetch the models available through the router via `listModels()`, e.g. to
+present model options to a user. Optional filters narrow the result by
+provider type (`cloud`/`local`), capability, or a case-insensitive substring
+of the model id.
+
+See [ListModelsExample.kt](src/test/kotlin/ai/router/sdk/examples/ListModelsExample.kt).
+
+> The server currently accepts only the `chat` and `embed` capabilities as a
+> filter; the other `Capability` values are rejected with a 400.
+
 ### Error Handling
 
 Non-2xx responses surface as `AiRouterException`, which carries the HTTP

@@ -43,7 +43,9 @@ own standard test-resources location. Duplicating a small fixture across SDKs is
 
 Each SDK documents its run command in the README's `## Testing` section
 (`./gradlew test`, `pytest`, `cargo test`, …). There is no top-level
-orchestrator: SDKs are tested individually.
+orchestrator: SDKs are tested individually. Because examples exercise live
+models, a run can occasionally flake on model nondeterminism (e.g. an empty
+answer) — re-run the failing example before suspecting the SDK.
 
 Each SDK also runs strict, locally-bootstrapped lint/static-analysis tooling
 and is kept at zero findings; the README's `## Linting` section documents the
