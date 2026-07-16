@@ -5,6 +5,7 @@ package scenarios
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -17,6 +18,15 @@ func init() {
 	Register(&chatMultiStep{})
 }
 
+// brindlemarkGuide is a large (>4096 token) original document
+// about an invented nation. It is sent verbatim on both turns of the scenario so
+// the repeated prefix can trigger a provider-side prompt cache read on turn 2.
+// The invented proper nouns (capital "Velmoria", river "Quillsong") cannot be
+// answered from training data, making recall meaningful and substring-checkable.
+//
+//go:embed resources/brindlemark_guide.md
+var brindlemarkGuide string
+
 type chatMultiStep struct{}
 
 func (s *chatMultiStep) Name() string {
@@ -24,7 +34,7 @@ func (s *chatMultiStep) Name() string {
 }
 
 func (s *chatMultiStep) Description() string {
-	return "Verifies basic chat completion and multi-step conversation recall"
+	return "Verifies multi-step conversation recall over a large document and observes prompt-cache reads"
 }
 
 func (s *chatMultiStep) RequiredCapabilities() []api.Capability {
@@ -37,9 +47,10 @@ func (s *chatMultiStep) Run(ctx context.Context, baseURL string, modelID string)
 	temperature := 0.7
 	result := api.NewResult()
 
-	// Step 1: Initial message — establishes a fact for later recall.
+	// Step 1: Send the full document plus a simple question about it.
 	messages := []api.ChatMessage{
-		{Role: "user", Content: api.TextContent("My favorite color is blue. Remember this.")},
+		{Role: api.RoleUser, Content: api.TextContent(
+			brindlemarkGuide + "\n\nUsing only the travel guide above, what is the capital city of Brindlemark? Answer concisely.")},
 	}
 
 	resp1, err := doChatRequest(ctx, client, url, modelID, &temperature, messages)
@@ -60,8 +71,8 @@ func (s *chatMultiStep) Run(ctx context.Context, baseURL string, modelID string)
 
 	// Step 2: Follow-up question — tests context recall.
 	messages = append(messages, api.ChatMessage{
-		Role:    "user",
-		Content: api.TextContent("What is my favorite color?"),
+		Role:    api.RoleUser,
+		Content: api.TextContent("And which river runs through that city? Answer concisely."),
 	})
 
 	resp2, err := doChatRequest(ctx, client, url, modelID, &temperature, messages)
@@ -76,12 +87,19 @@ func (s *chatMultiStep) Run(ctx context.Context, baseURL string, modelID string)
 		return result
 	}
 
-	if !strings.Contains(strings.ToLower(content2), "blue") {
-		result.Fail("multi-turn context recall", fmt.Sprintf("response did not contain 'blue'. Response: %s", content2))
+	if !strings.Contains(strings.ToLower(content2), "quillsong") {
+		result.Fail("multi-turn context recall", fmt.Sprintf("response did not contain 'Quillsong'. Response: %s", content2))
 		return result
 	}
 
 	result.Pass("multi-turn context recall")
+
+	// The repeated document prefix across the two turns should produce a cache read.
+	if resp2.Usage.CacheReadTokens > 0 {
+		result.Pass(fmt.Sprintf("prompt cache read observed (%d tokens)", resp2.Usage.CacheReadTokens))
+	} else {
+		result.Fail("prompt cache read", "no cache read observed — verify the provider/model supports prompt caching")
+	}
 
 	return result
 }

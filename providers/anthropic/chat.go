@@ -23,6 +23,11 @@ type anthropicChatRequest struct {
 	Tools        []anthropicTool        `json:"tools,omitempty"`
 	Thinking     *anthropicThinking     `json:"thinking,omitempty"`
 	OutputConfig *anthropicOutputConfig `json:"output_config,omitempty"`
+	CacheControl *anthropicCacheControl `json:"cache_control,omitempty"`
+}
+
+type anthropicCacheControl struct {
+	Type string `json:"type"`
 }
 
 // anthropicMessage carries an ordered list of content blocks. Content is a
@@ -110,8 +115,10 @@ type anthropicResponseBlock struct {
 }
 
 type anthropicUsage struct {
-	InputTokens  int `json:"input_tokens"`
-	OutputTokens int `json:"output_tokens"`
+	InputTokens              int `json:"input_tokens"`
+	OutputTokens             int `json:"output_tokens"`
+	CacheCreationInputTokens int `json:"cache_creation_input_tokens"`
+	CacheReadInputTokens     int `json:"cache_read_input_tokens"`
 }
 
 // --- Chat implementation ---
@@ -145,6 +152,11 @@ func toAnthropicRequest(req *api.ChatRequest, maxTokens int) *anthropicChatReque
 	aReq := &anthropicChatRequest{
 		Model:     req.Model,
 		MaxTokens: maxTokens,
+		// Always request automatic prompt caching: a transparent cost
+		// optimization clients never opt into. Anthropic auto-places and
+		// advances the cache breakpoint and silently no-ops for prompts below
+		// the model's minimum cacheable length.
+		CacheControl: &anthropicCacheControl{Type: "ephemeral"},
 	}
 
 	// Anthropic carries the system prompt out of band, not as a message. Pull
@@ -291,12 +303,17 @@ func contentBlocks(parts []api.ContentPart) []interface{} {
 // --- Response translation ---
 
 func mapAnthropicResponse(aResp *anthropicChatResponse) *api.ChatResponse {
+	// Anthropic reports cached tokens (both reads and writes) SEPARATELY from
+	// input_tokens, so the full prompt size is the sum of all three. PromptTokens
+	// always means the full prompt total, including cached tokens.
+	promptTokens := aResp.Usage.InputTokens + aResp.Usage.CacheReadInputTokens + aResp.Usage.CacheCreationInputTokens
 	resp := api.ChatResponse{
 		Model: aResp.Model,
 		Usage: api.ChatUsage{
-			PromptTokens:     aResp.Usage.InputTokens,
+			PromptTokens:     promptTokens,
 			CompletionTokens: aResp.Usage.OutputTokens,
-			TotalTokens:      aResp.Usage.InputTokens + aResp.Usage.OutputTokens,
+			TotalTokens:      promptTokens + aResp.Usage.OutputTokens,
+			CacheReadTokens:  aResp.Usage.CacheReadInputTokens,
 		},
 		Message: api.ChatMessage{Role: api.RoleAssistant},
 	}

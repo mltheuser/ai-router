@@ -51,9 +51,14 @@ type openRouterRequestMessage struct {
 // openRouterContentPart represents one entry in the OpenRouter content array.
 // Exactly one of Text or ImageURL should be set, matching the Type field.
 type openRouterContentPart struct {
-	Type     string                     `json:"type"` // "text" or "image_url"
-	Text     string                     `json:"text,omitempty"`
-	ImageURL *openRouterContentImageURL `json:"image_url,omitempty"`
+	Type         string                     `json:"type"` // "text" or "image_url"
+	Text         string                     `json:"text,omitempty"`
+	ImageURL     *openRouterContentImageURL `json:"image_url,omitempty"`
+	CacheControl *openRouterCacheControl    `json:"cache_control,omitempty"`
+}
+
+type openRouterCacheControl struct {
+	Type string `json:"type"`
 }
 
 type openRouterContentImageURL struct {
@@ -107,6 +112,9 @@ type openRouterUsage struct {
 	CompletionTokensDetails *struct {
 		ReasoningTokens int `json:"reasoning_tokens"`
 	} `json:"completion_tokens_details,omitempty"`
+	PromptTokensDetails *struct {
+		CachedTokens int `json:"cached_tokens"`
+	} `json:"prompt_tokens_details,omitempty"`
 }
 
 type openRouterChatResponse struct {
@@ -184,6 +192,21 @@ func toOpenRouterRequest(req *api.ChatRequest) *openRouterChatRequest {
 		orReq.Messages = append(orReq.Messages, msg)
 	}
 
+	// Request automatic prompt caching: a transparent cost optimization clients
+	// never opt into. We place a single ephemeral breakpoint on the last content
+	// block, which OpenRouter treats as the cache boundary — the entire prompt up
+	// to that point is cached, so the shared prefix is read back on the next turn.
+	// Models that cache implicitly (OpenAI, DeepSeek, Gemini 2.5) ignore the
+	// breakpoint harmlessly, and prompts below a model's minimum cacheable length
+	// silently no-op. We walk in reverse so tool-call/assistant messages with no
+	// content parts don't swallow the breakpoint.
+	for i := len(orReq.Messages) - 1; i >= 0; i-- {
+		if parts := orReq.Messages[i].Content; len(parts) > 0 {
+			parts[len(parts)-1].CacheControl = &openRouterCacheControl{Type: "ephemeral"}
+			break
+		}
+	}
+
 	return orReq
 }
 
@@ -244,6 +267,13 @@ func mapOpenRouterResponse(orResp *openRouterChatResponse) *api.ChatResponse {
 
 	if orResp.Usage.CompletionTokensDetails != nil {
 		resp.Usage.ReasoningTokens = orResp.Usage.CompletionTokensDetails.ReasoningTokens
+	}
+
+	// prompt_tokens already includes cached tokens,
+	// so PromptTokens stays unchanged and cached reads are surfaced
+	// separately.
+	if orResp.Usage.PromptTokensDetails != nil {
+		resp.Usage.CacheReadTokens = orResp.Usage.PromptTokensDetails.CachedTokens
 	}
 
 	if len(orResp.Choices) > 0 {

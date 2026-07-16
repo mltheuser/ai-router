@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "2.2.0"
     kotlin("plugin.serialization") version "2.2.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
+    `java-library`
     `maven-publish`
 }
 
@@ -21,8 +22,9 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
 
-    // Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    // Serialization. `api`: JsonObject and the @Serializable models sit in
+    // the SDK's public signatures.
+    api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
     // Test framework
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
