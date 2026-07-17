@@ -82,6 +82,30 @@ func TestSelectBestCandidate(t *testing.T) {
 	}
 }
 
+func TestCatalogStampsQualifiedModelString(t *testing.T) {
+	p := &StubProvider{
+		name:  "ollama",
+		pType: api.ProviderTypeLocal,
+		models: []api.ModelInfo{
+			{ID: "llama2", Provider: "ollama", ProviderType: api.ProviderTypeLocal, Capabilities: []api.Capability{api.CapabilityChat}},
+		},
+	}
+
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	catalog := NewModelCatalog(logger, []provider.Provider{p})
+	if err := catalog.Initialize(context.Background()); err != nil {
+		t.Fatalf("failed to initialize catalog: %v", err)
+	}
+
+	models := catalog.AllModels(nil, nil)
+	if len(models) != 1 {
+		t.Fatalf("expected 1 model, got %d", len(models))
+	}
+	if got, want := models[0].Model, "llama2:local@ollama"; got != want {
+		t.Errorf("expected model string %q, got %q", want, got)
+	}
+}
+
 func TestResolve(t *testing.T) {
 	// Setup catalog with stubs
 	cloudP := &StubProvider{

@@ -7,7 +7,7 @@
 ### Core Philosophy
 1.  **Unified API**: The server exposes a single, purpose-built API. Clients don't need to know if they are talking to a cloud provider or a local Ollama instance.
 2.  **Provider Independence**: Each provider is implemented in isolation within `providers/`, sharing no code beyond the common `Provider` interface — defined in `provider/provider.go`.
-3.  **Dynamic Routing**: Requests specify a model using the format `model_id:tag[@provider]`. The router resolves this to the best available provider.
+3.  **Dynamic Routing**: Requests specify a model using the format `model_id:tag[@provider]`. The router resolves this to the best available provider. Clients never compose this string themselves: every `GET /v1/models` catalog entry carries its fully-qualified form in the `model` field, passed verbatim in requests.
 4.  **Tagging System**:
     - `:cloud` - Routes to a cloud provider (e.g., OpenRouter, OpenAI). Selection heuristic: Lowest cost.
     - `:local` - Routes to a local runner (e.g., Ollama). Selection heuristic: First available.

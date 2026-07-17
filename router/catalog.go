@@ -150,8 +150,9 @@ func (c *ModelCatalog) refreshProvider(ctx context.Context, name string, p provi
 		}
 	}
 
-	// Add new entries
+	// Add new entries, stamping each with its fully-qualified request string.
 	for _, m := range models {
+		m.Model = fmt.Sprintf("%s:%s@%s", m.ID, m.ProviderType, m.Provider)
 		c.models[m.ID] = append(c.models[m.ID], m)
 	}
 

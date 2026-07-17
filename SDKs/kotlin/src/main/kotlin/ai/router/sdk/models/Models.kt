@@ -41,10 +41,14 @@ public enum class Capability {
 
 /**
  * Describes a model available through a specific provider.
+ *
+ * [model] is the fully-qualified string (`id:provider_type@provider`) to
+ * pass verbatim as a request's `model` to address this entry.
  */
 @Serializable
 public data class ModelInfo(
     val id: String,
+    val model: String,
     val provider: String,
     @SerialName("provider_type") val providerType: ProviderType,
     val capabilities: List<Capability>,

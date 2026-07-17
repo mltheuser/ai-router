@@ -24,7 +24,10 @@ const (
 
 // ModelInfo describes a model available through a specific provider.
 type ModelInfo struct {
-	ID           string       `json:"id"`
+	ID string `json:"id"`
+	// Model is the fully-qualified string ("id:provider_type@provider")
+	// to pass verbatim as `model` in requests to address this entry.
+	Model        string       `json:"model"`
 	Provider     string       `json:"provider"`
 	ProviderType ProviderType `json:"provider_type"`
 	Capabilities []Capability `json:"capabilities"`

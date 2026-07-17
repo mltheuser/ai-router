@@ -90,7 +90,8 @@ See [EmbeddingsExample.kt](src/test/kotlin/ai/router/sdk/examples/EmbeddingsExam
 Fetch the models available through the router via `listModels()`, e.g. to
 present model options to a user. Optional filters narrow the result by
 provider type (`cloud`/`local`), capability, or a case-insensitive substring
-of the model id.
+of the model id. Each entry's `model` property is the fully-qualified
+string to pass verbatim as a request's model.
 
 See [ListModelsExample.kt](src/test/kotlin/ai/router/sdk/examples/ListModelsExample.kt).
 

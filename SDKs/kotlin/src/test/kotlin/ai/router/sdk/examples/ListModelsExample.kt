@@ -20,6 +20,11 @@ class ListModelsExample {
             assertEquals("list", all.`object`)
             assertTrue(all.data.isNotEmpty(), "expected a configured server to expose at least one model")
 
+            assertTrue(
+                all.data.all { it.model.startsWith("${it.id}:") && it.model.endsWith("@${it.provider}") },
+                "expected every entry's model string to qualify its id with tag and provider",
+            )
+
             // Narrow the catalog with optional filters: provider type,
             // capability (chat/embed), and a case-insensitive id search.
             val localChat = client.listModels(
