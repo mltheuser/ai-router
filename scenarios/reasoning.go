@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/mltheuser/ai-router/api"
 )
@@ -26,6 +27,12 @@ func (s *thinkingScenario) Description() string {
 
 func (s *thinkingScenario) RequiredCapabilities() []api.Capability {
 	return []api.Capability{api.CapabilityReasoning}
+}
+
+// Timeout grants reasoning a larger budget: high-effort traces can stream well
+// past the default (observed 90s+ on some models via cloud providers).
+func (s *thinkingScenario) Timeout() time.Duration {
+	return 3 * time.Minute
 }
 
 func (s *thinkingScenario) Run(ctx context.Context, baseURL string, modelID string) *api.ScenarioResult {

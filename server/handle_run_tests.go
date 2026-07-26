@@ -141,7 +141,7 @@ func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Execute Scenario
-		testCtx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		testCtx, cancel := context.WithTimeout(context.Background(), scenarios.TimeoutFor(sc))
 		defer cancel()
 
 		// Construct routable ID (model:tag@provider)

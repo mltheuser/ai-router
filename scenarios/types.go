@@ -2,9 +2,14 @@ package scenarios
 
 import (
 	"context"
+	"time"
 
 	"github.com/mltheuser/ai-router/api"
 )
+
+// DefaultTimeout is the per-scenario execution budget applied unless a scenario
+// implements TimeoutOverrider to request more.
+const DefaultTimeout = 60 * time.Second
 
 // Scenario defines a test capability scenario.
 type Scenario interface {
@@ -23,6 +28,22 @@ type Scenario interface {
 	// a specific sub-test within the scenario. The Name and Model fields
 	// do not need to be set by the scenario; the caller fills them in.
 	Run(ctx context.Context, baseURL string, modelID string) *api.ScenarioResult
+}
+
+// TimeoutOverrider is an optional interface a scenario may implement to request
+// a longer execution budget than DefaultTimeout (e.g. reasoning models that
+// stream long traces at high effort).
+type TimeoutOverrider interface {
+	Timeout() time.Duration
+}
+
+// TimeoutFor returns the execution budget for a scenario: its override if it
+// implements TimeoutOverrider, otherwise DefaultTimeout.
+func TimeoutFor(s Scenario) time.Duration {
+	if o, ok := s.(TimeoutOverrider); ok {
+		return o.Timeout()
+	}
+	return DefaultTimeout
 }
 
 var registry = make(map[string]Scenario)
