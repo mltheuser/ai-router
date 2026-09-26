@@ -1,0 +1,31 @@
+# OpenAI /models endpoint does not expose this data so, as a workaround, we hardcode it here for models we care about.
+
+gpt-6-luna:
+  capabilities: [chat, tools, vision, structured_output, reasoning]
+  context_window: 922000
+  cost_per_m_input: 0.10
+  cost_per_m_output: 0.50
+
+gpt-6-sol:
+  capabilities: [chat, tools, vision, structured_output, reasoning]
+  context_window: 922000
+  cost_per_m_input: 2.00
+  cost_per_m_output: 10.00
+
+gpt-6-astra:
+  capabilities: [chat, tools, vision, structured_output, reasoning]
+  context_window: 922000
+  cost_per_m_input: 10.00
+  cost_per_m_output: 50.00
+
+text-embedding-3-small:
+  capabilities: [embed]
+  context_window: 8192
+  cost_per_m_input: 0.02
+  cost_per_m_output: 0
+
+text-embedding-3-large:
+  capabilities: [embed]
+  context_window: 8192
+  cost_per_m_input: 0.13
+  cost_per_m_output: 0

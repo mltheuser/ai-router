@@ -4,6 +4,7 @@ import (
 	"github.com/mltheuser/ai-router/provider"
 	"github.com/mltheuser/ai-router/providers/anthropic"
 	"github.com/mltheuser/ai-router/providers/ollama"
+	"github.com/mltheuser/ai-router/providers/openai"
 	"github.com/mltheuser/ai-router/providers/openrouter"
 )
 
@@ -18,6 +19,10 @@ func DefaultRegistry() *provider.Registry {
 
 	r.RegisterCloud("anthropic", func(apiKey string) provider.Provider {
 		return anthropic.New(apiKey)
+	})
+
+	r.RegisterCloud("openai", func(apiKey string) provider.Provider {
+		return openai.New(apiKey)
 	})
 
 	// Local runners
