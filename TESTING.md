@@ -29,7 +29,7 @@ The primary way to verify providers is the centralized, scenario-based E2E runne
 
 1.  **Build**: `make build` (always rebuild after changes).
 2.  **Run Server**: `set -a && source .env && set +a && ./bin/ai-router serve --debug`
-    - Cloud provider API keys live in `.env` at the project root (not committed).
+    - Cloud provider API keys live in `.env` at the project root (not committed); start from `cp .env.example .env`.
     - Key naming convention matches the server's expected format: `AI_ROUTER_<PROVIDER>_API_KEY` (e.g. `AI_ROUTER_OPENROUTER_API_KEY`).
 3.  **Trigger**: `curl -X POST http://localhost:8787/v1/test -d '{"provider": "ollama"}' | jq .`
     - Optionally pin a specific model: `curl -X POST http://localhost:8787/v1/test -d '{"provider": "openrouter", "model": "~anthropic/claude-sonnet-latest"}' | jq .`
