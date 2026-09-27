@@ -43,8 +43,10 @@ func (s *toolResultVision) Run(ctx context.Context, baseURL string, modelID stri
 		},
 	}
 
+	// The question must not hint at the photo's content: asking "what fruit"
+	// lets a model that never received the image guess "apple" and pass.
 	messages := []api.ChatMessage{
-		{Role: api.RoleUser, Content: api.TextContent("Use the take_photo tool, then tell me what fruit the photo shows. Be concise.")},
+		{Role: api.RoleUser, Content: api.TextContent("Use the take_photo tool, then describe what the photo shows. Be concise.")},
 	}
 
 	resp, err := doToolRequest(ctx, client, url, api.ChatRequest{
