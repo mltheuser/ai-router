@@ -92,18 +92,22 @@ func convertModel(m openRouterModel, providerName string) api.ModelInfo {
 		ContextWindow: m.ContextLength,
 	}
 
-	// Parse pricing: OpenRouter returns cost per token as a string.
-	// Convert to cost per million tokens.
-	if promptCost, err := strconv.ParseFloat(m.Pricing.Prompt, 64); err == nil {
-		c := promptCost * 1_000_000
-		info.CostPerMInput = &c
-	}
-	if completionCost, err := strconv.ParseFloat(m.Pricing.Completion, 64); err == nil {
-		c := completionCost * 1_000_000
-		info.CostPerMOutput = &c
-	}
+	info.CostPerMInput = parsePrice(m.Pricing.Prompt)
+	info.CostPerMOutput = parsePrice(m.Pricing.Completion)
 
 	return info
+}
+
+// Converts per-token price string to cost per million tokens. Router models (e.g. openrouter/auto) report "-1" because
+// their price depends on the model they forward to; negative and unparsable
+// prices are treated as unknown (nil).
+func parsePrice(perToken string) *float64 {
+	cost, err := strconv.ParseFloat(perToken, 64)
+	if err != nil || cost < 0 {
+		return nil
+	}
+	perMillion := cost * 1_000_000
+	return &perMillion
 }
 
 // inferCapabilities determines model capabilities from OpenRouter's architecture metadata.
