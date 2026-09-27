@@ -10,6 +10,8 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/mltheuser/ai-router/api"
 )
 
 // --- Debug collector (context-based) ---
@@ -129,7 +131,7 @@ func (c *Client) Do(req *http.Request, result interface{}) error {
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
+		return api.NewUpstreamError(resp.StatusCode, string(body))
 	}
 
 	if result != nil {

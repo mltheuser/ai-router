@@ -33,6 +33,7 @@ func (s *Server) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	// Forward the request to the resolved provider
 	resp, err := resolution.Provider.Chat(r.Context(), &req)
 	if err != nil {
+		s.logger.Error("Chat failed", "provider", resolution.Provider.Name(), "model", resolution.ModelID, "error", err)
 		api.WriteError(w, err)
 		return
 	}

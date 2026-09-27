@@ -3,12 +3,10 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 )
 
-// Error is both the JSON error wire shape and a classifiable domain error: it
-// carries the HTTP status and error type alongside the message, so an error's
-// full mapping lives in one place.
 type Error struct {
 	StatusCode int    `json:"-"`
 	Type       string `json:"type"`
@@ -18,7 +16,7 @@ type Error struct {
 
 func (e *Error) Error() string { return e.Message }
 
-// Sentinel domain errors. Each carries its own HTTP status and error type.
+// Sentinel domain errors.
 var (
 	ErrNotSupported        = NewError(http.StatusBadRequest, "capability not supported by this provider")
 	ErrModelNotFound       = NewError(http.StatusNotFound, "model not found")
@@ -36,12 +34,31 @@ func NewError(statusCode int, message string) *Error {
 	return &Error{StatusCode: statusCode, Type: typeForStatus(statusCode), Message: message}
 }
 
+// NewUpstreamError converts a non-2xx response from a provider's backend API
+// into an *Error. Client errors (4xx) pass through: the backend rejected the
+// request itself, so retrying it unchanged will not help. 401/403 are the
+// exception: they mean the router's own API key was refused, which the client
+// cannot fix. Those and every other status (5xx) mean the provider failed and
+// become 502 Bad Gateway. The upstream status and body stay in the message.
+func NewUpstreamError(upstreamStatus int, body string) *Error {
+	status := http.StatusBadGateway
+	if upstreamStatus >= 400 && upstreamStatus < 500 &&
+		upstreamStatus != http.StatusUnauthorized && upstreamStatus != http.StatusForbidden {
+		status = upstreamStatus
+	}
+	return NewError(status, fmt.Sprintf("API error (status %d): %s", upstreamStatus, body))
+}
+
 func typeForStatus(statusCode int) string {
 	switch statusCode {
 	case http.StatusNotFound:
 		return "not_found_error"
+	case http.StatusTooManyRequests:
+		return "rate_limit_error"
 	case http.StatusInternalServerError:
 		return "server_error"
+	case http.StatusBadGateway:
+		return "upstream_error"
 	case http.StatusServiceUnavailable:
 		return "service_unavailable"
 	default:
