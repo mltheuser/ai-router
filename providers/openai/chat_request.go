@@ -3,7 +3,7 @@ package openai
 import (
 	"encoding/json"
 
-	"github.com/mltheuser/ai-router/usecase/chat"
+	"github.com/mltheuser/ai-router/router/chat"
 )
 
 // --- Responses wire types (request) ---

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/mltheuser/ai-router/usecase/chat"
+	"github.com/mltheuser/ai-router/router/chat"
 )
 
 // fallbackMaxTokens is used only when the caller omits max_tokens and the

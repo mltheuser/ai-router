@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/mltheuser/ai-router/provider"
-	"github.com/mltheuser/ai-router/usecase/chat"
+	"github.com/mltheuser/ai-router/router"
+	"github.com/mltheuser/ai-router/router/chat"
 )
 
 // modelsResponse is the response from GET /v1/models.
@@ -76,7 +76,7 @@ func (p *Provider) ListChatModels(ctx context.Context) ([]chat.Model, error) {
 // endpoint exposes no pricing, so the cost fields are left nil.
 func (p *Provider) convertModel(m anthropicModel) chat.Model {
 	return chat.Model{
-		ModelRef:      provider.NewModelRef(p, m.ID),
+		ModelRef:      router.NewModelRef(p, m.ID),
 		Features:      features(m),
 		ContextWindow: m.MaxInputTokens,
 	}

@@ -6,9 +6,9 @@ import (
 	"fmt"
 
 	"github.com/mltheuser/ai-router/httpx"
-	"github.com/mltheuser/ai-router/provider"
-	"github.com/mltheuser/ai-router/usecase/chat"
-	"github.com/mltheuser/ai-router/usecase/embedding"
+	"github.com/mltheuser/ai-router/router"
+	"github.com/mltheuser/ai-router/router/chat"
+	"github.com/mltheuser/ai-router/router/embedding"
 )
 
 // Provider serves chat and embedding through the OpenAI API.
@@ -35,8 +35,8 @@ func (p *Provider) Name() string {
 	return "openai"
 }
 
-func (p *Provider) Type() provider.Type {
-	return provider.Cloud
+func (p *Provider) Type() router.ProviderType {
+	return router.Cloud
 }
 
 // Verify checks reachability and authentication. OpenAI has no dedicated

@@ -1,4 +1,4 @@
-package usecase
+package router
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/mltheuser/ai-router/httpx"
-	"github.com/mltheuser/ai-router/provider"
 )
 
 var (
@@ -17,7 +16,7 @@ var (
 // query is a parsed request model string "id:provider_type[@provider]".
 type query struct {
 	id           string
-	providerType provider.Type
+	providerType ProviderType
 	provider     string // empty unless the request pins a provider
 }
 
@@ -35,8 +34,8 @@ func parseModel(s string) (query, error) {
 		return query{}, fmt.Errorf("%w: model '%s' missing required tag: use '%s:cloud' or '%s:local'", errInvalidModel, s, s, s)
 	}
 	q.id = s[:idx]
-	switch tag := provider.Type(s[idx+1:]); tag {
-	case provider.Cloud, provider.Local:
+	switch tag := ProviderType(s[idx+1:]); tag {
+	case Cloud, Local:
 		q.providerType = tag
 	default:
 		return query{}, fmt.Errorf("%w: invalid tag '%s': must be 'cloud' or 'local'", errInvalidModel, tag)

@@ -1,5 +1,5 @@
 // Package server exposes the use cases over HTTP. It knows no use case in
-// particular: every route is derived from the usecase.UseCase interface.
+// particular: every route is derived from the router.UseCase interface.
 package server
 
 import (
@@ -12,7 +12,7 @@ import (
 
 	"github.com/mltheuser/ai-router/debug"
 	"github.com/mltheuser/ai-router/httpx"
-	"github.com/mltheuser/ai-router/usecase"
+	"github.com/mltheuser/ai-router/router"
 )
 
 // Config is what the server serves.
@@ -20,7 +20,7 @@ type Config struct {
 	// Addr is the host:port to listen on.
 	Addr string
 	// UseCases are served at /v1/<name>.
-	UseCases []usecase.UseCase
+	UseCases []router.UseCase
 	// Debug, if set, receives a full request/response log of every use-case
 	// request.
 	Debug io.Writer

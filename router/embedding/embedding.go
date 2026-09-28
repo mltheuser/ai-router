@@ -11,13 +11,12 @@ import (
 	"net/http"
 
 	"github.com/mltheuser/ai-router/httpx"
-	"github.com/mltheuser/ai-router/provider"
-	"github.com/mltheuser/ai-router/usecase"
+	"github.com/mltheuser/ai-router/router"
 )
 
 // Provider is implemented by every backend that serves embeddings.
 type Provider interface {
-	provider.Provider
+	router.Provider
 
 	// ListEmbeddingModels returns the embedding models available at this
 	// provider.
@@ -30,7 +29,7 @@ type Provider interface {
 
 // Model describes an embedding model at one provider.
 type Model struct {
-	provider.ModelRef
+	router.ModelRef
 
 	// Cloud metadata. Nil means unknown; a zero price means free.
 	ContextWindow int      `json:"context_window,omitempty"`
@@ -42,13 +41,13 @@ type Model struct {
 
 // UseCase serves embeddings.
 type UseCase struct {
-	*usecase.Base[Model, Provider]
+	*router.Base[Model, Provider]
 }
 
 // New builds the embedding use case over the providers that implement
 // Provider. It lists their models before it returns.
-func New(ctx context.Context, providers []provider.Provider) *UseCase {
-	return &UseCase{usecase.NewBase(ctx, usecase.Spec[Model, Provider]{
+func New(ctx context.Context, providers []router.Provider) *UseCase {
+	return &UseCase{router.NewBase(ctx, router.Spec[Model, Provider]{
 		Name:      "embedding",
 		List:      Provider.ListEmbeddingModels,
 		Prefer:    prefer,
@@ -58,10 +57,10 @@ func New(ctx context.Context, providers []provider.Provider) *UseCase {
 
 // prefer picks the cheaper model in the cloud and the smaller one locally.
 func prefer(a, b Model) bool {
-	if a.ProviderType == provider.Local {
-		return usecase.LessKnown(a.SizeBytes, b.SizeBytes)
+	if a.ProviderType == router.Local {
+		return router.LessKnown(a.SizeBytes, b.SizeBytes)
 	}
-	return usecase.LessKnown(a.CostPerMInput, b.CostPerMInput)
+	return router.LessKnown(a.CostPerMInput, b.CostPerMInput)
 }
 
 // Handle serves POST /v1/embedding.

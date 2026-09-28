@@ -12,8 +12,8 @@ linters:
   settings:
     revive:
       rules:
-        # The interfaces (provider.Provider, each use case's Provider,
-        # usecase.UseCase) are the single source of truth for what each method
+        # The interfaces (router.Provider, each use case's Provider,
+        # router.UseCase) are the single source of truth for what each method
         # does; forcing a doc comment onto every implementing method just
         # restates that contract.
         - name: exported

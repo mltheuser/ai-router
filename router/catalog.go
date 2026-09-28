@@ -1,4 +1,4 @@
-package usecase
+package router
 
 import (
 	"cmp"
@@ -10,15 +10,14 @@ import (
 	"sync"
 
 	"github.com/mltheuser/ai-router/httpx"
-	"github.com/mltheuser/ai-router/provider"
 )
 
 // ListModels writes the listed models, sorted by provider and ID.
 // Optional query parameters narrow the list: type=cloud|local, and search,
 // a case-insensitive substring of the model ID.
 func (b *Base[M, P]) ListModels(w http.ResponseWriter, r *http.Request) error {
-	providerType := provider.Type(r.URL.Query().Get("type"))
-	if providerType != "" && providerType != provider.Cloud && providerType != provider.Local {
+	providerType := ProviderType(r.URL.Query().Get("type"))
+	if providerType != "" && providerType != Cloud && providerType != Local {
 		return httpx.NewError(http.StatusBadRequest, "type must be 'cloud' or 'local'")
 	}
 	search := strings.ToLower(r.URL.Query().Get("search"))

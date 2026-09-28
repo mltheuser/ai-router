@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mltheuser/ai-router/usecase/chat"
+	"github.com/mltheuser/ai-router/router/chat"
 )
 
 // --- Ollama wire types (request) ---

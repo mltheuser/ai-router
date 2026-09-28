@@ -1,21 +1,19 @@
-package usecase
+package router
 
 import (
 	"context"
 	"testing"
-
-	"github.com/mltheuser/ai-router/provider"
 )
 
 // stubProvider is a provider serving a fixed model list.
 type stubProvider struct {
 	name   string
-	typ    provider.Type
+	typ    ProviderType
 	models []stubModel
 }
 
 func (p *stubProvider) Name() string                   { return p.name }
-func (p *stubProvider) Type() provider.Type            { return p.typ }
+func (p *stubProvider) Type() ProviderType             { return p.typ }
 func (p *stubProvider) Verify(_ context.Context) error { return nil }
 
 func (p *stubProvider) listStubModels(_ context.Context) ([]stubModel, error) {
@@ -23,12 +21,12 @@ func (p *stubProvider) listStubModels(_ context.Context) ([]stubModel, error) {
 }
 
 type stubModel struct {
-	provider.ModelRef
+	ModelRef
 	cost *float64
 }
 
 func stubBase(providers ...*stubProvider) *Base[stubModel, *stubProvider] {
-	ps := make([]provider.Provider, len(providers))
+	ps := make([]Provider, len(providers))
 	for i, p := range providers {
 		ps[i] = p
 	}
@@ -41,7 +39,7 @@ func stubBase(providers ...*stubProvider) *Base[stubModel, *stubProvider] {
 
 func withModels(p *stubProvider, costs map[string]*float64) *stubProvider {
 	for id, cost := range costs {
-		p.models = append(p.models, stubModel{ModelRef: provider.NewModelRef(p, id), cost: cost})
+		p.models = append(p.models, stubModel{ModelRef: NewModelRef(p, id), cost: cost})
 	}
 	return p
 }
@@ -50,10 +48,10 @@ func price(v float64) *float64 { return &v }
 
 func TestResolve(t *testing.T) {
 	b := stubBase(
-		withModels(&stubProvider{name: "cheap", typ: provider.Cloud}, map[string]*float64{"gpt": price(1)}),
-		withModels(&stubProvider{name: "pricey", typ: provider.Cloud}, map[string]*float64{"gpt": price(2)}),
-		withModels(&stubProvider{name: "unpriced", typ: provider.Cloud}, map[string]*float64{"gpt": nil}),
-		withModels(&stubProvider{name: "ollama", typ: provider.Local}, map[string]*float64{"llama": price(0)}),
+		withModels(&stubProvider{name: "cheap", typ: Cloud}, map[string]*float64{"gpt": price(1)}),
+		withModels(&stubProvider{name: "pricey", typ: Cloud}, map[string]*float64{"gpt": price(2)}),
+		withModels(&stubProvider{name: "unpriced", typ: Cloud}, map[string]*float64{"gpt": nil}),
+		withModels(&stubProvider{name: "ollama", typ: Local}, map[string]*float64{"llama": price(0)}),
 	)
 
 	tests := []struct {
@@ -94,7 +92,7 @@ func TestResolve(t *testing.T) {
 }
 
 func TestNewModelRefQualifiesTheID(t *testing.T) {
-	ref := provider.NewModelRef(&stubProvider{name: "ollama", typ: provider.Local}, "qwen3:8b")
+	ref := NewModelRef(&stubProvider{name: "ollama", typ: Local}, "qwen3:8b")
 	if got, want := ref.Model, "qwen3:8b:local@ollama"; got != want {
 		t.Errorf("model string %q, want %q", got, want)
 	}

@@ -3,7 +3,7 @@ package openai
 import (
 	"context"
 
-	"github.com/mltheuser/ai-router/usecase/chat"
+	"github.com/mltheuser/ai-router/router/chat"
 )
 
 // The shared API is chat-completions style (a list of role-tagged messages),

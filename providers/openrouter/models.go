@@ -6,9 +6,9 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/mltheuser/ai-router/provider"
-	"github.com/mltheuser/ai-router/usecase/chat"
-	"github.com/mltheuser/ai-router/usecase/embedding"
+	"github.com/mltheuser/ai-router/router"
+	"github.com/mltheuser/ai-router/router/chat"
+	"github.com/mltheuser/ai-router/router/embedding"
 )
 
 // modelsResponse is the response of both GET /models (chat models) and
@@ -48,7 +48,7 @@ func (p *Provider) ListChatModels(ctx context.Context) ([]chat.Model, error) {
 			continue
 		}
 		models = append(models, chat.Model{
-			ModelRef:       provider.NewModelRef(p, m.ID),
+			ModelRef:       router.NewModelRef(p, m.ID),
 			Features:       features(m),
 			ContextWindow:  m.ContextLength,
 			CostPerMInput:  parsePrice(m.Pricing.Prompt),
@@ -69,7 +69,7 @@ func (p *Provider) ListEmbeddingModels(ctx context.Context) ([]embedding.Model, 
 	models := make([]embedding.Model, 0, len(resp.Data))
 	for _, m := range resp.Data {
 		models = append(models, embedding.Model{
-			ModelRef:      provider.NewModelRef(p, m.ID),
+			ModelRef:      router.NewModelRef(p, m.ID),
 			ContextWindow: m.ContextLength,
 			CostPerMInput: parsePrice(m.Pricing.Prompt),
 		})

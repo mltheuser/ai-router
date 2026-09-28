@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/mltheuser/ai-router/provider"
+	"github.com/mltheuser/ai-router/router"
 	"github.com/mltheuser/ai-router/server"
 	"github.com/spf13/cobra"
 )
@@ -59,8 +59,8 @@ func runServe(_ *cobra.Command, _ []string) error {
 
 // verifiedProviders builds every configured provider and keeps those that
 // pass verification, sorted by name.
-func verifiedProviders(ctx context.Context) []provider.Provider {
-	var candidates []provider.Provider
+func verifiedProviders(ctx context.Context) []router.Provider {
+	var candidates []router.Provider
 	for name, build := range cloudProviders {
 		// Env var format: AI_ROUTER_<PROVIDER>_API_KEY (e.g. AI_ROUTER_OPENROUTER_API_KEY)
 		if key := os.Getenv(fmt.Sprintf("AI_ROUTER_%s_API_KEY", strings.ToUpper(name))); key != "" {
@@ -73,7 +73,7 @@ func verifiedProviders(ctx context.Context) []provider.Provider {
 
 	var (
 		mu       sync.Mutex
-		verified []provider.Provider
+		verified []router.Provider
 		wg       sync.WaitGroup
 	)
 	for _, p := range candidates {
@@ -81,7 +81,7 @@ func verifiedProviders(ctx context.Context) []provider.Provider {
 			// A local runner that is not running is normal, so it gets a short
 			// timeout and no warning.
 			timeout, logFailure := 10*time.Second, slog.Warn
-			if p.Type() == provider.Local {
+			if p.Type() == router.Local {
 				timeout, logFailure = 2*time.Second, slog.Debug
 			}
 			verifyCtx, cancel := context.WithTimeout(ctx, timeout)

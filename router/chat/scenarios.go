@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mltheuser/ai-router/usecase"
+	"github.com/mltheuser/ai-router/router"
 )
 
 // brindlemarkGuide is a large (>4096 token) original document about an
@@ -27,7 +27,7 @@ var appleImage []byte
 
 var appleImageBase64 = base64.StdEncoding.EncodeToString(appleImage)
 
-var scenarios = []usecase.Scenario[Model]{
+var scenarios = []router.Scenario[Model]{
 	{Name: "multi_turn", Run: runMultiTurn},
 	{Name: "vision", Applies: has(FeatureVision), Run: runVision},
 	{Name: "structured_output", Applies: has(FeatureStructuredOutput), Run: runStructuredOutput},
@@ -48,12 +48,12 @@ func has(features ...Feature) func(Model) bool {
 }
 
 func post(ctx context.Context, url string, req Request) (*Response, error) {
-	return usecase.PostJSON[Response](ctx, url, req)
+	return router.PostJSON[Response](ctx, url, req)
 }
 
 // runMultiTurn verifies multi-turn recall over a large document and observes
 // prompt-cache reads.
-func runMultiTurn(ctx context.Context, url, model string, res *usecase.Result) {
+func runMultiTurn(ctx context.Context, url, model string, res *router.Result) {
 	temperature := 0.7
 	messages := []Message{{Role: RoleUser, Content: TextContent(
 		brindlemarkGuide + "\n\nUsing only the travel guide above, what is the capital city of Brindlemark? Answer concisely.")}}
@@ -94,7 +94,7 @@ func runMultiTurn(ctx context.Context, url, model string, res *usecase.Result) {
 }
 
 // runVision verifies that the model can describe an image.
-func runVision(ctx context.Context, url, model string, res *usecase.Result) {
+func runVision(ctx context.Context, url, model string, res *router.Result) {
 	resp, err := post(ctx, url, Request{Model: model, Messages: []Message{{
 		Role: RoleUser,
 		Content: []ContentPart{
@@ -115,7 +115,7 @@ func runVision(ctx context.Context, url, model string, res *usecase.Result) {
 }
 
 // runStructuredOutput verifies that the response follows a JSON schema.
-func runStructuredOutput(ctx context.Context, url, model string, res *usecase.Result) {
+func runStructuredOutput(ctx context.Context, url, model string, res *router.Result) {
 	schema := map[string]interface{}{
 		"type": "object",
 		"properties": map[string]interface{}{
@@ -158,7 +158,7 @@ func runStructuredOutput(ctx context.Context, url, model string, res *usecase.Re
 }
 
 // runReasoning verifies that the model returns a reasoning trace.
-func runReasoning(ctx context.Context, url, model string, res *usecase.Result) {
+func runReasoning(ctx context.Context, url, model string, res *router.Result) {
 	// The prompt must be a NOVEL constraint puzzle, not a canonical
 	// brain-teaser: models with adaptive thinking (e.g. Anthropic) answer
 	// famous problems without emitting a reasoning trace, whereas a puzzle
@@ -199,7 +199,7 @@ var twoIntegers = map[string]interface{}{
 
 // runToolCalling verifies single and parallel tool calling: the model invokes
 // tools and incorporates their results.
-func runToolCalling(ctx context.Context, url, model string, res *usecase.Result) {
+func runToolCalling(ctx context.Context, url, model string, res *router.Result) {
 	results := map[string]string{"add": "5", "multiply": "6"}
 
 	// A parallel-capable model calls both tools at once.
@@ -263,7 +263,7 @@ func runToolCalling(ctx context.Context, url, model string, res *usecase.Result)
 
 // runToolResultVision verifies that an image inside a tool result reaches the
 // model.
-func runToolResultVision(ctx context.Context, url, model string, res *usecase.Result) {
+func runToolResultVision(ctx context.Context, url, model string, res *router.Result) {
 	tools := []ToolDefinition{{
 		Name:        "take_photo",
 		Description: "Take a photo with the camera and return it as an image",

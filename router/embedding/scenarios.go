@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/mltheuser/ai-router/usecase"
+	"github.com/mltheuser/ai-router/router"
 )
 
-var scenarios = []usecase.Scenario[Model]{
+var scenarios = []router.Scenario[Model]{
 	{Name: "batch_similarity", Run: runBatchSimilarity},
 }
 
 // runBatchSimilarity verifies batch embedding, dimension control, and that
 // similar texts embed closer together than different ones.
-func runBatchSimilarity(ctx context.Context, url, model string, res *usecase.Result) {
+func runBatchSimilarity(ctx context.Context, url, model string, res *router.Result) {
 	inputs := []string{
 		"The quick brown fox jumps over the lazy dog.",
 		"The quick brown fox jumps over the lazy cat.", // one word apart
@@ -22,7 +22,7 @@ func runBatchSimilarity(ctx context.Context, url, model string, res *usecase.Res
 	}
 	dimensions := 256
 
-	resp, err := usecase.PostJSON[Response](ctx, url, Request{Model: model, Input: inputs, Dimensions: &dimensions})
+	resp, err := router.PostJSON[Response](ctx, url, Request{Model: model, Input: inputs, Dimensions: &dimensions})
 	if err != nil {
 		res.Fail("batch embedding", err.Error())
 		return

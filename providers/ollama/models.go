@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/mltheuser/ai-router/provider"
-	"github.com/mltheuser/ai-router/usecase/chat"
-	"github.com/mltheuser/ai-router/usecase/embedding"
+	"github.com/mltheuser/ai-router/router"
+	"github.com/mltheuser/ai-router/router/chat"
+	"github.com/mltheuser/ai-router/router/embedding"
 )
 
 // tagsResponse is the response from GET /api/tags.
@@ -62,7 +62,7 @@ func (p *Provider) ListChatModels(ctx context.Context) ([]chat.Model, error) {
 			}
 		}
 		models = append(models, chat.Model{
-			ModelRef:       provider.NewModelRef(p, m.name),
+			ModelRef:       router.NewModelRef(p, m.name),
 			Features:       features,
 			SizeBytes:      &m.size,
 			CostPerMInput:  &free,
@@ -84,7 +84,7 @@ func (p *Provider) ListEmbeddingModels(ctx context.Context) ([]embedding.Model, 
 		if slices.Contains(m.capabilities, "embedding") {
 			free := 0.0
 			models = append(models, embedding.Model{
-				ModelRef:      provider.NewModelRef(p, m.name),
+				ModelRef:      router.NewModelRef(p, m.name),
 				SizeBytes:     &m.size,
 				CostPerMInput: &free,
 			})

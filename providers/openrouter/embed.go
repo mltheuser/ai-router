@@ -3,7 +3,7 @@ package openrouter
 import (
 	"context"
 
-	"github.com/mltheuser/ai-router/usecase/embedding"
+	"github.com/mltheuser/ai-router/router/embedding"
 )
 
 // --- Embedding wire types ---

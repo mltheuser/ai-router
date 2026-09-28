@@ -21,7 +21,7 @@ the owner has explicitly approved it.
 -   **Command**: `make test`
 -   **Scope**: Isolated units of non-trivial logic with no external dependencies. No mocking. New unit tests
     require owner sign-off before they are committed.
--   **Location**: `*_test.go` files next to the code (e.g. `usecase/usecase_test.go`).
+-   **Location**: `*_test.go` files next to the code (e.g. `router/router_test.go`).
 
 ## End-to-End Tests (`/v1/test`)
 
@@ -38,4 +38,4 @@ The primary way to verify providers is the centralized, scenario-based E2E runne
 
 **What happens**: the test works on exactly what the server serves. A provider is only loaded if it passed `Verify()` at startup; testing one that isn't loaded returns 404. For every use case the provider serves, the report first checks that the provider serves at least one model for it (the list fetched at startup), then runs the use case's scenarios on those models through the use case's own endpoint. The report has one section per use case. Restart the server to test a provider change.
 
-**Scenarios**: defined in each use case's package (`usecase/<name>/scenarios.go`). Each scenario may declare which models it applies to (e.g. chat models with the `tools` feature) and is skipped, not failed, when no model qualifies.
+**Scenarios**: defined in each use case's package (`router/<name>/scenarios.go`). Each scenario may declare which models it applies to (e.g. chat models with the `tools` feature) and is skipped, not failed, when no model qualifies.

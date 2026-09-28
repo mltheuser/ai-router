@@ -5,9 +5,9 @@ import (
 	_ "embed"
 	"fmt"
 
-	"github.com/mltheuser/ai-router/provider"
-	"github.com/mltheuser/ai-router/usecase/chat"
-	"github.com/mltheuser/ai-router/usecase/embedding"
+	"github.com/mltheuser/ai-router/router"
+	"github.com/mltheuser/ai-router/router/chat"
+	"github.com/mltheuser/ai-router/router/embedding"
 	"gopkg.in/yaml.v3"
 )
 
@@ -62,7 +62,7 @@ func (p *Provider) ListChatModels(ctx context.Context) ([]chat.Model, error) {
 	for _, id := range ids {
 		if meta, ok := knownModels.Chat[id]; ok {
 			models = append(models, chat.Model{
-				ModelRef:       provider.NewModelRef(p, id),
+				ModelRef:       router.NewModelRef(p, id),
 				Features:       meta.Features,
 				ContextWindow:  meta.ContextWindow,
 				CostPerMInput:  meta.CostPerMInput,
@@ -84,7 +84,7 @@ func (p *Provider) ListEmbeddingModels(ctx context.Context) ([]embedding.Model, 
 	for _, id := range ids {
 		if meta, ok := knownModels.Embedding[id]; ok {
 			models = append(models, embedding.Model{
-				ModelRef:      provider.NewModelRef(p, id),
+				ModelRef:      router.NewModelRef(p, id),
 				ContextWindow: meta.ContextWindow,
 				CostPerMInput: meta.CostPerMInput,
 			})

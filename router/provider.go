@@ -1,8 +1,4 @@
-// Package provider defines what every backend is, regardless of what it can
-// do. What a provider can do is expressed by the use-case interfaces it also
-// implements (chat.Provider, embedding.Provider, ...): a use case serves every
-// provider that implements its interface and ignores the rest.
-package provider
+package router
 
 import (
 	"context"
@@ -15,7 +11,7 @@ type Provider interface {
 	Name() string
 
 	// Type returns whether this is a cloud or local provider.
-	Type() Type
+	Type() ProviderType
 
 	// Verify checks that the provider is reachable and properly authenticated.
 	// For cloud providers this validates the API key; for local providers this
@@ -23,13 +19,13 @@ type Provider interface {
 	Verify(ctx context.Context) error
 }
 
-// Type distinguishes cloud from local providers.
-type Type string
+// ProviderType distinguishes cloud from local providers.
+type ProviderType string
 
 // Provider types.
 const (
-	Cloud Type = "cloud"
-	Local Type = "local"
+	Cloud ProviderType = "cloud"
+	Local ProviderType = "local"
 )
 
 // ModelRef is the routing identity of one model at one provider. Every use
@@ -39,9 +35,9 @@ type ModelRef struct {
 	ID string `json:"id"`
 	// Model is the fully-qualified string ("id:provider_type@provider") to
 	// pass verbatim as `model` in requests to address this entry.
-	Model        string `json:"model"`
-	Provider     string `json:"provider"`
-	ProviderType Type   `json:"provider_type"`
+	Model        string       `json:"model"`
+	Provider     string       `json:"provider"`
+	ProviderType ProviderType `json:"provider_type"`
 }
 
 // NewModelRef builds the ref of the model id served by p. Providers build the

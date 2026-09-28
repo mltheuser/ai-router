@@ -7,8 +7,8 @@ import (
 	"net/url"
 
 	"github.com/mltheuser/ai-router/httpx"
-	"github.com/mltheuser/ai-router/provider"
-	"github.com/mltheuser/ai-router/usecase/chat"
+	"github.com/mltheuser/ai-router/router"
+	"github.com/mltheuser/ai-router/router/chat"
 )
 
 // Provider serves chat through the Anthropic API.
@@ -43,8 +43,8 @@ func (p *Provider) Name() string {
 	return "anthropic"
 }
 
-func (p *Provider) Type() provider.Type {
-	return provider.Cloud
+func (p *Provider) Type() router.ProviderType {
+	return router.Cloud
 }
 
 // Verify checks reachability and authentication. Anthropic has no dedicated

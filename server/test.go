@@ -5,21 +5,21 @@ import (
 	"net/http"
 
 	"github.com/mltheuser/ai-router/httpx"
-	"github.com/mltheuser/ai-router/usecase"
+	"github.com/mltheuser/ai-router/router"
 )
 
 // testReport is the response of POST /v1/test: a report per use case the
 // provider serves.
 type testReport struct {
-	Provider string                    `json:"provider"`
-	UseCases map[string]usecase.Report `json:"use_cases"`
+	Provider string                   `json:"provider"`
+	UseCases map[string]router.Report `json:"use_cases"`
 }
 
 // handleTest serves POST /v1/test: it verifies one provider end to end by
 // running every use case's scenarios against it through this server, on the
 // models the server serves.
 func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) error {
-	var req usecase.TestRequest
+	var req router.TestRequest
 	if err := httpx.DecodeJSON(r, &req); err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) error {
 	}
 	req.URL = "http://" + s.httpServer.Addr
 
-	report := testReport{Provider: req.Provider, UseCases: map[string]usecase.Report{}}
+	report := testReport{Provider: req.Provider, UseCases: map[string]router.Report{}}
 	knownUseCase := req.UseCase == ""
 	for _, uc := range s.cfg.UseCases {
 		if req.UseCase != "" && req.UseCase != uc.Name() {
