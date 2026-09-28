@@ -74,9 +74,9 @@ type UseCase struct {
 }
 
 // New builds the embedding use case over the providers that implement
-// Provider.
-func New(providers []provider.Provider) *UseCase {
-	return &UseCase{usecase.NewBase(usecase.Spec[Model, Provider]{
+// Provider. It lists their models before it returns.
+func New(ctx context.Context, providers []provider.Provider) *UseCase {
+	return &UseCase{usecase.NewBase(ctx, usecase.Spec[Model, Provider]{
 		Name:      "embedding",
 		List:      Provider.ListEmbeddingModels,
 		Prefer:    prefer,

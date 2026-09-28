@@ -20,13 +20,14 @@ Every use case is served the same way:
 |---|---|
 | `POST /v1/<use case>` | The request, e.g. `POST /v1/chat`. |
 | `GET /v1/<use case>/models` | The models the request accepts, in the use case's own shape. Filters: `?type=cloud\|local`, `?search=<id substring>`. |
-| `POST /v1/<use case>/models/refresh` | Re-list the models now instead of waiting for the next refresh. |
 
 Plus `POST /v1/test` (see [TESTING.md](TESTING.md)) and `GET /health`.
 
+Model lists are fetched once, at startup, and never refreshed: restart the server to pick up new models (e.g. a freshly pulled Ollama model).
+
 ## Key Directories
 
--   **`usecase/`**: The machinery every use case shares, written once and generic over the use case's model and provider types: model catalog and refresh, model-string resolution, the model listing endpoint, and the scenario runner.
+-   **`usecase/`**: The machinery every use case shares, written once and generic over the use case's model and provider types: model catalog, model-string resolution, the model listing endpoint, and the scenario runner.
 -   **`usecase/<name>/`**: One package per use case (e.g. `usecase/chat/`), holding its entire contract and its scenarios.
 -   **`provider/`**: What every provider is (`Provider`: name, type, `Verify`) and the routing identity every listed model carries (`ModelRef`).
 -   **`providers/`**: Self-contained provider implementations, one per subdirectory (e.g. `ollama/`, `openrouter/`).

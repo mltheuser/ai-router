@@ -40,10 +40,7 @@ func runServe(_ *cobra.Command, _ []string) error {
 	defer cancel()
 
 	providers := verifiedProviders(ctx)
-	useCases := useCases(providers)
-	for _, uc := range useCases {
-		uc.Start(ctx)
-	}
+	useCases := useCases(ctx, providers)
 
 	cfg := server.Config{Addr: addr, Providers: providers, UseCases: useCases}
 	if debugMode {

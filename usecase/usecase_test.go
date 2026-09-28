@@ -32,13 +32,11 @@ func stubBase(providers ...*stubProvider) *Base[stubModel, *stubProvider] {
 	for i, p := range providers {
 		ps[i] = p
 	}
-	b := NewBase(Spec[stubModel, *stubProvider]{
+	return NewBase(context.Background(), Spec[stubModel, *stubProvider]{
 		Name:   "stub",
 		List:   (*stubProvider).listStubModels,
 		Prefer: func(a, b stubModel) bool { return LessKnown(a.cost, b.cost) },
 	}, ps)
-	b.Refresh(context.Background())
-	return b
 }
 
 func withModels(p *stubProvider, costs map[string]*float64) *stubProvider {

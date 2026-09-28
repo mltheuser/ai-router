@@ -8,7 +8,6 @@ import (
 	"slices"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/mltheuser/ai-router/api"
 	"github.com/mltheuser/ai-router/provider"
@@ -25,7 +24,6 @@ func (b *Base[M, P]) ListModels(w http.ResponseWriter, r *http.Request) error {
 	search := strings.ToLower(r.URL.Query().Get("search"))
 
 	models := []M{} // encodes as [], never null
-	b.mu.RLock()
 	for _, name := range b.names {
 		for _, m := range b.models[name] {
 			ref := m.Ref()
@@ -38,7 +36,6 @@ func (b *Base[M, P]) ListModels(w http.ResponseWriter, r *http.Request) error {
 			models = append(models, m)
 		}
 	}
-	b.mu.RUnlock()
 	slices.SortFunc(models, func(a, b M) int {
 		return cmp.Or(cmp.Compare(a.Ref().Provider, b.Ref().Provider), cmp.Compare(a.Ref().ID, b.Ref().ID))
 	})
@@ -49,64 +46,27 @@ func (b *Base[M, P]) ListModels(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (b *Base[M, P]) Start(ctx context.Context) {
-	b.Refresh(ctx)
-	go func() {
-		ticker := time.NewTicker(localTTL)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				b.refreshStale(ctx)
-			}
-		}
-	}()
-}
-
-func (b *Base[M, P]) Refresh(ctx context.Context) {
-	b.refreshEach(ctx, b.names)
-}
-
-// refreshStale re-lists the providers whose list is older than their TTL.
-func (b *Base[M, P]) refreshStale(ctx context.Context) {
-	var stale []string
-	b.mu.RLock()
-	for _, name := range b.names {
-		ttl := cloudTTL
-		if b.providers[name].Type() == provider.Local {
-			ttl = localTTL
-		}
-		if time.Since(b.listedAt[name]) >= ttl {
-			stale = append(stale, name)
-		}
-	}
-	b.mu.RUnlock()
-	b.refreshEach(ctx, stale)
-}
-
-// refreshEach re-lists the named providers in parallel and waits for all.
-func (b *Base[M, P]) refreshEach(ctx context.Context, names []string) {
+// listAll lists the models of every provider in parallel. A provider whose
+// listing fails serves no models until the server restarts.
+func (b *Base[M, P]) listAll(ctx context.Context) map[string][]M {
+	lists := make([][]M, len(b.names))
 	var wg sync.WaitGroup
-	for _, name := range names {
-		wg.Go(func() { b.refresh(ctx, name) })
+	for i, name := range b.names {
+		wg.Go(func() {
+			models, err := b.spec.List(b.providers[name], ctx)
+			if err != nil {
+				slog.Warn("Listing models failed", "use_case", b.spec.Name, "provider", name, "error", err)
+				return
+			}
+			slog.Info("Listed models", "use_case", b.spec.Name, "provider", name, "models", len(models))
+			lists[i] = models
+		})
 	}
 	wg.Wait()
-}
 
-// refresh replaces one provider's model list. On failure the previous list
-// stays in place and is retried on the next tick.
-func (b *Base[M, P]) refresh(ctx context.Context, name string) {
-	models, err := b.spec.List(b.providers[name], ctx)
-	if err != nil {
-		slog.Warn("Listing models failed", "use_case", b.spec.Name, "provider", name, "error", err)
-		return
+	models := make(map[string][]M, len(b.names))
+	for i, name := range b.names {
+		models[name] = lists[i]
 	}
-
-	b.mu.Lock()
-	b.models[name] = models
-	b.listedAt[name] = time.Now()
-	b.mu.Unlock()
-	slog.Debug("Listed models", "use_case", b.spec.Name, "provider", name, "models", len(models))
+	return models
 }

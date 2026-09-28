@@ -48,11 +48,6 @@ func New(cfg Config) *Server {
 		prefix := "/v1/" + uc.Name()
 		mux.Handle("POST "+prefix, withDebug(handle(uc.Handle)))
 		mux.Handle("GET "+prefix+"/models", handle(uc.ListModels))
-		mux.Handle("POST "+prefix+"/models/refresh", handle(func(w http.ResponseWriter, r *http.Request) error {
-			uc.Refresh(r.Context())
-			api.WriteJSON(w, map[string]string{"status": "refreshed"})
-			return nil
-		}))
 	}
 	mux.Handle("POST /v1/test", handle(s.handleTest))
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {

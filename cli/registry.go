@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"context"
+
 	"github.com/mltheuser/ai-router/provider"
 	"github.com/mltheuser/ai-router/providers/anthropic"
 	"github.com/mltheuser/ai-router/providers/ollama"
@@ -30,10 +32,10 @@ var localProviders = []func() provider.Provider{
 }
 
 // useCases builds every use case over the verified providers. Each serves the
-// providers that implement its interface.
-func useCases(providers []provider.Provider) []usecase.UseCase {
+// providers that implement its interface and lists their models once.
+func useCases(ctx context.Context, providers []provider.Provider) []usecase.UseCase {
 	return []usecase.UseCase{
-		chat.New(providers),
-		embedding.New(providers),
+		chat.New(ctx, providers),
+		embedding.New(ctx, providers),
 	}
 }

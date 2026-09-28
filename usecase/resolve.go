@@ -62,8 +62,6 @@ func (b *Base[M, P]) Resolve(model string) (M, P, error) {
 		return best, bestP, err
 	}
 
-	b.mu.RLock()
-	defer b.mu.RUnlock()
 	for _, name := range b.names {
 		if q.provider != "" && q.provider != name {
 			continue
