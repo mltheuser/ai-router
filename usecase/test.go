@@ -86,25 +86,25 @@ func (r *Result) skip(reason string) {
 }
 
 // Report is the outcome of testing one provider's implementation of one use
-// case: its model listing, then every scenario.
+// case: whether it serves any models, then every scenario.
 type Report struct {
-	ListModels Check    `json:"list_models"`
-	Scenarios  []Result `json:"scenarios"`
+	Models    Check    `json:"models"`
+	Scenarios []Result `json:"scenarios"`
 }
 
 func (b *Base[M, P]) Test(ctx context.Context, req TestRequest) (Report, bool) {
-	p, ok := b.providers[req.Provider]
-	if !ok {
+	if _, ok := b.providers[req.Provider]; !ok {
 		return Report{}, false
 	}
 
-	var report Report
-	models, err := b.spec.List(p, ctx)
-	if err != nil {
-		report.ListModels = Check{Status: Fail, Error: err.Error()}
+	// Test exactly what the router serves: the models listed at startup.
+	report := Report{Scenarios: []Result{}}
+	models := b.models[req.Provider]
+	if len(models) == 0 {
+		report.Models = Check{Status: Fail, Error: "no models served: the listing failed at startup (see the log) or the provider offers none"}
 		return report, true
 	}
-	report.ListModels = Check{Status: Pass, Description: fmt.Sprintf("%d models", len(models))}
+	report.Models = Check{Status: Pass, Description: fmt.Sprintf("%d models served", len(models))}
 
 	for _, sc := range b.spec.Scenarios {
 		res := Result{Name: sc.Name}
@@ -141,7 +141,7 @@ func pickModel[M Model](sc Scenario[M], models []M, pinned string, prefer func(a
 			}
 			return m, ""
 		}
-		return best, fmt.Sprintf("model '%s' not listed by the provider", pinned)
+		return best, fmt.Sprintf("model '%s' is not among the provider's served models", pinned)
 	}
 
 	found := false
@@ -151,7 +151,7 @@ func pickModel[M Model](sc Scenario[M], models []M, pinned string, prefer func(a
 		}
 	}
 	if !found {
-		return best, "no listed model supports this scenario"
+		return best, "no served model supports this scenario"
 	}
 	return best, ""
 }

@@ -12,7 +12,6 @@ import (
 
 	"github.com/mltheuser/ai-router/api"
 	"github.com/mltheuser/ai-router/debug"
-	"github.com/mltheuser/ai-router/provider"
 	"github.com/mltheuser/ai-router/usecase"
 )
 
@@ -20,9 +19,8 @@ import (
 type Config struct {
 	// Addr is the host:port to listen on.
 	Addr string
-	// Providers are the verified providers; UseCases serve them.
-	Providers []provider.Provider
-	UseCases  []usecase.UseCase
+	// UseCases are served at /v1/<name>.
+	UseCases []usecase.UseCase
 	// Debug, if set, receives a full request/response log of every use-case
 	// request.
 	Debug io.Writer

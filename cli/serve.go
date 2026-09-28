@@ -39,10 +39,9 @@ func runServe(_ *cobra.Command, _ []string) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	providers := verifiedProviders(ctx)
-	useCases := useCases(ctx, providers)
+	useCases := useCases(ctx, verifiedProviders(ctx))
 
-	cfg := server.Config{Addr: addr, Providers: providers, UseCases: useCases}
+	cfg := server.Config{Addr: addr, UseCases: useCases}
 	if debugMode {
 		slog.Info("Debug mode enabled — full request/response lifecycle will be logged")
 		cfg.Debug = os.Stdout

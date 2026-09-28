@@ -36,9 +36,9 @@ type UseCase interface {
 	// ListModels writes the models that Handle accepts.
 	ListModels(w http.ResponseWriter, r *http.Request) error
 
-	// Test verifies one provider's implementation of the use case; see
-	// TestRequest. It reports false if the provider does not serve this use
-	// case.
+	// Test verifies one provider's implementation of the use case against
+	// the models it serves; see TestRequest. It reports false if the provider
+	// does not serve this use case.
 	Test(ctx context.Context, req TestRequest) (Report, bool)
 }
 
