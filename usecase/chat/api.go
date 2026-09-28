@@ -1,5 +1,8 @@
 package chat
 
+// This file holds the wire types of the chat API: what clients send to
+// POST /v1/chat and receive back. The SDKs mirror these types.
+
 // Role identifies the author of a chat message.
 type Role string
 

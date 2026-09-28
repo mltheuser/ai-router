@@ -47,10 +47,9 @@ Dependencies point one way: `providers/*` → `usecase/<name>` → `usecase` →
 3.  Register the constructor in `cli/registry.go`.
 
 ### Adding a Use Case
-1.  Create `usecase/<name>/` with: a `Model` type embedding `provider.ModelRef`, the `Request`/`Response` types, a `Provider` interface (embedding `provider.Provider`, plus a listing method and a request method with use-case-specific names, since one provider type may implement several use cases), and a `UseCase` type that embeds `*usecase.Base` built from a `usecase.Spec` and adds `Handle`.
-2.  Write its scenarios in the same package (`Spec.Scenarios`).
-3.  Add it to `useCases` in `cli/registry.go`.
-4.  Add the use case to every SDK (see [SDKs/AGENTS.md](SDKs/AGENTS.md)).
+1.  Create `usecase/<name>/` with three files. `api.go`: the wire types clients send and receive (`Request`, `Response`, ...). `scenarios.go`: the E2E scenarios (`Spec.Scenarios`). `<name>.go`: everything else, namely a `Model` type embedding `provider.ModelRef`, a `Provider` interface (embedding `provider.Provider`, plus a listing method and a request method with use-case-specific names, since one provider type may implement several use cases), and a `UseCase` type that embeds `*usecase.Base` built from a `usecase.Spec` and adds `Handle`.
+2.  Add it to `useCases` in `cli/registry.go`.
+3.  Add the use case to every SDK (see [SDKs/AGENTS.md](SDKs/AGENTS.md)).
 
 `usecase/embedding/` is the smallest complete example.
 

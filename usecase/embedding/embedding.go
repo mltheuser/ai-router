@@ -40,34 +40,6 @@ type Model struct {
 	SizeBytes *int64 `json:"size_bytes,omitempty"`
 }
 
-// Request is the body of POST /v1/embedding.
-type Request struct {
-	Model string   `json:"model"`
-	Input []string `json:"input"`
-	// Dimensions, if set, asks for vectors of this size. Not every model
-	// supports it.
-	Dimensions *int `json:"dimensions,omitempty"`
-}
-
-// Response is the body of a successful POST /v1/embedding response.
-type Response struct {
-	Model string      `json:"model"`
-	Data  []Embedding `json:"data"`
-	Usage Usage       `json:"usage"`
-}
-
-// Embedding is the vector of the input text at Index.
-type Embedding struct {
-	Index     int       `json:"index"`
-	Embedding []float64 `json:"embedding"`
-}
-
-// Usage reports the tokens a request consumed.
-type Usage struct {
-	PromptTokens int `json:"prompt_tokens"`
-	TotalTokens  int `json:"total_tokens"`
-}
-
 // UseCase serves embeddings.
 type UseCase struct {
 	*usecase.Base[Model, Provider]
