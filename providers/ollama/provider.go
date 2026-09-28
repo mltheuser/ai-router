@@ -3,8 +3,8 @@ package ollama
 
 import (
 	"context"
-	"net/http"
 
+	"github.com/mltheuser/ai-router/httpx"
 	"github.com/mltheuser/ai-router/provider"
 	"github.com/mltheuser/ai-router/usecase/chat"
 	"github.com/mltheuser/ai-router/usecase/embedding"
@@ -12,7 +12,7 @@ import (
 
 // Provider serves chat and embedding through a local Ollama runner.
 type Provider struct {
-	client *client
+	client *httpx.Client
 }
 
 // The use cases this provider serves. A use case finds its providers by
@@ -26,7 +26,7 @@ var (
 // New creates a new Ollama provider pointing at the default local endpoint.
 func New() *Provider {
 	return &Provider{
-		client: newClient("http://localhost:11434"),
+		client: httpx.NewClient("http://localhost:11434"),
 	}
 }
 
@@ -38,17 +38,7 @@ func (p *Provider) Type() provider.Type {
 	return provider.Local
 }
 
-// Verify checks that Ollama is running and responding.
+// Verify checks that Ollama is running by requesting its version.
 func (p *Provider) Verify(ctx context.Context) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, p.client.BaseURL+"/", nil)
-	if err != nil {
-		return err
-	}
-
-	resp, err := p.client.HTTPClient.Do(req)
-	if err != nil {
-		return err
-	}
-	_ = resp.Body.Close()
-	return nil
+	return p.client.Get(ctx, "/api/version", nil)
 }

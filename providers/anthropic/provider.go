@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/mltheuser/ai-router/httpx"
 	"github.com/mltheuser/ai-router/provider"
 	"github.com/mltheuser/ai-router/usecase/chat"
 )
 
 // Provider serves chat through the Anthropic API.
 type Provider struct {
-	client *client
+	client *httpx.Client
 }
 
 // The use cases this provider serves. A use case finds its providers by
@@ -32,7 +33,7 @@ func New(apiKey string) *Provider {
 // modelMaxTokens returns the model's maximum output-token count.
 func (p *Provider) modelMaxTokens(ctx context.Context, model string) int {
 	var m anthropicModel
-	if err := p.client.get(ctx, "/models/"+url.PathEscape(model), &m); err != nil || m.MaxTokens <= 0 {
+	if err := p.client.Get(ctx, "/models/"+url.PathEscape(model), &m); err != nil || m.MaxTokens <= 0 {
 		return fallbackMaxTokens
 	}
 	return m.MaxTokens
@@ -51,7 +52,7 @@ func (p *Provider) Type() provider.Type {
 // require the API key.
 func (p *Provider) Verify(ctx context.Context) error {
 	var resp modelsResponse
-	if err := p.client.get(ctx, "/models?limit=1", &resp); err != nil {
+	if err := p.client.Get(ctx, "/models?limit=1", &resp); err != nil {
 		return fmt.Errorf("anthropic verification failed: %w", err)
 	}
 	return nil

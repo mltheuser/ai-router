@@ -96,7 +96,7 @@ func (p *Provider) ListEmbeddingModels(ctx context.Context) ([]embedding.Model, 
 // listModelIDs returns the IDs of all models the API key can use.
 func (p *Provider) listModelIDs(ctx context.Context) ([]string, error) {
 	var resp modelsResponse
-	if err := p.client.get(ctx, "/models", &resp); err != nil {
+	if err := p.client.Get(ctx, "/models", &resp); err != nil {
 		return nil, fmt.Errorf("listing openai models: %w", err)
 	}
 	ids := make([]string, len(resp.Data))

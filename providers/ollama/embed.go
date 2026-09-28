@@ -39,7 +39,7 @@ func (p *Provider) Embed(ctx context.Context, req *embedding.Request) (*embeddin
 	}
 
 	var wireResp embedResponse
-	if err := p.client.post(ctx, "/v1/embeddings", wireReq, &wireResp); err != nil {
+	if err := p.client.Post(ctx, "/v1/embeddings", wireReq, &wireResp); err != nil {
 		return nil, err
 	}
 

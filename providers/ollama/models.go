@@ -97,14 +97,14 @@ func (p *Provider) ListEmbeddingModels(ctx context.Context) ([]embedding.Model, 
 // only /api/show reports, one model at a time.
 func (p *Provider) listInstalled(ctx context.Context) ([]installedModel, error) {
 	var tags tagsResponse
-	if err := p.client.get(ctx, "/api/tags", &tags); err != nil {
+	if err := p.client.Get(ctx, "/api/tags", &tags); err != nil {
 		return nil, fmt.Errorf("listing ollama models: %w", err)
 	}
 
 	models := make([]installedModel, 0, len(tags.Models))
 	for _, m := range tags.Models {
 		var show showResponse
-		if err := p.client.post(ctx, "/api/show", showRequest{Name: m.Name}, &show); err != nil {
+		if err := p.client.Post(ctx, "/api/show", showRequest{Name: m.Name}, &show); err != nil {
 			// Without its capabilities, assume a plain completion model.
 			show.Capabilities = []string{"completion"}
 		}

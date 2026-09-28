@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/mltheuser/ai-router/httpx"
 	"github.com/mltheuser/ai-router/provider"
 	"github.com/mltheuser/ai-router/usecase/chat"
 	"github.com/mltheuser/ai-router/usecase/embedding"
@@ -12,7 +13,7 @@ import (
 
 // Provider serves chat and embedding through the OpenAI API.
 type Provider struct {
-	client *client
+	client *httpx.Client
 }
 
 // The use cases this provider serves. A use case finds its providers by
@@ -42,7 +43,7 @@ func (p *Provider) Type() provider.Type {
 // key-info endpoint, so we list models — which requires a valid API key.
 func (p *Provider) Verify(ctx context.Context) error {
 	var resp modelsResponse
-	if err := p.client.get(ctx, "/models", &resp); err != nil {
+	if err := p.client.Get(ctx, "/models", &resp); err != nil {
 		return fmt.Errorf("openai verification failed: %w", err)
 	}
 	return nil

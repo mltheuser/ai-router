@@ -131,11 +131,11 @@ func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response,
 
 	var ollamaResp ollamaChatResponse
 
-	err := p.client.post(ctx, "/api/chat", ollamaReq, &ollamaResp)
+	err := p.client.Post(ctx, "/api/chat", ollamaReq, &ollamaResp)
 	if err != nil {
 		if isUnsupportedThinkValueError(err) && ollamaReq.Think != false {
 			ollamaReq.Think = true
-			if retryErr := p.client.post(ctx, "/api/chat", ollamaReq, &ollamaResp); retryErr != nil {
+			if retryErr := p.client.Post(ctx, "/api/chat", ollamaReq, &ollamaResp); retryErr != nil {
 				return nil, retryErr
 			}
 		} else {

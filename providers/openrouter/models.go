@@ -38,7 +38,7 @@ type openRouterPricing struct {
 // ListChatModels returns the models that produce text.
 func (p *Provider) ListChatModels(ctx context.Context) ([]chat.Model, error) {
 	var resp modelsResponse
-	if err := p.client.get(ctx, "/models", &resp); err != nil {
+	if err := p.client.Get(ctx, "/models", &resp); err != nil {
 		return nil, fmt.Errorf("listing openrouter chat models: %w", err)
 	}
 
@@ -62,7 +62,7 @@ func (p *Provider) ListChatModels(ctx context.Context) ([]chat.Model, error) {
 // at an endpoint of their own.
 func (p *Provider) ListEmbeddingModels(ctx context.Context) ([]embedding.Model, error) {
 	var resp modelsResponse
-	if err := p.client.get(ctx, "/embeddings/models", &resp); err != nil {
+	if err := p.client.Get(ctx, "/embeddings/models", &resp); err != nil {
 		return nil, fmt.Errorf("listing openrouter embedding models: %w", err)
 	}
 

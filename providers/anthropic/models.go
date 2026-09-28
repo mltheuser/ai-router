@@ -53,7 +53,7 @@ func (p *Provider) ListChatModels(ctx context.Context) ([]chat.Model, error) {
 		}
 
 		var resp modelsResponse
-		if err := p.client.get(ctx, "/models?"+query.Encode(), &resp); err != nil {
+		if err := p.client.Get(ctx, "/models?"+query.Encode(), &resp); err != nil {
 			return nil, fmt.Errorf("listing anthropic models: %w", err)
 		}
 

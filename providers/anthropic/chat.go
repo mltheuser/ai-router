@@ -142,7 +142,7 @@ func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response,
 	aReq := toAnthropicRequest(req, maxTokens)
 
 	var aResp anthropicChatResponse
-	if err := p.client.post(ctx, "/messages", aReq, &aResp); err != nil {
+	if err := p.client.Post(ctx, "/messages", aReq, &aResp); err != nil {
 		return nil, err
 	}
 

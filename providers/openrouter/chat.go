@@ -134,7 +134,7 @@ func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response,
 	orReq := toOpenRouterRequest(req)
 
 	var orResp openRouterChatResponse
-	if err := p.client.post(ctx, "/chat/completions", orReq, &orResp); err != nil {
+	if err := p.client.Post(ctx, "/chat/completions", orReq, &orResp); err != nil {
 		return nil, err
 	}
 

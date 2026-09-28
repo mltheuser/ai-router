@@ -22,7 +22,7 @@ func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response,
 	oReq := toResponsesRequest(req)
 
 	var oResp responsesResponse
-	if err := p.client.post(ctx, "/responses", oReq, &oResp); err != nil {
+	if err := p.client.Post(ctx, "/responses", oReq, &oResp); err != nil {
 		return nil, err
 	}
 

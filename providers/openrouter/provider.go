@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/mltheuser/ai-router/httpx"
 	"github.com/mltheuser/ai-router/provider"
 	"github.com/mltheuser/ai-router/usecase/chat"
 	"github.com/mltheuser/ai-router/usecase/embedding"
@@ -12,7 +13,7 @@ import (
 
 // Provider serves chat and embedding through the OpenRouter API.
 type Provider struct {
-	client *client
+	client *httpx.Client
 }
 
 // The use cases this provider serves. A use case finds its providers by
@@ -54,7 +55,7 @@ type keyData struct {
 // Verify validates the API key by calling the dedicated key info endpoint.
 func (p *Provider) Verify(ctx context.Context) error {
 	var resp keyResponse
-	if err := p.client.get(ctx, "/key", &resp); err != nil {
+	if err := p.client.Get(ctx, "/key", &resp); err != nil {
 		return fmt.Errorf("openrouter verification failed: %w", err)
 	}
 	return nil

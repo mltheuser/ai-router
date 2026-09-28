@@ -7,7 +7,7 @@
 ### Core Philosophy
 1.  **Use cases are the unit of contract.** Each use case (`chat`, `embedding`, ...) owns its API end to end: request and response types, a model type with its own metadata, the provider interface a backend implements to serve it, and its E2E scenarios. Use cases share no types with each other.
 2.  **Providers are the unit of connection.** A provider (API key, base URL, `Verify`) is created once and serves every use case whose interface it implements. Serving a use case is opting in by implementing its interface; nothing else needs to know. There are no "not supported" stubs.
-3.  **Provider independence.** Each provider lives in isolation in `providers/`, sharing no code with other providers beyond the small helpers in `providers/httpclient`.
+3.  **Provider independence.** Each provider lives in isolation in `providers/`, sharing no code with other providers; they call their APIs through the shared `httpx.Client`.
 4.  **Dynamic routing.** Requests name a model as `model_id:tag[@provider]`. Clients never compose this string themselves: every entry of a use case's model listing carries it in the `model` field, passed verbatim in requests.
     - `:cloud` / `:local` - the provider type. Among providers of that type listing the model, the use case's preference picks one (chat and embedding: cheapest in the cloud, smallest locally).
     - `@provider` - optional suffix to force a specific provider (e.g. `@openrouter`).
@@ -32,7 +32,7 @@ Model lists are fetched once, at startup, and never refreshed: restart the serve
 -   **`provider/`**: What every provider is (`Provider`: name, type, `Verify`) and the routing identity every listed model carries (`ModelRef`).
 -   **`providers/`**: Self-contained provider implementations, one per subdirectory (e.g. `ollama/`, `openrouter/`).
 -   **`server/`**: The HTTP server. It knows no use case in particular; every route is derived from the `usecase.UseCase` interface.
--   **`httpx/`**: HTTP plumbing shared across the router: the error type every handler responds with, the mapping of upstream API failures onto it, and JSON helpers.
+-   **`httpx/`**: HTTP plumbing shared across the router: the error type every handler responds with, JSON helpers, and the `Client` providers use to call their upstream APIs (which maps upstream failures onto that error type and records exchanges for `--debug`).
 -   **`debug/`**: The `--debug` request log, an HTTP middleware.
 -   **`cli/`** / **`cmd/`**: Process entry point and commands. `cli/registry.go` is the one place that knows every provider and every use case.
 -   **[`SDKs/`](SDKs/)**: Client libraries for the proxy, one per language. Carries its own guide with the conventions every SDK follows — read when working on any SDK.
