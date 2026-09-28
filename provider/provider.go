@@ -1,34 +1,60 @@
-// Package provider defines the Provider interface that every backend
-// implements, plus the registry machinery that maps provider names to
-// factories.
+// Package provider defines what every backend is, regardless of what it can
+// do. What a provider can do is expressed by the use-case interfaces it also
+// implements (chat.Provider, embedding.Provider, ...): a use case serves every
+// provider that implements its interface and ignores the rest.
 package provider
 
 import (
 	"context"
-
-	"github.com/mltheuser/ai-router/api"
+	"fmt"
 )
 
-// Provider is the contract that every cloud and local provider must implement.
-// Methods should return api.ErrNotSupported for unsupported capabilities.
+// Provider is the contract every cloud and local provider implements.
 type Provider interface {
 	// Name returns the provider identifier (e.g. "openrouter", "ollama").
 	Name() string
 
 	// Type returns whether this is a cloud or local provider.
-	Type() api.ProviderType
+	Type() Type
 
 	// Verify checks that the provider is reachable and properly authenticated.
 	// For cloud providers this validates the API key; for local providers this
 	// checks that the runner is running and responding.
 	Verify(ctx context.Context) error
-
-	// ListModels returns all models available through this provider.
-	ListModels(ctx context.Context) ([]api.ModelInfo, error)
-
-	// Embed generates embeddings for the given input.
-	Embed(ctx context.Context, req *api.EmbedRequest) (*api.EmbedResponse, error)
-
-	// Chat generates a chat completion for the given request.
-	Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatResponse, error)
 }
+
+// Type distinguishes cloud from local providers.
+type Type string
+
+// Provider types.
+const (
+	Cloud Type = "cloud"
+	Local Type = "local"
+)
+
+// ModelRef is the routing identity of one model at one provider. Every use
+// case's model type embeds it, so every listed model, whatever else it
+// describes, says how to address it.
+type ModelRef struct {
+	ID string `json:"id"`
+	// Model is the fully-qualified string ("id:provider_type@provider") to
+	// pass verbatim as `model` in requests to address this entry.
+	Model        string `json:"model"`
+	Provider     string `json:"provider"`
+	ProviderType Type   `json:"provider_type"`
+}
+
+// NewModelRef builds the ref of the model id served by p. Providers build the
+// ref of every model they list with it.
+func NewModelRef(p Provider, id string) ModelRef {
+	return ModelRef{
+		ID:           id,
+		Model:        fmt.Sprintf("%s:%s@%s", id, p.Type(), p.Name()),
+		Provider:     p.Name(),
+		ProviderType: p.Type(),
+	}
+}
+
+// Ref returns the ref itself. Embedding ModelRef promotes this method, which
+// is how generic code reads the ref of any use case's model type.
+func (r ModelRef) Ref() ModelRef { return r }

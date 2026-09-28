@@ -1,30 +1,32 @@
-// Package openrouter implements the Provider interface for the OpenRouter
-// cloud aggregator.
+// Package openrouter is the provider for the OpenRouter cloud aggregator.
 package openrouter
 
 import (
 	"context"
 	"fmt"
-	"sync"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/provider"
+	"github.com/mltheuser/ai-router/usecase/chat"
+	"github.com/mltheuser/ai-router/usecase/embedding"
 )
 
-// Provider implements the provider.Provider interface for OpenRouter.
+// Provider serves chat and embedding through the OpenRouter API.
 type Provider struct {
 	client *client
-
-	// Internal metadata to track if a model supports "reasoning_effort".
-	// This is populated during ListModels.
-	mu                      sync.RWMutex
-	supportsReasoningEffort map[string]bool
 }
+
+// The use cases this provider serves. A use case finds its providers by
+// interface, so these checks turn a signature mismatch into a build error
+// instead of a silently missing use case.
+var (
+	_ chat.Provider      = (*Provider)(nil)
+	_ embedding.Provider = (*Provider)(nil)
+)
 
 // New creates a new OpenRouter provider with the given API key.
 func New(apiKey string) *Provider {
 	return &Provider{
-		client:                  newClient(apiKey),
-		supportsReasoningEffort: make(map[string]bool),
+		client: newClient(apiKey),
 	}
 }
 
@@ -32,8 +34,8 @@ func (p *Provider) Name() string {
 	return "openrouter"
 }
 
-func (p *Provider) Type() api.ProviderType {
-	return api.ProviderTypeCloud
+func (p *Provider) Type() provider.Type {
+	return provider.Cloud
 }
 
 // keyResponse is the response from GET /api/v1/key.

@@ -1,57 +1,78 @@
-// Package server implements the HTTP server and request handlers that expose
-// the ai-router API and the built-in scenario test runner.
+// Package server exposes the use cases over HTTP. It knows no use case in
+// particular: every route is derived from the usecase.UseCase interface.
 package server
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 	"time"
 
-	"github.com/mltheuser/ai-router/router"
+	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/debug"
+	"github.com/mltheuser/ai-router/provider"
+	"github.com/mltheuser/ai-router/usecase"
 )
 
-// Server is the AI Router HTTP server.
-type Server struct {
-	httpServer *http.Server
-	router     *router.Router
-	catalog    *router.ModelCatalog
-	logger     *slog.Logger
+// Config is what the server serves.
+type Config struct {
+	// Addr is the host:port to listen on.
+	Addr string
+	// Providers are the verified providers; UseCases serve them.
+	Providers []provider.Provider
+	UseCases  []usecase.UseCase
+	// Debug, if set, receives a full request/response log of every use-case
+	// request.
+	Debug io.Writer
 }
 
-// New creates a new server.
-func New(host string, port int, r *router.Router, catalog *router.ModelCatalog, logger *slog.Logger) *Server {
-	s := &Server{
-		router:  r,
-		catalog: catalog,
-		logger:  logger,
+// Server is the ai-router HTTP server.
+type Server struct {
+	httpServer *http.Server
+	cfg        Config
+}
+
+// New creates a server. Call Start to serve.
+func New(cfg Config) *Server {
+	s := &Server{cfg: cfg}
+
+	withDebug := func(h http.Handler) http.Handler { return h }
+	if cfg.Debug != nil {
+		withDebug = debug.Middleware(cfg.Debug)
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /v1/models", s.handleListModels)
-	mux.HandleFunc("POST /v1/models/refresh", s.handleRefreshModels)
-	mux.HandleFunc("GET /health", s.handleHealth)
-
-	mux.HandleFunc("POST /v1/embeddings", s.handleEmbed)
-	mux.HandleFunc("POST /v1/chat/completions", s.handleChatCompletions)
-	mux.HandleFunc("POST /v1/test", s.handleTest)
+	for _, uc := range cfg.UseCases {
+		prefix := "/v1/" + uc.Name()
+		mux.Handle("POST "+prefix, withDebug(handle(uc.Handle)))
+		mux.Handle("GET "+prefix+"/models", handle(uc.ListModels))
+		mux.Handle("POST "+prefix+"/models/refresh", handle(func(w http.ResponseWriter, r *http.Request) error {
+			uc.Refresh(r.Context())
+			api.WriteJSON(w, map[string]string{"status": "refreshed"})
+			return nil
+		}))
+	}
+	mux.Handle("POST /v1/test", handle(s.handleTest))
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
+		api.WriteJSON(w, map[string]string{"status": "ok"})
+	})
 
 	s.httpServer = &http.Server{
-		Addr:         fmt.Sprintf("%s:%d", host, port),
-		Handler:      s.withMiddleware(mux),
+		Addr:         cfg.Addr,
+		Handler:      logRequests(mux),
 		ReadTimeout:  10 * time.Minute,
 		WriteTimeout: 10 * time.Minute,
 		IdleTimeout:  60 * time.Second,
 	}
-
 	return s
 }
 
-// Start begins listening. It blocks until the server is shut down.
+// Start serves until the server is shut down.
 func (s *Server) Start() error {
-	s.logger.Info("Server listening", "addr", s.httpServer.Addr)
-	if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	slog.Info("Server listening", "addr", s.httpServer.Addr)
+	if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
 	return nil
@@ -59,12 +80,45 @@ func (s *Server) Start() error {
 
 // Shutdown gracefully shuts down the server.
 func (s *Server) Shutdown(ctx context.Context) error {
-	s.logger.Info("Shutting down server")
+	slog.Info("Shutting down server")
 	return s.httpServer.Shutdown(ctx)
 }
 
-func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(`{"status":"ok"}`))
+// handle adapts a handler that returns its error to an http.Handler that
+// writes the error as the JSON error response.
+func handle(h func(http.ResponseWriter, *http.Request) error) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := h(w, r); err != nil {
+			slog.Warn("Request failed", "path", r.URL.Path, "error", err)
+			api.WriteError(w, err)
+		}
+	})
 }
+
+// logRequests logs one line per request.
+func logRequests(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		sw := &statusWriter{ResponseWriter: w, status: http.StatusOK}
+		next.ServeHTTP(sw, r)
+		slog.Info("Request",
+			"method", r.Method,
+			"path", r.URL.Path,
+			"status", sw.status,
+			"duration", time.Since(start),
+		)
+	})
+}
+
+type statusWriter struct {
+	http.ResponseWriter
+	status int
+}
+
+func (w *statusWriter) WriteHeader(status int) {
+	w.status = status
+	w.ResponseWriter.WriteHeader(status)
+}
+
+// Unwrap exposes the wrapped writer to http.ResponseController.
+func (w *statusWriter) Unwrap() http.ResponseWriter { return w.ResponseWriter }

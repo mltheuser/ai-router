@@ -3,7 +3,7 @@ package openai
 import (
 	"encoding/json"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/usecase/chat"
 )
 
 // --- Responses wire types (request) ---
@@ -82,7 +82,7 @@ type responsesFormat struct {
 
 // --- Request translation ---
 
-func toResponsesRequest(req *api.ChatRequest) *responsesRequest {
+func toResponsesRequest(req *chat.Request) *responsesRequest {
 	oReq := &responsesRequest{
 		Model:           req.Model,
 		Store:           false,
@@ -110,9 +110,9 @@ func toResponsesRequest(req *api.ChatRequest) *responsesRequest {
 		})
 	}
 
-	if rf := req.ResponseFormat; rf != nil && rf.Type == api.ResponseFormatJSONSchema && rf.JSONSchema != nil {
+	if rf := req.ResponseFormat; rf != nil && rf.Type == chat.ResponseFormatJSONSchema && rf.JSONSchema != nil {
 		oReq.Text = &responsesText{Format: responsesFormat{
-			Type:        string(api.ResponseFormatJSONSchema),
+			Type:        string(chat.ResponseFormatJSONSchema),
 			Name:        rf.JSONSchema.Name,
 			Description: rf.JSONSchema.Description,
 			Schema:      rf.JSONSchema.Schema,
@@ -128,22 +128,22 @@ func toResponsesRequest(req *api.ChatRequest) *responsesRequest {
 }
 
 // inputItems converts one shared message to Responses input items.
-func inputItems(m api.ChatMessage) []interface{} {
+func inputItems(m chat.Message) []interface{} {
 	switch m.Role {
-	case api.RoleSystem:
+	case chat.RoleSystem:
 		return []interface{}{newMessage("developer", inputContent(m.Content))}
-	case api.RoleTool:
+	case chat.RoleTool:
 		return []interface{}{responsesFunctionCallOutput{
 			Type:   "function_call_output",
 			CallID: m.ToolCallID,
 			Output: inputContent(m.Content),
 		}}
-	case api.RoleAssistant:
+	case chat.RoleAssistant:
 		// Assistant text replays as a message with output_text; each tool call
 		// becomes its own function_call item after it. ReasoningContent is not
 		// replayed: the API ignores reasoning it did not issue itself.
 		var items []interface{}
-		if text := api.TextFromContent(m.Content); text != "" {
+		if text := chat.TextFromContent(m.Content); text != "" {
 			items = append(items, newMessage("assistant", []responsesContentPart{{Type: "output_text", Text: text}}))
 		}
 		for _, tc := range m.ToolCalls {
@@ -172,13 +172,13 @@ func newMessage(role string, content []responsesContentPart) responsesMessage {
 
 // inputContent converts shared multimodal content parts to Responses input
 // parts. Images are sent inline as base64 data URLs.
-func inputContent(parts []api.ContentPart) []responsesContentPart {
+func inputContent(parts []chat.ContentPart) []responsesContentPart {
 	result := make([]responsesContentPart, 0, len(parts))
 	for _, p := range parts {
 		switch p.Type {
-		case api.ContentPartText:
+		case chat.ContentPartText:
 			result = append(result, responsesContentPart{Type: "input_text", Text: p.Text})
-		case api.ContentPartImage:
+		case chat.ContentPartImage:
 			result = append(result, responsesContentPart{
 				Type:     "input_image",
 				ImageURL: "data:" + p.MimeType + ";base64," + p.Base64Data,

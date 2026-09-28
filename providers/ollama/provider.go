@@ -1,17 +1,27 @@
-// Package ollama implements the Provider interface for a local Ollama runner.
+// Package ollama is the provider for a local Ollama runner.
 package ollama
 
 import (
 	"context"
 	"net/http"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/provider"
+	"github.com/mltheuser/ai-router/usecase/chat"
+	"github.com/mltheuser/ai-router/usecase/embedding"
 )
 
-// Provider implements provider.Provider for Ollama.
+// Provider serves chat and embedding through a local Ollama runner.
 type Provider struct {
 	client *client
 }
+
+// The use cases this provider serves. A use case finds its providers by
+// interface, so these checks turn a signature mismatch into a build error
+// instead of a silently missing use case.
+var (
+	_ chat.Provider      = (*Provider)(nil)
+	_ embedding.Provider = (*Provider)(nil)
+)
 
 // New creates a new Ollama provider pointing at the default local endpoint.
 func New() *Provider {
@@ -24,8 +34,8 @@ func (p *Provider) Name() string {
 	return "ollama"
 }
 
-func (p *Provider) Type() api.ProviderType {
-	return api.ProviderTypeLocal
+func (p *Provider) Type() provider.Type {
+	return provider.Local
 }
 
 // Verify checks that Ollama is running and responding.

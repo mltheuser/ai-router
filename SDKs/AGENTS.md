@@ -3,6 +3,15 @@
 Every SDK in this directory follows the same shape. New SDKs mirror it.
 See [kotlin/](kotlin/) for the canonical implementation.
 
+## API surface mirrors the use cases
+
+The server is organized by use case (chat, embedding, ...), and so is every
+SDK: per use case, one request method, its request/response types, a model
+type with the use case's own metadata, and a model listing method returning
+that type. The model types share one interface for the routing fields (`id`,
+`model`, `provider`, `provider_type`). Adding a use case to the server means
+adding this set to each SDK.
+
 ## Examples are tests
 
 Each SDK ships one example file per documented usage pattern, living in the
@@ -26,10 +35,10 @@ trigger a failure and assert on the SDK's exception/result shape.
 
 In the same directory as the examples, one file holds:
 
-- Constants `SERVER_URL`, `CHAT_MODEL`, `EMBED_MODEL`. Pick a `CHAT_MODEL`
-  that supports vision, reasoning, tools, and structured output — every
-  chat-shaped example shares it. Add more constants only on a real
-  capability gap.
+- `SERVER_URL`, and one model constant per use case (`CHAT_MODEL`,
+  `EMBED_MODEL`, ...). Pick a `CHAT_MODEL` with every chat feature (vision,
+  reasoning, tools, structured output) — every chat example shares it. Add
+  more constants only on a real capability gap.
 - A client factory used by every example, configured with a custom HTTP
   layer (timeouts, etc.). This exercises the "custom HTTP client"
   configuration path on every test run instead of needing a separate test.

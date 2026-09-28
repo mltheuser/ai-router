@@ -1,6 +1,6 @@
 # ai-router Kotlin SDK
 
-Kotlin SDK for the [ai-router](../../) LLM proxy. Build requests with a
+Kotlin SDK for the [ai-router](../../) proxy. Build requests with a
 type-safe DSL, send them to a local or remote proxy, and consume responses —
 including structured output via `@Serializable` classes.
 
@@ -87,16 +87,15 @@ See [EmbeddingsExample.kt](src/test/kotlin/ai/router/sdk/examples/EmbeddingsExam
 
 ### Listing Models
 
-Fetch the models available through the router via `listModels()`, e.g. to
-present model options to a user. Optional filters narrow the result by
-provider type (`cloud`/`local`), capability, or a case-insensitive substring
-of the model id. Each entry's `model` property is the fully-qualified
-string to pass verbatim as a request's model.
+Each use case lists the models its request method accepts:
+`listChatModels()` for `chat`, `listEmbedModels()` for `embed`. Entries carry
+metadata specific to their use case; chat models, for example, report their
+features (tools, vision, reasoning, structured output). Optional filters
+narrow a listing by provider type (`cloud`/`local`) or a case-insensitive
+substring of the model id. Each entry's `model` property is the
+fully-qualified string to pass verbatim as a request's model.
 
 See [ListModelsExample.kt](src/test/kotlin/ai/router/sdk/examples/ListModelsExample.kt).
-
-> The server currently accepts only the `chat` and `embed` capabilities as a
-> filter; the other `Capability` values are rejected with a 400.
 
 ### Error Handling
 

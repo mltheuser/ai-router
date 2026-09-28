@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/provider"
+	"github.com/mltheuser/ai-router/usecase/chat"
 )
 
 // modelsResponse is the response from GET /v1/models.
@@ -37,11 +38,11 @@ type anthropicCapability struct {
 	Supported bool `json:"supported"`
 }
 
-// ListModels fetches all models from Anthropic and converts them to unified
-// ModelInfo. The endpoint is paginated via opaque cursors, so we follow
-// has_more/last_id until the listing is exhausted.
-func (p *Provider) ListModels(ctx context.Context) ([]api.ModelInfo, error) {
-	var models []api.ModelInfo
+// ListChatModels fetches all models from Anthropic. The endpoint is paginated
+// via opaque cursors, so we follow has_more/last_id until the listing is
+// exhausted.
+func (p *Provider) ListChatModels(ctx context.Context) ([]chat.Model, error) {
+	var models []chat.Model
 
 	afterID := ""
 	for {
@@ -57,7 +58,7 @@ func (p *Provider) ListModels(ctx context.Context) ([]api.ModelInfo, error) {
 		}
 
 		for _, m := range resp.Data {
-			models = append(models, convertModel(m, p.Name()))
+			models = append(models, p.convertModel(m))
 		}
 
 		// Terminate on the last page, an empty page, or a missing cursor to
@@ -71,33 +72,30 @@ func (p *Provider) ListModels(ctx context.Context) ([]api.ModelInfo, error) {
 	return models, nil
 }
 
-// convertModel converts an Anthropic model to a unified ModelInfo. The models
+// convertModel converts an Anthropic model to a chat model. The models
 // endpoint exposes no pricing, so the cost fields are left nil.
-func convertModel(m anthropicModel, providerName string) api.ModelInfo {
-	return api.ModelInfo{
-		ID:            m.ID,
-		Provider:      providerName,
-		ProviderType:  api.ProviderTypeCloud,
-		Capabilities:  inferCapabilities(m),
+func (p *Provider) convertModel(m anthropicModel) chat.Model {
+	return chat.Model{
+		ModelRef:      provider.NewModelRef(p, m.ID),
+		Features:      features(m),
 		ContextWindow: m.MaxInputTokens,
 	}
 }
 
-// inferCapabilities maps Anthropic capability flags to unified capabilities.
-// The models API exposes no chat or tools flag, so we assume both — every
-// Claude model supports them — and read the rest from the reported flags.
-func inferCapabilities(m anthropicModel) []api.Capability {
-	caps := []api.Capability{api.CapabilityChat, api.CapabilityTools}
+// features maps Anthropic capability flags to chat features. The models API
+// exposes no tools flag, so we assume it: every Claude model supports tools.
+func features(m anthropicModel) []chat.Feature {
+	fs := []chat.Feature{chat.FeatureTools}
 
 	if m.Capabilities.ImageInput.Supported {
-		caps = append(caps, api.CapabilityVision)
+		fs = append(fs, chat.FeatureVision)
 	}
 	if m.Capabilities.Thinking.Supported {
-		caps = append(caps, api.CapabilityReasoning)
+		fs = append(fs, chat.FeatureReasoning)
 	}
 	if m.Capabilities.StructuredOutputs.Supported {
-		caps = append(caps, api.CapabilityStructuredOutput)
+		fs = append(fs, chat.FeatureStructuredOutput)
 	}
 
-	return caps
+	return fs
 }

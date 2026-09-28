@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/usecase/chat"
 )
 
 // fallbackMaxTokens is used only when the caller omits max_tokens and the
@@ -128,7 +128,7 @@ type anthropicUsage struct {
 
 // Chat sends a chat completion request to the Anthropic Messages API and maps
 // the response back to the shared API type.
-func (p *Provider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatResponse, error) {
+func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response, error) {
 	// Anthropic requires max_tokens. An explicit value caps the response; when
 	// omitted, default to the model's own maximum output so nothing is capped
 	// below the model's ceiling.
@@ -151,7 +151,7 @@ func (p *Provider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatRes
 
 // --- Request translation ---
 
-func toAnthropicRequest(req *api.ChatRequest, maxTokens int) *anthropicChatRequest {
+func toAnthropicRequest(req *chat.Request, maxTokens int) *anthropicChatRequest {
 	aReq := &anthropicChatRequest{
 		Model:     req.Model,
 		MaxTokens: maxTokens,
@@ -167,8 +167,8 @@ func toAnthropicRequest(req *api.ChatRequest, maxTokens int) *anthropicChatReque
 	// appendMessage as user/assistant turns.
 	var system []string
 	for _, m := range req.Messages {
-		if m.Role == api.RoleSystem {
-			if text := api.TextFromContent(m.Content); text != "" {
+		if m.Role == chat.RoleSystem {
+			if text := chat.TextFromContent(m.Content); text != "" {
 				system = append(system, text)
 			}
 			continue
@@ -197,16 +197,16 @@ func toAnthropicRequest(req *api.ChatRequest, maxTokens int) *anthropicChatReque
 	// level (the modern Claude reasoning controls). "none" leaves thinking off
 	// by omitting the parameter entirely — an explicit "disabled" is rejected by
 	// the latest models.
-	if req.ReasoningEffort != nil && *req.ReasoningEffort != api.ReasoningEffortNone {
+	if req.ReasoningEffort != nil && *req.ReasoningEffort != chat.ReasoningEffortNone {
 		aReq.Thinking = &anthropicThinking{Type: "adaptive", Display: "summarized"}
 		aReq.outputConfig().Effort = string(*req.ReasoningEffort)
 	}
 
 	// Structured output: Anthropic constrains the response shape via
 	// output_config.format rather than a top-level response_format field.
-	if rf := req.ResponseFormat; rf != nil && rf.Type == api.ResponseFormatJSONSchema && rf.JSONSchema != nil {
+	if rf := req.ResponseFormat; rf != nil && rf.Type == chat.ResponseFormatJSONSchema && rf.JSONSchema != nil {
 		aReq.outputConfig().Format = &anthropicFormat{
-			Type:   string(api.ResponseFormatJSONSchema),
+			Type:   string(chat.ResponseFormatJSONSchema),
 			Schema: rf.JSONSchema.Schema,
 		}
 	}
@@ -232,12 +232,12 @@ func (r *anthropicChatRequest) outputConfig() *anthropicOutputConfig {
 // matches. Coalescing is required for parallel tool calls: they come back as
 // several consecutive tool-result messages that Anthropic expects grouped into
 // one user turn.
-func appendMessage(aReq *anthropicChatRequest, m api.ChatMessage) {
+func appendMessage(aReq *anthropicChatRequest, m chat.Message) {
 	var role string
 	var blocks []interface{}
 
 	switch m.Role {
-	case api.RoleTool:
+	case chat.RoleTool:
 		// A tool result is a user turn carrying a tool_result block keyed by the
 		// originating tool_use id. Its content is a block list so image parts
 		// travel inside the tool_result.
@@ -247,9 +247,9 @@ func appendMessage(aReq *anthropicChatRequest, m api.ChatMessage) {
 			ToolUseID: m.ToolCallID,
 			Content:   contentBlocks(m.Content),
 		})
-	case api.RoleAssistant:
+	case chat.RoleAssistant:
 		role = "assistant"
-		if text := api.TextFromContent(m.Content); text != "" {
+		if text := chat.TextFromContent(m.Content); text != "" {
 			blocks = append(blocks, anthropicTextBlock{Type: "text", Text: text})
 		}
 		for _, tc := range m.ToolCalls {
@@ -281,16 +281,16 @@ func appendMessage(aReq *anthropicChatRequest, m api.ChatMessage) {
 }
 
 // contentBlocks converts shared multimodal content parts to Anthropic blocks.
-func contentBlocks(parts []api.ContentPart) []interface{} {
+func contentBlocks(parts []chat.ContentPart) []interface{} {
 	blocks := make([]interface{}, 0, len(parts))
 	for _, p := range parts {
 		switch p.Type {
-		case api.ContentPartText:
+		case chat.ContentPartText:
 			if p.Text == "" {
 				continue
 			}
 			blocks = append(blocks, anthropicTextBlock{Type: "text", Text: p.Text})
-		case api.ContentPartImage:
+		case chat.ContentPartImage:
 			blocks = append(blocks, anthropicImageBlock{
 				Type: "image",
 				Source: anthropicImageSource{
@@ -306,27 +306,27 @@ func contentBlocks(parts []api.ContentPart) []interface{} {
 
 // --- Response translation ---
 
-func mapAnthropicResponse(aResp *anthropicChatResponse) *api.ChatResponse {
+func mapAnthropicResponse(aResp *anthropicChatResponse) *chat.Response {
 	// Anthropic reports cached tokens (both reads and writes) SEPARATELY from
 	// input_tokens, so the full prompt size is the sum of all three. PromptTokens
 	// always means the full prompt total, including cached tokens.
 	promptTokens := aResp.Usage.InputTokens + aResp.Usage.CacheReadInputTokens + aResp.Usage.CacheCreationInputTokens
-	resp := api.ChatResponse{
+	resp := chat.Response{
 		Model: aResp.Model,
-		Usage: api.ChatUsage{
+		Usage: chat.Usage{
 			PromptTokens:     promptTokens,
 			CompletionTokens: aResp.Usage.OutputTokens,
 			TotalTokens:      promptTokens + aResp.Usage.OutputTokens,
 			ReasoningTokens:  aResp.Usage.OutputTokensDetails.ThinkingTokens,
 			CacheReadTokens:  aResp.Usage.CacheReadInputTokens,
 		},
-		Message: api.ChatMessage{Role: api.RoleAssistant},
+		Message: chat.Message{Role: chat.RoleAssistant},
 	}
 
 	// The response is a list of content blocks: concatenate text and thinking,
 	// and collect tool_use blocks as tool calls.
 	var text, reasoning string
-	var toolCalls []api.ToolCall
+	var toolCalls []chat.ToolCall
 	for _, b := range aResp.Content {
 		switch b.Type {
 		case "text":
@@ -334,9 +334,9 @@ func mapAnthropicResponse(aResp *anthropicChatResponse) *api.ChatResponse {
 		case "thinking":
 			reasoning += b.Thinking
 		case "tool_use":
-			toolCalls = append(toolCalls, api.ToolCall{
+			toolCalls = append(toolCalls, chat.ToolCall{
 				ID: b.ID,
-				Function: api.ToolCallFunction{
+				Function: chat.ToolCallFunction{
 					Name:      b.Name,
 					Arguments: parseToolInput(b.Input),
 				},
@@ -344,7 +344,7 @@ func mapAnthropicResponse(aResp *anthropicChatResponse) *api.ChatResponse {
 		}
 	}
 
-	resp.Message.Content = api.TextContent(text)
+	resp.Message.Content = chat.TextContent(text)
 	resp.Message.ReasoningContent = reasoning
 	resp.Message.ToolCalls = toolCalls
 
@@ -365,17 +365,17 @@ func parseToolInput(raw json.RawMessage) map[string]interface{} {
 
 // mapStopReason maps Anthropic stop reasons to the shared FinishReason. The
 // type is passthrough-friendly, so unrecognized values are forwarded unchanged.
-func mapStopReason(reason string) api.FinishReason {
+func mapStopReason(reason string) chat.FinishReason {
 	switch reason {
 	case "end_turn", "stop_sequence", "":
-		return api.FinishReasonStop
+		return chat.FinishReasonStop
 	case "tool_use":
-		return api.FinishReasonToolCalls
+		return chat.FinishReasonToolCalls
 	case "max_tokens", "model_context_window_exceeded":
-		return api.FinishReasonLength
+		return chat.FinishReasonLength
 	case "refusal":
-		return api.FinishReasonContentFilter
+		return chat.FinishReasonContentFilter
 	default:
-		return api.FinishReason(reason)
+		return chat.FinishReason(reason)
 	}
 }

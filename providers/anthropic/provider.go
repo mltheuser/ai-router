@@ -1,5 +1,4 @@
-// Package anthropic implements the Provider interface for the Anthropic
-// (Claude) cloud API.
+// Package anthropic is the provider for the Anthropic (Claude) cloud API.
 package anthropic
 
 import (
@@ -7,13 +6,21 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/provider"
+	"github.com/mltheuser/ai-router/usecase/chat"
 )
 
-// Provider implements the provider.Provider interface for Anthropic.
+// Provider serves chat through the Anthropic API.
 type Provider struct {
 	client *client
 }
+
+// The use cases this provider serves. A use case finds its providers by
+// interface, so these checks turn a signature mismatch into a build error
+// instead of a silently missing use case.
+var (
+	_ chat.Provider = (*Provider)(nil)
+)
 
 // New creates a new Anthropic provider with the given API key.
 func New(apiKey string) *Provider {
@@ -35,8 +42,8 @@ func (p *Provider) Name() string {
 	return "anthropic"
 }
 
-func (p *Provider) Type() api.ProviderType {
-	return api.ProviderTypeCloud
+func (p *Provider) Type() provider.Type {
+	return provider.Cloud
 }
 
 // Verify checks reachability and authentication. Anthropic has no dedicated

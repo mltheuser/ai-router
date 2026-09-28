@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/usecase/chat"
 )
 
 // --- Ollama wire types (request) ---
@@ -23,8 +23,8 @@ type ollamaChatRequest struct {
 
 // ollamaToolDefinition wraps our flat ToolDefinition in Ollama's {"type":"function","function":{...}} format.
 type ollamaToolDefinition struct {
-	Type     string             `json:"type"`
-	Function api.ToolDefinition `json:"function"`
+	Type     string              `json:"type"`
+	Function chat.ToolDefinition `json:"function"`
 }
 
 // ollamaRequestMessage is the outgoing message format for Ollama.
@@ -94,7 +94,7 @@ type ollamaResponseToolCallFunc struct {
 
 // Chat sends a chat completion request to Ollama and maps the response back
 // to the shared API type.
-func (p *Provider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatResponse, error) {
+func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response, error) {
 	ollamaReq := ollamaChatRequest{
 		Model:    req.Model,
 		Messages: toOllamaMessages(req.Messages),
@@ -104,7 +104,7 @@ func (p *Provider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatRes
 
 	// Map generic ReasoningEffort to Ollama's "think" parameter.
 	if req.ReasoningEffort != nil {
-		if *req.ReasoningEffort == api.ReasoningEffortNone {
+		if *req.ReasoningEffort == chat.ReasoningEffortNone {
 			ollamaReq.Think = false
 		} else {
 			ollamaReq.Think = string(*req.ReasoningEffort)
@@ -122,7 +122,7 @@ func (p *Provider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatRes
 
 	// Handle Structured Output
 	if req.ResponseFormat != nil {
-		if req.ResponseFormat.Type == api.ResponseFormatJSONSchema && req.ResponseFormat.JSONSchema != nil {
+		if req.ResponseFormat.Type == chat.ResponseFormatJSONSchema && req.ResponseFormat.JSONSchema != nil {
 			ollamaReq.Format = req.ResponseFormat.JSONSchema.Schema
 		} else if req.ResponseFormat.Type == "json_object" {
 			ollamaReq.Format = "json"
@@ -149,7 +149,7 @@ func (p *Provider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatRes
 // --- Request translation ---
 
 // wrapTools converts flat ToolDefinitions to Ollama's nested wire format.
-func wrapTools(tools []api.ToolDefinition) []ollamaToolDefinition {
+func wrapTools(tools []chat.ToolDefinition) []ollamaToolDefinition {
 	if len(tools) == 0 {
 		return nil
 	}
@@ -161,17 +161,17 @@ func wrapTools(tools []api.ToolDefinition) []ollamaToolDefinition {
 }
 
 // toOllamaMessages transforms shared API messages to Ollama's native format.
-func toOllamaMessages(messages []api.ChatMessage) []ollamaRequestMessage {
+func toOllamaMessages(messages []chat.Message) []ollamaRequestMessage {
 	result := make([]ollamaRequestMessage, len(messages))
 	for i, m := range messages {
 		om := ollamaRequestMessage{
 			Role:    string(m.Role),
-			Content: api.TextFromContent(m.Content),
-			Images:  api.ImagesFromContent(m.Content),
+			Content: chat.TextFromContent(m.Content),
+			Images:  chat.ImagesFromContent(m.Content),
 		}
 
 		switch m.Role {
-		case api.RoleAssistant:
+		case chat.RoleAssistant:
 			// Convert tool calls: map string ID → integer index
 			for _, tc := range m.ToolCalls {
 				idx, _ := strconv.Atoi(tc.ID) // synthetic IDs are stringified indices
@@ -184,7 +184,7 @@ func toOllamaMessages(messages []api.ChatMessage) []ollamaRequestMessage {
 					},
 				})
 			}
-		case api.RoleTool:
+		case chat.RoleTool:
 			// Ollama uses "tool_name" to identify which tool the result is for.
 			// Look up the function name from the assistant's tool calls using ToolCallID.
 			if m.ToolCallID != "" {
@@ -199,19 +199,19 @@ func toOllamaMessages(messages []api.ChatMessage) []ollamaRequestMessage {
 
 // --- Response translation ---
 
-func mapResponse(ollamaResp *ollamaChatResponse) *api.ChatResponse {
-	resp := api.ChatResponse{
+func mapResponse(ollamaResp *ollamaChatResponse) *chat.Response {
+	resp := chat.Response{
 		Model: ollamaResp.Model,
-		Usage: api.ChatUsage{
+		Usage: chat.Usage{
 			PromptTokens:     ollamaResp.PromptEvalCount,
 			CompletionTokens: ollamaResp.EvalCount,
 			TotalTokens:      ollamaResp.PromptEvalCount + ollamaResp.EvalCount,
 			// Ollama has no prompt caching.
 		},
 		FinishReason: mapFinishReason(ollamaResp.DoneReason),
-		Message: api.ChatMessage{
-			Role:    api.Role(ollamaResp.Message.Role),
-			Content: api.TextContent(ollamaResp.Message.Content),
+		Message: chat.Message{
+			Role:    chat.Role(ollamaResp.Message.Role),
+			Content: chat.TextContent(ollamaResp.Message.Content),
 		},
 	}
 
@@ -222,15 +222,15 @@ func mapResponse(ollamaResp *ollamaChatResponse) *api.ChatResponse {
 	// Map tool calls: convert Ollama's index-based calls to ID-based shared format.
 	if len(ollamaResp.Message.ToolCalls) > 0 {
 		for _, tc := range ollamaResp.Message.ToolCalls {
-			resp.Message.ToolCalls = append(resp.Message.ToolCalls, api.ToolCall{
+			resp.Message.ToolCalls = append(resp.Message.ToolCalls, chat.ToolCall{
 				ID: fmt.Sprintf("%d", tc.Function.Index),
-				Function: api.ToolCallFunction{
+				Function: chat.ToolCallFunction{
 					Name:      tc.Function.Name,
 					Arguments: tc.Function.Arguments,
 				},
 			})
 		}
-		resp.FinishReason = api.FinishReasonToolCalls
+		resp.FinishReason = chat.FinishReasonToolCalls
 	}
 
 	return &resp
@@ -241,12 +241,12 @@ func mapResponse(ollamaResp *ollamaChatResponse) *api.ChatResponse {
 // mapFinishReason maps Ollama's done_reason to the shared FinishReason.
 // "length" indicates truncation; "stop", lifecycle values (e.g. "load",
 // "unload"), and empty all resolve to stop.
-func mapFinishReason(doneReason string) api.FinishReason {
+func mapFinishReason(doneReason string) chat.FinishReason {
 	switch doneReason {
 	case "length":
-		return api.FinishReasonLength
+		return chat.FinishReasonLength
 	default:
-		return api.FinishReasonStop
+		return chat.FinishReasonStop
 	}
 }
 
@@ -257,7 +257,7 @@ func isUnsupportedThinkValueError(err error) bool {
 
 // findToolName searches backwards through messages for the tool call matching
 // the given ID and returns its function name.
-func findToolName(messages []api.ChatMessage, toolCallID string) string {
+func findToolName(messages []chat.Message, toolCallID string) string {
 	for j := len(messages) - 1; j >= 0; j-- {
 		for _, tc := range messages[j].ToolCalls {
 			if tc.ID == toolCallID {

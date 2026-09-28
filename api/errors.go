@@ -7,6 +7,8 @@ import (
 	"net/http"
 )
 
+// Error is an error with the HTTP status it is served with. Handlers return
+// it, or wrap it, to control the response; any other error is served as 500.
 type Error struct {
 	StatusCode int    `json:"-"`
 	Type       string `json:"type"`
@@ -15,14 +17,6 @@ type Error struct {
 }
 
 func (e *Error) Error() string { return e.Message }
-
-// Sentinel domain errors.
-var (
-	ErrNotSupported        = NewError(http.StatusBadRequest, "capability not supported by this provider")
-	ErrModelNotFound       = NewError(http.StatusNotFound, "model not found")
-	ErrProviderUnavailable = NewError(http.StatusServiceUnavailable, "provider unavailable")
-	ErrInvalidModel        = NewError(http.StatusBadRequest, "invalid model string")
-)
 
 // ErrorResponse is the top-level error response wrapper.
 type ErrorResponse struct {
@@ -79,9 +73,4 @@ func WriteError(w http.ResponseWriter, err error) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(out.StatusCode)
 	_ = json.NewEncoder(w).Encode(ErrorResponse{Error: out})
-}
-
-// WriteBadRequest writes an error response with StatusBadRequest.
-func WriteBadRequest(w http.ResponseWriter, message string) {
-	WriteError(w, NewError(http.StatusBadRequest, message))
 }

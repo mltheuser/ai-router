@@ -3,7 +3,7 @@ package openai
 import (
 	"context"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/usecase/chat"
 )
 
 // The shared API is chat-completions style (a list of role-tagged messages),
@@ -18,7 +18,7 @@ import (
 
 // Chat sends a chat request to the OpenAI Responses API and maps the response
 // back to the shared API type.
-func (p *Provider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatResponse, error) {
+func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response, error) {
 	oReq := toResponsesRequest(req)
 
 	var oResp responsesResponse

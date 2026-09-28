@@ -1,17 +1,27 @@
-// Package openai implements the Provider interface for the OpenAI cloud API.
+// Package openai is the provider for the OpenAI cloud API.
 package openai
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/provider"
+	"github.com/mltheuser/ai-router/usecase/chat"
+	"github.com/mltheuser/ai-router/usecase/embedding"
 )
 
-// Provider implements the provider.Provider interface for OpenAI.
+// Provider serves chat and embedding through the OpenAI API.
 type Provider struct {
 	client *client
 }
+
+// The use cases this provider serves. A use case finds its providers by
+// interface, so these checks turn a signature mismatch into a build error
+// instead of a silently missing use case.
+var (
+	_ chat.Provider      = (*Provider)(nil)
+	_ embedding.Provider = (*Provider)(nil)
+)
 
 // New creates a new OpenAI provider with the given API key.
 func New(apiKey string) *Provider {
@@ -24,8 +34,8 @@ func (p *Provider) Name() string {
 	return "openai"
 }
 
-func (p *Provider) Type() api.ProviderType {
-	return api.ProviderTypeCloud
+func (p *Provider) Type() provider.Type {
+	return provider.Cloud
 }
 
 // Verify checks reachability and authentication. OpenAI has no dedicated

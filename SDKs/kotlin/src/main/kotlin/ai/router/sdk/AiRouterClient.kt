@@ -2,13 +2,15 @@ package ai.router.sdk
 
 import ai.router.sdk.models.AiRouterException
 import ai.router.sdk.models.ApiError
-import ai.router.sdk.models.Capability
+import ai.router.sdk.models.ChatModel
 import ai.router.sdk.models.ChatRequest
 import ai.router.sdk.models.ChatResponse
+import ai.router.sdk.models.EmbedModel
 import ai.router.sdk.models.EmbedRequest
 import ai.router.sdk.models.EmbedResponse
 import ai.router.sdk.models.ErrorResponse
 import ai.router.sdk.models.ModelList
+import ai.router.sdk.models.ModelRef
 import ai.router.sdk.models.ProviderType
 import ai.router.sdk.models.StructuredChatRequest
 import io.ktor.client.HttpClient
@@ -31,7 +33,11 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * Client for the ai-router LLM proxy.
+ * Client for the ai-router proxy.
+ *
+ * Each use case has a request method ([chat], [embed]) and a model listing
+ * ([listChatModels], [listEmbedModels]) whose entries' `model` strings the
+ * request method accepts.
  *
  * ```kotlin
  * val client = AiRouterClient("http://localhost:8787")
@@ -81,7 +87,7 @@ public class AiRouterClient(
      * Send a chat completion request.
      */
     public suspend fun chat(request: ChatRequest): ChatResponse {
-        return post("/v1/chat/completions", request)
+        return post("/v1/chat", request)
     }
 
     /**
@@ -97,25 +103,23 @@ public class AiRouterClient(
      * Send an embedding request.
      */
     public suspend fun embed(request: EmbedRequest): EmbedResponse {
-        return post("/v1/embeddings", request)
+        return post("/v1/embedding", request)
     }
 
     /**
-     * List the models available through the router, optionally filtered.
+     * List the models [chat] accepts, optionally narrowed by provider [type]
+     * and a case-insensitive [search] substring of the model id.
      */
-    public suspend fun listModels(
-        type: ProviderType? = null,
-        capability: Capability? = null,
-        search: String? = null,
-    ): ModelList {
-        return get(
-            "/v1/models",
-            mapOf(
-                "type" to type?.let { wireName(it) },
-                "capability" to capability?.let { wireName(it) },
-                "search" to search,
-            ),
-        )
+    public suspend fun listChatModels(type: ProviderType? = null, search: String? = null): ModelList<ChatModel> {
+        return listModels("chat", type, search)
+    }
+
+    /**
+     * List the models [embed] accepts, optionally narrowed by provider [type]
+     * and a case-insensitive [search] substring of the model id.
+     */
+    public suspend fun listEmbedModels(type: ProviderType? = null, search: String? = null): ModelList<EmbedModel> {
+        return listModels("embedding", type, search)
     }
 
     override fun close() {
@@ -123,6 +127,17 @@ public class AiRouterClient(
     }
 
     // ─── Internal ─────────────────────────────────────────────────────
+
+    private suspend inline fun <reified M : ModelRef> listModels(
+        useCase: String,
+        type: ProviderType?,
+        search: String?,
+    ): ModelList<M> {
+        return get(
+            "/v1/$useCase/models",
+            mapOf("type" to type?.let { wireName(it) }, "search" to search),
+        )
+    }
 
     private suspend inline fun <reified Req, reified Res> post(path: String, body: Req): Res {
         val response: HttpResponse = httpClient.post("$baseUrl$path") {

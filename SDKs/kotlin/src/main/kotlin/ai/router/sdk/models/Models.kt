@@ -16,55 +16,22 @@ public enum class ProviderType {
 }
 
 /**
- * Model capability flags.
- */
-@Serializable
-public enum class Capability {
-    @SerialName("chat")
-    CHAT,
-
-    @SerialName("embed")
-    EMBED,
-
-    @SerialName("structured_output")
-    STRUCTURED_OUTPUT,
-
-    @SerialName("reasoning")
-    REASONING,
-
-    @SerialName("tools")
-    TOOLS,
-
-    @SerialName("vision")
-    VISION,
-}
-
-/**
- * Describes a model available through a specific provider.
+ * The routing identity every listed model carries, whatever its use case.
  *
  * [model] is the fully-qualified string (`id:provider_type@provider`) to
  * pass verbatim as a request's `model` to address this entry.
  */
-@Serializable
-public data class ModelInfo(
-    val id: String,
-    val model: String,
-    val provider: String,
-    @SerialName("provider_type") val providerType: ProviderType,
-    val capabilities: List<Capability>,
-    @SerialName("context_window") val contextWindow: Int = 0,
-    @SerialName("cost_per_m_input") val costPerMInput: Double? = null,
-    @SerialName("cost_per_m_output") val costPerMOutput: Double? = null,
-    @SerialName("size_bytes") val sizeBytes: Long? = null,
-) {
-    public fun hasCapability(cap: Capability): Boolean = cap in capabilities
+public interface ModelRef {
+    public val id: String
+    public val model: String
+    public val provider: String
+    public val providerType: ProviderType
 }
 
 /**
- * Response format for listing models.
+ * The response of a use case's model listing (e.g. `GET /v1/chat/models`).
  */
 @Serializable
-public data class ModelList(
-    val `object`: String,
-    val data: List<ModelInfo>,
+public data class ModelList<M : ModelRef>(
+    val data: List<M>,
 )

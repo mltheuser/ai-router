@@ -1,6 +1,8 @@
-// Package debug provides a Provider decorator that logs the full request
-// lifecycle (shared API request/response plus the provider-specific HTTP
-// exchange) for troubleshooting.
+// Package debug logs the full lifecycle of API requests for troubleshooting.
+// Each logged request shows four bodies: the shared API request and response
+// (captured by Middleware at the HTTP boundary) and the provider-specific
+// request and response in between (recorded by the provider's HTTP client
+// into the Exchange that Middleware attaches to the request context).
 package debug
 
 import (
@@ -11,141 +13,102 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"sync"
 	"time"
-
-	"github.com/mltheuser/ai-router/api"
-	"github.com/mltheuser/ai-router/provider"
-	"github.com/mltheuser/ai-router/providers/httpclient"
 )
 
-// Provider wraps a real provider and logs the full request lifecycle.
-// It captures 4 data points per call:
-//  1. Incoming shared API request
-//  2. Outgoing provider-specific HTTP request (via context collector)
-//  3. Incoming provider-specific HTTP response (via context collector)
-//  4. Outgoing shared API response
-type Provider struct {
-	inner provider.Provider
-	mu    *sync.Mutex // shared across all debug providers for atomic output
-	w     io.Writer
+// Exchange is the provider-specific HTTP exchange of one API request. When a
+// provider makes several calls, the last one wins.
+type Exchange struct {
+	Method       string
+	URL          string
+	RequestBody  []byte
+	ResponseBody []byte
 }
 
-// WrapProvider decorates a provider with debug logging.
-// The mutex should be shared across all debug-wrapped providers so that
-// output blocks from concurrent requests never interleave.
-func WrapProvider(p provider.Provider, mu *sync.Mutex, w io.Writer) provider.Provider {
-	return &Provider{inner: p, mu: mu, w: w}
+type exchangeKey struct{}
+
+// ExchangeFrom returns the Exchange to record into, or nil when the request is
+// not being debug-logged.
+func ExchangeFrom(ctx context.Context) *Exchange {
+	ex, _ := ctx.Value(exchangeKey{}).(*Exchange)
+	return ex
 }
 
-// --- Delegated methods (no debug needed) ---
+// Middleware returns an HTTP middleware that writes one debug block per
+// request to w. Blocks are written atomically, so concurrent requests never
+// interleave.
+func Middleware(w io.Writer) func(http.Handler) http.Handler {
+	var mu sync.Mutex
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			reqBody, _ := io.ReadAll(r.Body)
+			r.Body = io.NopCloser(bytes.NewReader(reqBody))
 
-func (d *Provider) Name() string { return d.inner.Name() }
+			ex := &Exchange{}
+			r = r.WithContext(context.WithValue(r.Context(), exchangeKey{}, ex))
+			rec := &recorder{ResponseWriter: rw}
 
-func (d *Provider) Type() api.ProviderType { return d.inner.Type() }
+			start := time.Now()
+			next.ServeHTTP(rec, r)
+			block := format(r, ex, reqBody, rec.body.Bytes(), time.Since(start))
 
-func (d *Provider) Verify(ctx context.Context) error { return d.inner.Verify(ctx) }
-
-func (d *Provider) ListModels(ctx context.Context) ([]api.ModelInfo, error) {
-	return d.inner.ListModels(ctx)
+			mu.Lock()
+			_, _ = w.Write(block)
+			mu.Unlock()
+		})
+	}
 }
 
-// --- Debug-instrumented methods ---
-
-// Chat delegates to the wrapped provider and logs the full request lifecycle.
-func (d *Provider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatResponse, error) {
-	reqJSON := marshalPretty(req)
-
-	dc := &httpclient.DebugCollector{}
-	ctx = httpclient.NewDebugContext(ctx, dc)
-
-	start := time.Now()
-	resp, err := d.inner.Chat(ctx, req)
-	elapsed := time.Since(start)
-
-	respJSON := marshalPretty(resp)
-	d.printBlock("Chat", dc, reqJSON, respJSON, elapsed, err)
-	return resp, err
+// recorder tees the response body so it can be logged after it was sent.
+type recorder struct {
+	http.ResponseWriter
+	body bytes.Buffer
 }
 
-// Embed delegates to the wrapped provider and logs the full request lifecycle.
-func (d *Provider) Embed(ctx context.Context, req *api.EmbedRequest) (*api.EmbedResponse, error) {
-	reqJSON := marshalPretty(req)
-
-	dc := &httpclient.DebugCollector{}
-	ctx = httpclient.NewDebugContext(ctx, dc)
-
-	start := time.Now()
-	resp, err := d.inner.Embed(ctx, req)
-	elapsed := time.Since(start)
-
-	respJSON := marshalPretty(resp)
-	d.printBlock("Embed", dc, reqJSON, respJSON, elapsed, err)
-	return resp, err
+func (r *recorder) Write(b []byte) (int, error) {
+	r.body.Write(b)
+	return r.ResponseWriter.Write(b)
 }
 
-// --- Output formatting ---
+// Unwrap exposes the wrapped writer to http.ResponseController.
+func (r *recorder) Unwrap() http.ResponseWriter { return r.ResponseWriter }
 
-func (d *Provider) printBlock(op string, dc *httpclient.DebugCollector, inReq, outResp []byte, elapsed time.Duration, callErr error) {
-	reqID := shortID()
-	provName := d.inner.Name()
-	ts := time.Now().Format(time.RFC3339)
+func format(r *http.Request, ex *Exchange, reqBody, respBody []byte, elapsed time.Duration) []byte {
+	const (
+		line = "══════════════════════════════════════════════════════════════════════"
+		thin = "──────────────────────────────────────────────────────────────────────"
+	)
 
 	var buf bytes.Buffer
-	line := "══════════════════════════════════════════════════════════════════════"
-	thin := "──────────────────────────────────────────────────────────────────────"
-
 	fmt.Fprintf(&buf, "\n╔%s\n", line)
-	fmt.Fprintf(&buf, "║ DEBUG [%s] %s → %s\n", reqID, op, provName)
-	fmt.Fprintf(&buf, "║ %s\n", ts)
+	fmt.Fprintf(&buf, "║ DEBUG [%s] %s %s\n", shortID(), r.Method, r.URL.Path)
+	fmt.Fprintf(&buf, "║ %s\n", time.Now().Format(time.RFC3339))
 	fmt.Fprintf(&buf, "╠%s\n", line)
 
-	// 1. Incoming shared API request
 	fmt.Fprintf(&buf, "║ ► INCOMING REQUEST (shared API)\n")
-	writeIndented(&buf, inReq)
+	writeIndented(&buf, prettyJSON(reqBody))
 	fmt.Fprintf(&buf, "╠%s\n", thin)
 
-	// 2. Outgoing provider-specific request
-	fmt.Fprintf(&buf, "║ ► OUTGOING PROVIDER REQUEST (%s)\n", provName)
-	if dc.RequestMethod != "" {
-		fmt.Fprintf(&buf, "║ %s %s\n", dc.RequestMethod, dc.RequestURL)
+	fmt.Fprintf(&buf, "║ ► OUTGOING PROVIDER REQUEST\n")
+	if ex.Method != "" {
+		fmt.Fprintf(&buf, "║ %s %s\n", ex.Method, ex.URL)
 	}
-	writeIndented(&buf, prettyJSON(dc.RequestBody))
+	writeIndented(&buf, prettyJSON(ex.RequestBody))
 	fmt.Fprintf(&buf, "╠%s\n", thin)
 
-	// 3. Incoming provider-specific response
-	fmt.Fprintf(&buf, "║ ► INCOMING PROVIDER RESPONSE (%s)\n", provName)
-	writeIndented(&buf, prettyJSON(dc.ResponseBody))
+	fmt.Fprintf(&buf, "║ ► INCOMING PROVIDER RESPONSE\n")
+	writeIndented(&buf, prettyJSON(ex.ResponseBody))
 	fmt.Fprintf(&buf, "╠%s\n", thin)
 
-	// 4. Outgoing shared API response
 	fmt.Fprintf(&buf, "║ ► OUTGOING RESPONSE (shared API)\n")
-	if callErr != nil {
-		fmt.Fprintf(&buf, "║ ERROR: %s\n", callErr)
-	}
-	writeIndented(&buf, outResp)
+	writeIndented(&buf, prettyJSON(respBody))
 	fmt.Fprintf(&buf, "╠%s\n", thin)
 
 	fmt.Fprintf(&buf, "║ Duration: %s\n", elapsed.Round(time.Millisecond))
 	fmt.Fprintf(&buf, "╚%s\n", line)
-
-	// Atomic write: lock so concurrent requests don't interleave
-	d.mu.Lock()
-	_, _ = d.w.Write(buf.Bytes())
-	d.mu.Unlock()
-}
-
-// --- Helpers ---
-
-func marshalPretty(v interface{}) []byte {
-	if v == nil {
-		return []byte("<nil>")
-	}
-	b, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		return []byte(fmt.Sprintf("<marshal error: %s>", err))
-	}
-	return b
+	return buf.Bytes()
 }
 
 func prettyJSON(raw []byte) []byte {
@@ -153,8 +116,8 @@ func prettyJSON(raw []byte) []byte {
 		return []byte("<empty>")
 	}
 	var buf bytes.Buffer
-	if err := json.Indent(&buf, raw, "", "  "); err != nil {
-		return raw // already not valid JSON, return as-is
+	if err := json.Indent(&buf, bytes.TrimSpace(raw), "", "  "); err != nil {
+		return raw // not JSON; show as-is
 	}
 	return buf.Bytes()
 }
@@ -167,6 +130,6 @@ func writeIndented(buf *bytes.Buffer, data []byte) {
 
 func shortID() string {
 	b := make([]byte, 4)
-	rand.Read(b)
+	_, _ = rand.Read(b)
 	return hex.EncodeToString(b)
 }

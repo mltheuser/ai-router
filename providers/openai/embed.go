@@ -2,10 +2,11 @@ package openai
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/usecase/embedding"
 )
+
+// --- Embedding wire types ---
 
 type embedRequest struct {
 	Model      string   `json:"model"`
@@ -14,16 +15,14 @@ type embedRequest struct {
 }
 
 type embedResponse struct {
-	Object string      `json:"object"`
-	Data   []embedData `json:"data"`
-	Model  string      `json:"model"`
-	Usage  embedUsage  `json:"usage"`
+	Model string      `json:"model"`
+	Data  []embedData `json:"data"`
+	Usage embedUsage  `json:"usage"`
 }
 
 type embedData struct {
-	Object    string    `json:"object"`
-	Embedding []float64 `json:"embedding"`
 	Index     int       `json:"index"`
+	Embedding []float64 `json:"embedding"`
 }
 
 type embedUsage struct {
@@ -32,33 +31,27 @@ type embedUsage struct {
 }
 
 // Embed generates embeddings via the OpenAI embeddings endpoint.
-func (p *Provider) Embed(ctx context.Context, req *api.EmbedRequest) (*api.EmbedResponse, error) {
-	oReq := embedRequest{
+func (p *Provider) Embed(ctx context.Context, req *embedding.Request) (*embedding.Response, error) {
+	wireReq := embedRequest{
 		Model:      req.Model,
 		Input:      req.Input,
 		Dimensions: req.Dimensions,
 	}
 
-	var oResp embedResponse
-	if err := p.client.post(ctx, "/embeddings", oReq, &oResp); err != nil {
-		return nil, fmt.Errorf("openai embed: %w", err)
+	var wireResp embedResponse
+	if err := p.client.post(ctx, "/embeddings", wireReq, &wireResp); err != nil {
+		return nil, err
 	}
 
-	resp := &api.EmbedResponse{
-		Object: oResp.Object,
-		Model:  oResp.Model,
-		Usage: api.EmbedUsage{
-			PromptTokens: oResp.Usage.PromptTokens,
-			TotalTokens:  oResp.Usage.TotalTokens,
+	resp := &embedding.Response{
+		Model: wireResp.Model,
+		Usage: embedding.Usage{
+			PromptTokens: wireResp.Usage.PromptTokens,
+			TotalTokens:  wireResp.Usage.TotalTokens,
 		},
 	}
-	for _, d := range oResp.Data {
-		resp.Data = append(resp.Data, api.EmbedData{
-			Object:    d.Object,
-			Embedding: d.Embedding,
-			Index:     d.Index,
-		})
+	for _, d := range wireResp.Data {
+		resp.Data = append(resp.Data, embedding.Embedding{Index: d.Index, Embedding: d.Embedding})
 	}
-
 	return resp, nil
 }

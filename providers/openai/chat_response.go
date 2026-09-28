@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/usecase/chat"
 )
 
 // --- Responses wire types (response) ---
@@ -59,17 +59,17 @@ type responsesUsage struct {
 
 // --- Response translation ---
 
-func mapResponsesResponse(oResp *responsesResponse) *api.ChatResponse {
-	resp := api.ChatResponse{
+func mapResponsesResponse(oResp *responsesResponse) *chat.Response {
+	resp := chat.Response{
 		Model: oResp.Model,
-		Usage: api.ChatUsage{
+		Usage: chat.Usage{
 			PromptTokens:     oResp.Usage.InputTokens,
 			CompletionTokens: oResp.Usage.OutputTokens,
 			TotalTokens:      oResp.Usage.TotalTokens,
 			ReasoningTokens:  oResp.Usage.OutputTokensDetails.ReasoningTokens,
 			CacheReadTokens:  oResp.Usage.InputTokensDetails.CachedTokens,
 		},
-		Message: api.ChatMessage{Role: api.RoleAssistant},
+		Message: chat.Message{Role: chat.RoleAssistant},
 	}
 
 	// The output is a list of items: message items carry the answer text (a
@@ -92,9 +92,9 @@ func mapResponsesResponse(oResp *responsesResponse) *api.ChatResponse {
 				}
 			}
 		case "function_call":
-			resp.Message.ToolCalls = append(resp.Message.ToolCalls, api.ToolCall{
+			resp.Message.ToolCalls = append(resp.Message.ToolCalls, chat.ToolCall{
 				ID: item.CallID,
-				Function: api.ToolCallFunction{
+				Function: chat.ToolCallFunction{
 					Name:      item.Name,
 					Arguments: parseArguments(item.Arguments),
 				},
@@ -102,7 +102,7 @@ func mapResponsesResponse(oResp *responsesResponse) *api.ChatResponse {
 		}
 	}
 
-	resp.Message.Content = api.TextContent(strings.Join(texts, "\n\n"))
+	resp.Message.Content = chat.TextContent(strings.Join(texts, "\n\n"))
 	resp.Message.ReasoningContent = strings.Join(summaries, "\n\n")
 	resp.FinishReason = mapFinishReason(oResp, len(resp.Message.ToolCalls) > 0, refused)
 
@@ -137,7 +137,7 @@ func parseArguments(raw string) map[string]interface{} {
 // finish reason: it reports a status (plus a reason when incomplete), and tool
 // calls are signalled by function_call items. The type is passthrough-friendly,
 // so unrecognized values are forwarded unchanged.
-func mapFinishReason(oResp *responsesResponse, hasToolCalls, refused bool) api.FinishReason {
+func mapFinishReason(oResp *responsesResponse, hasToolCalls, refused bool) chat.FinishReason {
 	var incompleteReason string
 	if oResp.IncompleteDetails != nil {
 		incompleteReason = oResp.IncompleteDetails.Reason
@@ -145,18 +145,18 @@ func mapFinishReason(oResp *responsesResponse, hasToolCalls, refused bool) api.F
 
 	switch {
 	case oResp.Status == "incomplete" && incompleteReason == "max_output_tokens":
-		return api.FinishReasonLength
+		return chat.FinishReasonLength
 	case oResp.Status == "incomplete" && incompleteReason == "content_filter":
-		return api.FinishReasonContentFilter
+		return chat.FinishReasonContentFilter
 	case oResp.Status == "incomplete":
-		return api.FinishReason(incompleteReason)
+		return chat.FinishReason(incompleteReason)
 	case oResp.Status != "completed" && oResp.Status != "":
-		return api.FinishReason(oResp.Status)
+		return chat.FinishReason(oResp.Status)
 	case hasToolCalls:
-		return api.FinishReasonToolCalls
+		return chat.FinishReasonToolCalls
 	case refused:
-		return api.FinishReasonContentFilter
+		return chat.FinishReasonContentFilter
 	default:
-		return api.FinishReasonStop
+		return chat.FinishReasonStop
 	}
 }

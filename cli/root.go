@@ -10,10 +10,9 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "ai-router",
-	Short: "Unified LLM router — one API for all providers",
-	Long: `ai-router is a unified LLM gateway that routes requests to multiple
-cloud providers (OpenRouter, Google, Anthropic) and local runners (Ollama, vLLM)
-through a single, purpose-built API.`,
+	Short: "Unified AI router — one API per use case, across all providers",
+	Long: `ai-router routes requests for each AI use case (chat, embedding, ...) to
+cloud providers and local runners through one purpose-built API per use case.`,
 }
 
 // Execute runs the root command.

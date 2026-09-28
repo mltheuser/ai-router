@@ -1,6 +1,4 @@
-// Package api holds the shared, provider-independent request/response types
-// and error helpers used across the router, server, and provider packages.
-package api
+package chat
 
 // Role identifies the author of a chat message.
 type Role string
@@ -40,10 +38,10 @@ const (
 	FinishReasonError         FinishReason = "error"
 )
 
-// ChatRequest represents a chat completion request.
-type ChatRequest struct {
-	Model    string        `json:"model"`
-	Messages []ChatMessage `json:"messages"`
+// Request is the body of POST /v1/chat.
+type Request struct {
+	Model    string    `json:"model"`
+	Messages []Message `json:"messages"`
 	// Generation parameters
 	FrequencyPenalty *float64 `json:"frequency_penalty,omitempty"`
 	MaxTokens        *int     `json:"max_tokens,omitempty"`
@@ -145,12 +143,12 @@ func ImagesFromContent(parts []ContentPart) []string {
 	return images
 }
 
-// ChatMessage represents a message in a chat conversation.
+// Message represents a message in a chat conversation.
 // Different roles use different subsets of fields:
 //   - user/system:  Role + Content (text-only or multimodal)
 //   - assistant:    Role + Content (+ ReasoningContent, ToolCalls)
 //   - tool:         Role + Content + ToolCallID
-type ChatMessage struct {
+type Message struct {
 	Role             Role          `json:"role"`
 	Content          []ContentPart `json:"content"`
 	ReasoningContent string        `json:"reasoning_content,omitempty"`
@@ -158,17 +156,17 @@ type ChatMessage struct {
 	ToolCallID       string        `json:"tool_call_id,omitempty"` // tool result only
 }
 
-// ChatResponse represents a chat completion response.
+// Response is the body of a successful POST /v1/chat response.
 // Multi-completion is intentionally unsupported: a request yields a single message.
-type ChatResponse struct {
+type Response struct {
 	Model        string       `json:"model"`
-	Message      ChatMessage  `json:"message"`
+	Message      Message      `json:"message"`
 	FinishReason FinishReason `json:"finish_reason"`
-	Usage        ChatUsage    `json:"usage"`
+	Usage        Usage        `json:"usage"`
 }
 
-// ChatUsage represents token usage for a chat completion request.
-type ChatUsage struct {
+// Usage reports the tokens a request consumed.
+type Usage struct {
 	PromptTokens     int `json:"prompt_tokens"`
 	CompletionTokens int `json:"completion_tokens"`
 	TotalTokens      int `json:"total_tokens"`

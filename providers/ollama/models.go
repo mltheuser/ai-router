@@ -3,106 +3,112 @@ package ollama
 import (
 	"context"
 	"fmt"
+	"slices"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/provider"
+	"github.com/mltheuser/ai-router/usecase/chat"
+	"github.com/mltheuser/ai-router/usecase/embedding"
 )
 
-// ollamaTagsResponse is the response from GET /api/tags.
-type ollamaTagsResponse struct {
-	Models []ollamaModelEntry `json:"models"`
+// tagsResponse is the response from GET /api/tags.
+type tagsResponse struct {
+	Models []struct {
+		Name string `json:"name"`
+		Size int64  `json:"size"`
+	} `json:"models"`
 }
 
-type ollamaModelEntry struct {
-	Name       string             `json:"name"`
-	Model      string             `json:"model"`
-	ModifiedAt string             `json:"modified_at"`
-	Size       int64              `json:"size"`
-	Digest     string             `json:"digest"`
-	Details    ollamaModelDetails `json:"details"`
-}
-
-type ollamaModelDetails struct {
-	ParentModel   string   `json:"parent_model"`
-	Format        string   `json:"format"`
-	Family        string   `json:"family"`
-	Families      []string `json:"families"`
-	ParameterSize string   `json:"parameter_size"`
-	QuantLevel    string   `json:"quantization_level"`
-}
-
-// ollamaShowRequest is the request for POST /api/show.
-type ollamaShowRequest struct {
+// showRequest and showResponse are the request and the part of the response
+// we use of POST /api/show.
+type showRequest struct {
 	Name string `json:"name"`
 }
 
-// ollamaShowResponse captures the fields we need from /api/show.
-type ollamaShowResponse struct {
+type showResponse struct {
 	Capabilities []string `json:"capabilities"`
 }
 
-// ListModels fetches installed models from Ollama and enriches with capabilities via /api/show.
-func (p *Provider) ListModels(ctx context.Context) ([]api.ModelInfo, error) {
-	// Step 1: Get list of installed models
-	var tagsResp ollamaTagsResponse
-	if err := p.client.get(ctx, "/api/tags", &tagsResp); err != nil {
-		return nil, fmt.Errorf("listing ollama models: %w", err)
-	}
-
-	// Step 2: For each model, call /api/show to get capabilities
-	var models []api.ModelInfo
-	for _, m := range tagsResp.Models {
-		caps, err := p.getCapabilities(ctx, m.Name)
-		if err != nil {
-			// If we can't get capabilities, default to chat
-			caps = []api.Capability{api.CapabilityChat}
-		}
-
-		models = append(models, api.ModelInfo{
-			ID:           m.Name,
-			Provider:     p.Name(),
-			ProviderType: api.ProviderTypeLocal,
-			Capabilities: caps,
-			SizeBytes:    int64Ptr(m.Size),
-			// Local models are free
-			CostPerMInput:  float64Ptr(0),
-			CostPerMOutput: float64Ptr(0),
-		})
-	}
-
-	return models, nil
+// installedModel is an installed model with its Ollama capabilities
+// ("completion", "embedding", "tools", "vision", "thinking", ...).
+type installedModel struct {
+	name         string
+	size         int64
+	capabilities []string
 }
 
-// getCapabilities calls /api/show for a model and maps Ollama capabilities to our types.
-func (p *Provider) getCapabilities(ctx context.Context, modelName string) ([]api.Capability, error) {
-	var showResp ollamaShowResponse
-	if err := p.client.post(ctx, "/api/show", ollamaShowRequest{Name: modelName}, &showResp); err != nil {
+// ListChatModels returns the installed models that can complete text.
+func (p *Provider) ListChatModels(ctx context.Context) ([]chat.Model, error) {
+	installed, err := p.listInstalled(ctx)
+	if err != nil {
 		return nil, err
 	}
 
-	var caps []api.Capability
-	for _, c := range showResp.Capabilities {
-		switch c {
-		case "embedding":
-			caps = append(caps, api.CapabilityEmbed)
-		case "completion":
-			caps = append(caps, api.CapabilityChat)
-			caps = append(caps, api.CapabilityStructuredOutput)
-		case "tools":
-			caps = append(caps, api.CapabilityTools)
-		case "vision":
-			caps = append(caps, api.CapabilityVision)
-		case "thinking":
-			caps = append(caps, api.CapabilityReasoning)
+	var models []chat.Model
+	for _, m := range installed {
+		free := 0.0
+		if !slices.Contains(m.capabilities, "completion") {
+			continue
 		}
+		// Ollama constrains any completion model's output to a JSON schema.
+		features := []chat.Feature{chat.FeatureStructuredOutput}
+		for _, c := range m.capabilities {
+			switch c {
+			case "tools":
+				features = append(features, chat.FeatureTools)
+			case "vision":
+				features = append(features, chat.FeatureVision)
+			case "thinking":
+				features = append(features, chat.FeatureReasoning)
+			}
+		}
+		models = append(models, chat.Model{
+			ModelRef:       provider.NewModelRef(p, m.name),
+			Features:       features,
+			SizeBytes:      &m.size,
+			CostPerMInput:  &free,
+			CostPerMOutput: &free,
+		})
+	}
+	return models, nil
+}
+
+// ListEmbeddingModels returns the installed models that can embed text.
+func (p *Provider) ListEmbeddingModels(ctx context.Context) ([]embedding.Model, error) {
+	installed, err := p.listInstalled(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	return caps, nil
+	var models []embedding.Model
+	for _, m := range installed {
+		if slices.Contains(m.capabilities, "embedding") {
+			free := 0.0
+			models = append(models, embedding.Model{
+				ModelRef:      provider.NewModelRef(p, m.name),
+				SizeBytes:     &m.size,
+				CostPerMInput: &free,
+			})
+		}
+	}
+	return models, nil
 }
 
-func float64Ptr(v float64) *float64 {
-	return &v
-}
+// listInstalled returns the installed models with their capabilities, which
+// only /api/show reports, one model at a time.
+func (p *Provider) listInstalled(ctx context.Context) ([]installedModel, error) {
+	var tags tagsResponse
+	if err := p.client.get(ctx, "/api/tags", &tags); err != nil {
+		return nil, fmt.Errorf("listing ollama models: %w", err)
+	}
 
-func int64Ptr(v int64) *int64 {
-	return &v
+	models := make([]installedModel, 0, len(tags.Models))
+	for _, m := range tags.Models {
+		var show showResponse
+		if err := p.client.post(ctx, "/api/show", showRequest{Name: m.Name}, &show); err != nil {
+			// Without its capabilities, assume a plain completion model.
+			show.Capabilities = []string{"completion"}
+		}
+		models = append(models, installedModel{name: m.Name, size: m.Size, capabilities: show.Capabilities})
+	}
+	return models, nil
 }

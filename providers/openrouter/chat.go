@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/usecase/chat"
 )
 
 // --- OpenRouter wire types (request) ---
@@ -23,8 +23,8 @@ type openRouterChatRequest struct {
 }
 
 type openRouterResponseFormat struct {
-	Type       api.ResponseFormatType `json:"type"`
-	JSONSchema *openRouterJSONSchema  `json:"json_schema"`
+	Type       chat.ResponseFormatType `json:"type"`
+	JSONSchema *openRouterJSONSchema   `json:"json_schema"`
 }
 
 type openRouterJSONSchema struct {
@@ -36,8 +36,8 @@ type openRouterJSONSchema struct {
 
 // openRouterToolDefinition wraps our flat ToolDefinition in OpenRouter's {"type":"function","function":{...}} format.
 type openRouterToolDefinition struct {
-	Type     string             `json:"type"`
-	Function api.ToolDefinition `json:"function"`
+	Type     string              `json:"type"`
+	Function chat.ToolDefinition `json:"function"`
 }
 
 // openRouterRequestMessage is the outgoing message format for OpenRouter.
@@ -130,7 +130,7 @@ type openRouterChatResponse struct {
 
 // Chat sends a chat completion request to OpenRouter and maps the response
 // back to the shared API type.
-func (p *Provider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatResponse, error) {
+func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response, error) {
 	orReq := toOpenRouterRequest(req)
 
 	var orResp openRouterChatResponse
@@ -143,7 +143,7 @@ func (p *Provider) Chat(ctx context.Context, req *api.ChatRequest) (*api.ChatRes
 
 // --- Request translation ---
 
-func toOpenRouterRequest(req *api.ChatRequest) *openRouterChatRequest {
+func toOpenRouterRequest(req *chat.Request) *openRouterChatRequest {
 	orReq := &openRouterChatRequest{
 		Model:            req.Model,
 		FrequencyPenalty: req.FrequencyPenalty,
@@ -171,7 +171,7 @@ func toOpenRouterRequest(req *api.ChatRequest) *openRouterChatRequest {
 		}
 
 		switch m.Role {
-		case api.RoleAssistant:
+		case chat.RoleAssistant:
 			// Convert tool calls: serialize arguments map → JSON string
 			for _, tc := range m.ToolCalls {
 				argsJSON, _ := json.Marshal(tc.Function.Arguments)
@@ -184,7 +184,7 @@ func toOpenRouterRequest(req *api.ChatRequest) *openRouterChatRequest {
 					},
 				})
 			}
-		case api.RoleTool:
+		case chat.RoleTool:
 			// OpenRouter uses "tool_call_id" to match results to calls.
 			msg.ToolCallID = m.ToolCallID
 		}
@@ -211,16 +211,16 @@ func toOpenRouterRequest(req *api.ChatRequest) *openRouterChatRequest {
 }
 
 // toOpenRouterContent converts our []ContentPart to OpenRouter's content parts format.
-func toOpenRouterContent(parts []api.ContentPart) []openRouterContentPart {
+func toOpenRouterContent(parts []chat.ContentPart) []openRouterContentPart {
 	result := make([]openRouterContentPart, 0, len(parts))
 	for _, p := range parts {
 		switch p.Type {
-		case api.ContentPartText:
+		case chat.ContentPartText:
 			result = append(result, openRouterContentPart{
 				Type: "text",
 				Text: p.Text,
 			})
-		case api.ContentPartImage:
+		case chat.ContentPartImage:
 			result = append(result, openRouterContentPart{
 				Type: "image_url",
 				ImageURL: &openRouterContentImageURL{
@@ -232,7 +232,7 @@ func toOpenRouterContent(parts []api.ContentPart) []openRouterContentPart {
 	return result
 }
 
-func toOpenRouterResponseFormat(rf *api.ResponseFormat) *openRouterResponseFormat {
+func toOpenRouterResponseFormat(rf *chat.ResponseFormat) *openRouterResponseFormat {
 	if rf == nil {
 		return nil
 	}
@@ -255,10 +255,10 @@ func toOpenRouterResponseFormat(rf *api.ResponseFormat) *openRouterResponseForma
 
 // --- Response translation ---
 
-func mapOpenRouterResponse(orResp *openRouterChatResponse) *api.ChatResponse {
-	resp := api.ChatResponse{
+func mapOpenRouterResponse(orResp *openRouterChatResponse) *chat.Response {
+	resp := chat.Response{
 		Model: orResp.Model,
-		Usage: api.ChatUsage{
+		Usage: chat.Usage{
 			PromptTokens:     orResp.Usage.PromptTokens,
 			CompletionTokens: orResp.Usage.CompletionTokens,
 			TotalTokens:      orResp.Usage.TotalTokens,
@@ -284,20 +284,20 @@ func mapOpenRouterResponse(orResp *openRouterChatResponse) *api.ChatResponse {
 			reasoning = c.Message.Thinking
 		}
 
-		resp.Message = api.ChatMessage{
-			Role:             api.Role(c.Message.Role),
-			Content:          api.TextContent(c.Message.Content),
+		resp.Message = chat.Message{
+			Role:             chat.Role(c.Message.Role),
+			Content:          chat.TextContent(c.Message.Content),
 			ReasoningContent: reasoning,
 		}
-		resp.FinishReason = api.FinishReason(c.FinishReason)
+		resp.FinishReason = chat.FinishReason(c.FinishReason)
 
 		// Map tool calls: parse JSON-string arguments → map
 		if len(c.Message.ToolCalls) > 0 {
-			resp.FinishReason = api.FinishReasonToolCalls
+			resp.FinishReason = chat.FinishReasonToolCalls
 			for _, tc := range c.Message.ToolCalls {
-				resp.Message.ToolCalls = append(resp.Message.ToolCalls, api.ToolCall{
+				resp.Message.ToolCalls = append(resp.Message.ToolCalls, chat.ToolCall{
 					ID: tc.ID,
-					Function: api.ToolCallFunction{
+					Function: chat.ToolCallFunction{
 						Name:      tc.Function.Name,
 						Arguments: parseArguments(tc.Function.Arguments),
 					},

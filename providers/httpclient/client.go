@@ -1,5 +1,6 @@
 // Package httpclient provides a small JSON-over-HTTP client shared by the
-// provider implementations, with optional context-based debug capture.
+// provider implementations. It records every exchange into the request's
+// debug.Exchange, if one is attached, so debug logging needs no provider code.
 package httpclient
 
 import (
@@ -12,31 +13,8 @@ import (
 	"time"
 
 	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/debug"
 )
-
-// --- Debug collector (context-based) ---
-
-type debugCtxKey struct{}
-
-// DebugCollector captures raw HTTP request/response bodies for debug logging.
-// It is passed through context so providers don't need any code changes.
-type DebugCollector struct {
-	RequestMethod string
-	RequestURL    string
-	RequestBody   []byte
-	ResponseBody  []byte
-}
-
-// NewDebugContext returns a child context carrying the given collector.
-func NewDebugContext(ctx context.Context, dc *DebugCollector) context.Context {
-	return context.WithValue(ctx, debugCtxKey{}, dc)
-}
-
-// DebugCollectorFromContext extracts the collector, or nil if absent.
-func DebugCollectorFromContext(ctx context.Context) *DebugCollector {
-	dc, _ := ctx.Value(debugCtxKey{}).(*DebugCollector)
-	return dc
-}
 
 // --- Client ---
 
@@ -94,9 +72,8 @@ func (c *Client) Post(ctx context.Context, path string, body interface{}, result
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	// Capture request body for debug if collector is present
-	if dc := DebugCollectorFromContext(ctx); dc != nil {
-		dc.RequestBody = data
+	if ex := debug.ExchangeFrom(ctx); ex != nil {
+		ex.RequestBody = data
 	}
 
 	return c.Do(req, result)
@@ -108,10 +85,10 @@ func (c *Client) Do(req *http.Request, result interface{}) error {
 		req.Header.Set(k, v)
 	}
 
-	// Capture request metadata for debug if collector is present
-	if dc := DebugCollectorFromContext(req.Context()); dc != nil {
-		dc.RequestMethod = req.Method
-		dc.RequestURL = req.URL.String()
+	ex := debug.ExchangeFrom(req.Context())
+	if ex != nil {
+		ex.Method = req.Method
+		ex.URL = req.URL.String()
 	}
 
 	resp, err := c.HTTPClient.Do(req)
@@ -125,9 +102,8 @@ func (c *Client) Do(req *http.Request, result interface{}) error {
 		return fmt.Errorf("reading response: %w", err)
 	}
 
-	// Capture response body for debug if collector is present
-	if dc := DebugCollectorFromContext(req.Context()); dc != nil {
-		dc.ResponseBody = body
+	if ex != nil {
+		ex.ResponseBody = body
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
