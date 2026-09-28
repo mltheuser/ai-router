@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mltheuser/ai-router/api"
 	"github.com/mltheuser/ai-router/debug"
+	"github.com/mltheuser/ai-router/httpx"
 	"github.com/mltheuser/ai-router/usecase"
 )
 
@@ -49,7 +49,7 @@ func New(cfg Config) *Server {
 	}
 	mux.Handle("POST /v1/test", handle(s.handleTest))
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
-		api.WriteJSON(w, map[string]string{"status": "ok"})
+		httpx.WriteJSON(w, map[string]string{"status": "ok"})
 	})
 
 	s.httpServer = &http.Server{
@@ -83,7 +83,7 @@ func handle(h func(http.ResponseWriter, *http.Request) error) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := h(w, r); err != nil {
 			slog.Warn("Request failed", "path", r.URL.Path, "error", err)
-			api.WriteError(w, err)
+			httpx.WriteError(w, err)
 		}
 	})
 }

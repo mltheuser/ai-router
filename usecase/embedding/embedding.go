@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/httpx"
 	"github.com/mltheuser/ai-router/provider"
 	"github.com/mltheuser/ai-router/usecase"
 )
@@ -95,11 +95,11 @@ func prefer(a, b Model) bool {
 // Handle serves POST /v1/embedding.
 func (u *UseCase) Handle(w http.ResponseWriter, r *http.Request) error {
 	var req Request
-	if err := api.DecodeJSON(r, &req); err != nil {
+	if err := httpx.DecodeJSON(r, &req); err != nil {
 		return err
 	}
 	if len(req.Input) == 0 {
-		return api.NewError(http.StatusBadRequest, "input is required")
+		return httpx.NewError(http.StatusBadRequest, "input is required")
 	}
 
 	model, p, err := u.Resolve(req.Model)
@@ -112,6 +112,6 @@ func (u *UseCase) Handle(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return fmt.Errorf("%s: %w", p.Name(), err)
 	}
-	api.WriteJSON(w, resp)
+	httpx.WriteJSON(w, resp)
 	return nil
 }

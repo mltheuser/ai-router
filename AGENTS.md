@@ -32,14 +32,14 @@ Model lists are fetched once, at startup, and never refreshed: restart the serve
 -   **`provider/`**: What every provider is (`Provider`: name, type, `Verify`) and the routing identity every listed model carries (`ModelRef`).
 -   **`providers/`**: Self-contained provider implementations, one per subdirectory (e.g. `ollama/`, `openrouter/`).
 -   **`server/`**: The HTTP server. It knows no use case in particular; every route is derived from the `usecase.UseCase` interface.
--   **`api/`**: HTTP plumbing every handler shares: the error type and JSON helpers.
+-   **`httpx/`**: HTTP plumbing shared across the router: the error type every handler responds with, the mapping of upstream API failures onto it, and JSON helpers.
 -   **`debug/`**: The `--debug` request log, an HTTP middleware.
 -   **`cli/`** / **`cmd/`**: Process entry point and commands. `cli/registry.go` is the one place that knows every provider and every use case.
 -   **[`SDKs/`](SDKs/)**: Client libraries for the proxy, one per language. Carries its own guide with the conventions every SDK follows — read when working on any SDK.
 
 ## Architecture Highlights
 
-Dependencies point one way: `providers/*` → `usecase/<name>` → `usecase` → `provider`, `api`. A use case never imports a provider, and a provider never imports the server. Only `cli/registry.go` sees both sides.
+Dependencies point one way: `providers/*` → `usecase/<name>` → `usecase` → `provider`, `httpx`. A use case never imports a provider, and a provider never imports the server. Only `cli/registry.go` sees both sides.
 
 ### Adding a Provider
 1.  Create `providers/<name>/` with a type implementing `provider.Provider`.

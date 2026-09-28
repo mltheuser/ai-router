@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/httpx"
 	"github.com/mltheuser/ai-router/provider"
 )
 
@@ -19,7 +19,7 @@ import (
 func (b *Base[M, P]) ListModels(w http.ResponseWriter, r *http.Request) error {
 	providerType := provider.Type(r.URL.Query().Get("type"))
 	if providerType != "" && providerType != provider.Cloud && providerType != provider.Local {
-		return api.NewError(http.StatusBadRequest, "type must be 'cloud' or 'local'")
+		return httpx.NewError(http.StatusBadRequest, "type must be 'cloud' or 'local'")
 	}
 	search := strings.ToLower(r.URL.Query().Get("search"))
 
@@ -40,7 +40,7 @@ func (b *Base[M, P]) ListModels(w http.ResponseWriter, r *http.Request) error {
 		return cmp.Or(cmp.Compare(a.Ref().Provider, b.Ref().Provider), cmp.Compare(a.Ref().ID, b.Ref().ID))
 	})
 
-	api.WriteJSON(w, struct {
+	httpx.WriteJSON(w, struct {
 		Data []M `json:"data"`
 	}{models})
 	return nil

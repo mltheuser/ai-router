@@ -12,8 +12,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mltheuser/ai-router/api"
 	"github.com/mltheuser/ai-router/debug"
+	"github.com/mltheuser/ai-router/httpx"
 )
 
 // --- Client ---
@@ -107,7 +107,7 @@ func (c *Client) Do(req *http.Request, result interface{}) error {
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return api.NewUpstreamError(resp.StatusCode, string(body))
+		return httpx.NewUpstreamError(resp.StatusCode, string(body))
 	}
 
 	if result != nil {

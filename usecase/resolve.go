@@ -5,13 +5,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/httpx"
 	"github.com/mltheuser/ai-router/provider"
 )
 
 var (
-	errInvalidModel  = api.NewError(http.StatusBadRequest, "invalid model string")
-	errModelNotFound = api.NewError(http.StatusNotFound, "model not found")
+	errInvalidModel  = httpx.NewError(http.StatusBadRequest, "invalid model string")
+	errModelNotFound = httpx.NewError(http.StatusNotFound, "model not found")
 )
 
 // query is a parsed request model string "id:provider_type[@provider]".

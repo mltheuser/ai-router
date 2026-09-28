@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/httpx"
 	"github.com/mltheuser/ai-router/usecase"
 )
 
@@ -20,11 +20,11 @@ type testReport struct {
 // models the server serves.
 func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) error {
 	var req usecase.TestRequest
-	if err := api.DecodeJSON(r, &req); err != nil {
+	if err := httpx.DecodeJSON(r, &req); err != nil {
 		return err
 	}
 	if req.Provider == "" {
-		return api.NewError(http.StatusBadRequest, "provider is required")
+		return httpx.NewError(http.StatusBadRequest, "provider is required")
 	}
 	req.URL = "http://" + s.httpServer.Addr
 
@@ -42,12 +42,12 @@ func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) error {
 
 	switch {
 	case !knownUseCase:
-		return api.NewError(http.StatusBadRequest, fmt.Sprintf("unknown use case '%s'", req.UseCase))
+		return httpx.NewError(http.StatusBadRequest, fmt.Sprintf("unknown use case '%s'", req.UseCase))
 	case len(report.UseCases) == 0 && req.UseCase != "":
-		return api.NewError(http.StatusNotFound, fmt.Sprintf("provider '%s' does not serve %s: it is not loaded or does not implement it", req.Provider, req.UseCase))
+		return httpx.NewError(http.StatusNotFound, fmt.Sprintf("provider '%s' does not serve %s: it is not loaded or does not implement it", req.Provider, req.UseCase))
 	case len(report.UseCases) == 0:
-		return api.NewError(http.StatusNotFound, fmt.Sprintf("provider '%s' is not loaded: it is not configured or failed verification at startup", req.Provider))
+		return httpx.NewError(http.StatusNotFound, fmt.Sprintf("provider '%s' is not loaded: it is not configured or failed verification at startup", req.Provider))
 	}
-	api.WriteJSON(w, report)
+	httpx.WriteJSON(w, report)
 	return nil
 }

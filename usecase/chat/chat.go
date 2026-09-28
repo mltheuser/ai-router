@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/mltheuser/ai-router/api"
+	"github.com/mltheuser/ai-router/httpx"
 	"github.com/mltheuser/ai-router/provider"
 	"github.com/mltheuser/ai-router/usecase"
 )
@@ -90,7 +90,7 @@ func prefer(a, b Model) bool {
 // Handle serves POST /v1/chat.
 func (u *UseCase) Handle(w http.ResponseWriter, r *http.Request) error {
 	var req Request
-	if err := api.DecodeJSON(r, &req); err != nil {
+	if err := httpx.DecodeJSON(r, &req); err != nil {
 		return err
 	}
 	if err := req.validate(); err != nil {
@@ -107,21 +107,21 @@ func (u *UseCase) Handle(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return fmt.Errorf("%s: %w", p.Name(), err)
 	}
-	api.WriteJSON(w, resp)
+	httpx.WriteJSON(w, resp)
 	return nil
 }
 
 // validate checks the request's required fields and enum values.
 func (r *Request) validate() error {
 	if len(r.Messages) == 0 {
-		return api.NewError(http.StatusBadRequest, "messages is required")
+		return httpx.NewError(http.StatusBadRequest, "messages is required")
 	}
 
 	if r.ReasoningEffort != nil {
 		switch *r.ReasoningEffort {
 		case ReasoningEffortNone, ReasoningEffortLow, ReasoningEffortMedium, ReasoningEffortHigh:
 		default:
-			return api.NewError(http.StatusBadRequest, "reasoning_effort must be one of: none, low, medium, high")
+			return httpx.NewError(http.StatusBadRequest, "reasoning_effort must be one of: none, low, medium, high")
 		}
 	}
 
@@ -129,7 +129,7 @@ func (r *Request) validate() error {
 		switch m.Role {
 		case RoleSystem, RoleUser, RoleAssistant, RoleTool:
 		default:
-			return api.NewError(http.StatusBadRequest, "message role must be one of: system, user, assistant, tool")
+			return httpx.NewError(http.StatusBadRequest, "message role must be one of: system, user, assistant, tool")
 		}
 	}
 	return nil
