@@ -1,15 +1,6 @@
-package ai.router.sdk.dsl
+package ai.router.sdk.chat
 
-import ai.router.sdk.models.ChatMessage
-import ai.router.sdk.models.ChatRequest
-import ai.router.sdk.models.ContentPart
-import ai.router.sdk.models.ContentPartType
-import ai.router.sdk.models.JsonSchemaSpec
-import ai.router.sdk.models.ReasoningEffort
-import ai.router.sdk.models.ResponseFormat
-import ai.router.sdk.models.ResponseFormatType
-import ai.router.sdk.models.StructuredChatRequest
-import ai.router.sdk.models.ToolDefinition
+import ai.router.sdk.AiRouterDsl
 import ai.router.sdk.schema.SchemaGenerator
 import kotlinx.serialization.serializer
 
@@ -34,8 +25,7 @@ public fun chatRequest(model: String, block: ChatRequestBuilder.() -> Unit): Cha
  * Entry point for a chat request with typed structured output.
  *
  * Sets up the response format from [T]'s schema automatically and pairs the
- * request with its deserializer so [ai.router.sdk.AiRouterClient.chat] returns
- * a [T] directly.
+ * request with its deserializer so [ChatClient.send] returns a [T] directly.
  *
  * ```kotlin
  * val request = structuredChatRequest<WeatherInfo>("gpt-4:cloud") {
@@ -44,7 +34,7 @@ public fun chatRequest(model: String, block: ChatRequestBuilder.() -> Unit): Cha
  *         user { text("It's 22°C and sunny in Berlin.") }
  *     }
  * }
- * val weather: WeatherInfo = client.chat(request)
+ * val weather: WeatherInfo = client.chat.send(request)
  * ```
  */
 public inline fun <reified T> structuredChatRequest(
@@ -66,10 +56,7 @@ public inline fun <reified T> structuredChatRequest(
 
 // ─── ChatRequest builder ──────────────────────────────────────────────
 
-@DslMarker
-public annotation class ChatDsl
-
-@ChatDsl
+@AiRouterDsl
 public class ChatRequestBuilder(private val model: String) {
     private var messagesBuilder: MessagesBuilder? = null
     private var temperature: Double? = null
@@ -122,7 +109,7 @@ public class ChatRequestBuilder(private val model: String) {
 
 // ─── Messages builder ─────────────────────────────────────────────────
 
-@ChatDsl
+@AiRouterDsl
 public class MessagesBuilder {
     private val messages = mutableListOf<ChatMessage>()
 
@@ -162,7 +149,7 @@ public class MessagesBuilder {
 
 // ─── Content parts builder ────────────────────────────────────────────
 
-@ChatDsl
+@AiRouterDsl
 public class ContentBuilder {
     private val parts = mutableListOf<ContentPart>()
 
@@ -179,7 +166,7 @@ public class ContentBuilder {
 
 // ─── Tools builder ────────────────────────────────────────────────────
 
-@ChatDsl
+@AiRouterDsl
 public class ToolsBuilder {
     private val tools = mutableListOf<ToolDefinition>()
 
@@ -198,7 +185,7 @@ public class ToolsBuilder {
      * }
      * ```
      *
-     * Decode the arguments from a tool call response with [ai.router.sdk.models.ToolCall.decode].
+     * Decode the arguments from a tool call response with [ToolCall.decode].
      */
     public inline fun <reified T> tool(name: String, description: String? = null) {
         addTool(ToolDefinition(name = name, description = description, parameters = SchemaGenerator.generate<T>()))

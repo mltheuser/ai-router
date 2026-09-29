@@ -9,7 +9,7 @@
 2.  **Providers are the unit of connection.** A provider (API key, base URL, `Verify`) is created once and serves every use case whose interface it implements. Serving a use case is opting in by implementing its interface; nothing else needs to know. There are no "not supported" stubs.
 3.  **Provider independence.** Each provider lives in isolation in `providers/`, sharing no code with other providers; they call their APIs through the shared `httpx.Client`.
 4.  **Dynamic routing.** Requests name a model as `model_id:tag[@provider]`. Clients never compose this string themselves: every entry of a use case's model listing carries it in the `model` field, passed verbatim in requests.
-    - `:cloud` / `:local` - the provider type. Among providers of that type listing the model, the use case's preference picks one (chat and embedding: cheapest in the cloud, smallest locally; search and contents, whose models carry no metadata to rank by: the first listed).
+    - `:cloud` / `:local` - the provider type. When multiple providers of that type list the model, the use case's heuristic picks the best one.
     - `@provider` - optional suffix to force a specific provider (e.g. `@openrouter`).
 
 ## API

@@ -1,5 +1,7 @@
-package ai.router.sdk.models
+package ai.router.sdk.chat
 
+import ai.router.sdk.ModelRef
+import ai.router.sdk.ProviderType
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

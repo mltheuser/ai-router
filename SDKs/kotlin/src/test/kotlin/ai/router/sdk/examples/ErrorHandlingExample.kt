@@ -1,7 +1,7 @@
 package ai.router.sdk.examples
 
-import ai.router.sdk.dsl.chatRequest
-import ai.router.sdk.models.AiRouterException
+import ai.router.sdk.AiRouterException
+import ai.router.sdk.chat.chatRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.DisplayName
@@ -16,7 +16,7 @@ class ErrorHandlingExample {
         val ex = assertThrows(AiRouterException::class.java) {
             runBlocking {
                 newExampleClient().use { client ->
-                    client.chat(
+                    client.chat.send(
                         chatRequest("does-not-exist:local@nonexistent") {
                             messages { user { text("hi") } }
                         }

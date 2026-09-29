@@ -24,6 +24,10 @@ dependencies {
 
 ## Usage
 
+The client mirrors the server: one property per use case (e.g. `client.chat`,
+`client.embedding`) — each with `send(...)`
+for the use case's request and `listModels(...)` for the models it accepts.
+
 ### Quick Start
 
 A minimal end-to-end usage of the SDK: connect to the proxy, send one chat
@@ -88,10 +92,7 @@ See [EmbeddingsExample.kt](src/test/kotlin/ai/router/sdk/examples/EmbeddingsExam
 ### Web Search
 
 Send a query and get web pages back, most relevant first. Each result has a
-URL, a title and a snippet with the parts of the page that match the query.
-`maxResults` caps how many results come back. Search models are the
-provider's search modes (e.g. `fast:cloud@exa` or `deep:cloud@exa`), which
-trade speed for depth.
+URL, a title and a text snippet. `maxResults` caps how many results come back.
 
 See [SearchExample.kt](src/test/kotlin/ai/router/sdk/examples/SearchExample.kt).
 
@@ -99,22 +100,19 @@ See [SearchExample.kt](src/test/kotlin/ai/router/sdk/examples/SearchExample.kt).
 
 Load one or more web pages as markdown. The response has one result per
 requested URL, in request order. A page that fails to load carries an `error`
-instead of failing the whole request. The example shows the typical agent
-flow: search, then read the top result.
+instead.
 
 See [ContentsExample.kt](src/test/kotlin/ai/router/sdk/examples/ContentsExample.kt).
 
 ### Listing Models
 
-Each use case lists the models its request method accepts:
-`listChatModels()` for `chat`, `listEmbedModels()` for `embed`,
-`listSearchModels()` for `search` and `listContentsModels()` for
-`getContents`. Entries carry metadata specific to their use case; chat
-models, for example, report their features (tools, vision, reasoning,
-structured output). Optional filters
-narrow a listing by provider type (`cloud`/`local`) or a case-insensitive
-substring of the model id. Each entry's `model` property is the
-fully-qualified string to pass verbatim as a request's model.
+Each use case lists the models its `send` accepts (e.g.
+`client.chat.listModels()`). Entries carry metadata specific to their use
+case; chat models, for example, report their features (tools, vision,
+reasoning, structured output). Optional filters narrow a listing by
+provider type (`cloud`/`local`) or a case-insensitive substring of the model
+id. Each entry's `model` property is the fully-qualified string to pass
+verbatim as a request's model.
 
 See [ListModelsExample.kt](src/test/kotlin/ai/router/sdk/examples/ListModelsExample.kt).
 
@@ -146,8 +144,7 @@ Prerequisites:
   for how to build and run one.
 - A provider with the models referenced in
   [ExampleSetup.kt](src/test/kotlin/ai/router/sdk/examples/ExampleSetup.kt).
-  Adjust the constants as needed. The search and contents examples need the
-  server to have `AI_ROUTER_EXA_API_KEY` set.
+  Adjust the constants as needed.
 
 Run all examples:
 

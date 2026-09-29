@@ -1,6 +1,6 @@
 package ai.router.sdk.examples
 
-import ai.router.sdk.dsl.structuredChatRequest
+import ai.router.sdk.chat.structuredChatRequest
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.DisplayName
@@ -27,7 +27,7 @@ class StructuredOutputExample {
                 }
             }
 
-            val weather: WeatherInfo = client.chat(request)
+            val weather: WeatherInfo = client.chat.send(request)
 
             assertTrue(weather.city.isNotBlank(), "expected non-empty city (got $weather)")
         }

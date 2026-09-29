@@ -1,7 +1,7 @@
 package ai.router.sdk.examples
 
-import ai.router.sdk.models.ChatFeature
-import ai.router.sdk.models.ProviderType
+import ai.router.sdk.ProviderType
+import ai.router.sdk.chat.ChatFeature
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -15,10 +15,10 @@ class ListModelsExample {
         newExampleClient().use { client ->
             // Every use case lists its own models, each with metadata of its
             // own: chat models report their features, for example.
-            val chatModels = client.listChatModels()
-            val embedModels = client.listEmbedModels()
-            val searchModels = client.listSearchModels()
-            val contentsModels = client.listContentsModels()
+            val chatModels = client.chat.listModels()
+            val embedModels = client.embedding.listModels()
+            val searchModels = client.search.listModels()
+            val contentsModels = client.contents.listModels()
 
             assertTrue(chatModels.data.isNotEmpty(), "expected a configured server to expose at least one chat model")
             assertTrue(
@@ -34,14 +34,14 @@ class ListModelsExample {
 
             // Narrow a listing by provider type and a case-insensitive id search.
             val fragment = chatModels.data.first().id.take(4)
-            val narrowed = client.listChatModels(type = chatModels.data.first().providerType, search = fragment)
+            val narrowed = client.chat.listModels(type = chatModels.data.first().providerType, search = fragment)
 
             assertTrue(
                 narrowed.data.isNotEmpty() && narrowed.data.all { it.id.contains(fragment, ignoreCase = true) },
                 "expected every searched model id to contain \"$fragment\"",
             )
 
-            val local = client.listEmbedModels(type = ProviderType.LOCAL)
+            val local = client.embedding.listModels(type = ProviderType.LOCAL)
             assertTrue(local.data.all { it.providerType == ProviderType.LOCAL }, "expected only local models")
         }
     }

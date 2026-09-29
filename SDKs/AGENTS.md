@@ -6,11 +6,22 @@ See [kotlin/](kotlin/) for the canonical implementation.
 ## API surface mirrors the use cases
 
 The server is organized by use case (chat, embedding, ...), and so is every
-SDK: per use case, one request method, its request/response types, a model
-type with the use case's own metadata, and a model listing method returning
-that type. The model types share one interface for the routing fields (`id`,
-`model`, `provider`, `provider_type`). Adding a use case to the server means
-adding this set to each SDK.
+SDK. Each use case gets its own module (Kotlin: a package, e.g.
+`ai.router.sdk.chat`) holding its request/response types, a model type with
+the use case's own metadata, any request builders, and a use-case client with
+two methods: `send`, the use case's request, and `listModels`, returning that
+model type. The model types share one interface for the routing fields
+(`id`, `model`, `provider`, `provider_type`).
+
+The top-level client only wires things together: it exposes one use-case
+client per use case as a property named after the use case
+(`client.chat.send(...)`), and one internal transport that serves them all
+(`POST /v1/<use case>`, `GET /v1/<use case>/models`, error decoding). No class
+grows with the number of use cases beyond one property on the top-level
+client.
+
+Adding a use case to the server means adding a module to each SDK and one
+property to its top-level client.
 
 ## Examples are tests
 

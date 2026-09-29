@@ -1,7 +1,7 @@
 package ai.router.sdk.examples
 
-import ai.router.sdk.dsl.chatRequest
-import ai.router.sdk.models.ReasoningEffort
+import ai.router.sdk.chat.ReasoningEffort
+import ai.router.sdk.chat.chatRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -13,7 +13,7 @@ class ReasoningExample {
     @DisplayName("Reasoning: separate reasoning trace from the final answer")
     fun run() = runBlocking {
         newExampleClient().use { client ->
-            val response = client.chat(
+            val response = client.chat.send(
                 chatRequest(CHAT_MODEL) {
                     messages {
                         user { text("Prove that √2 is irrational.") }

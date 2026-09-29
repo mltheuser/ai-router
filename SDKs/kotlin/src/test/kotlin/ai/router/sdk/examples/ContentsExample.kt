@@ -1,6 +1,6 @@
 package ai.router.sdk.examples
 
-import ai.router.sdk.models.ContentsRequest
+import ai.router.sdk.contents.ContentsRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -12,7 +12,7 @@ class ContentsExample {
     @DisplayName("Contents: load a web page as markdown")
     fun run() = runBlocking {
         newExampleClient().use { client ->
-            val response = client.getContents(
+            val response = client.contents.send(
                 ContentsRequest(
                     model = CONTENTS_MODEL,
                     urls = listOf("https://www.rfc-editor.org/rfc/rfc2119"),

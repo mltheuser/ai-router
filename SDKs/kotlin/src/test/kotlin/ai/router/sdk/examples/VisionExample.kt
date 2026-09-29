@@ -1,6 +1,6 @@
 package ai.router.sdk.examples
 
-import ai.router.sdk.dsl.chatRequest
+import ai.router.sdk.chat.chatRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -18,7 +18,7 @@ class VisionExample {
         val imageBase64 = Base64.getEncoder().encodeToString(imageBytes)
 
         newExampleClient().use { client ->
-            val response = client.chat(
+            val response = client.chat.send(
                 chatRequest(CHAT_MODEL) {
                     messages {
                         user {

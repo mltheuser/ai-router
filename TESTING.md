@@ -34,7 +34,7 @@ The primary way to verify providers is the centralized, scenario-based E2E runne
     - `serve --addr 127.0.0.1:<port>` runs a second server next to one already on the default port.
 3.  **Trigger**: `curl -X POST http://localhost:8787/v1/test -d '{"provider": "ollama"}' | jq .`
     - Optionally limit the run to one use case: `-d '{"provider": "openrouter", "use_case": "chat"}'`.
-    - Optionally pin a model: `-d '{"provider": "openrouter", "use_case": "chat", "model": "~anthropic/claude-sonnet-latest"}'`. The `model` value is the bare `id` as listed by `GET /v1/<use case>/models`. When omitted, each scenario runs against the best-ranked served model it applies to, by the use case's own preference (for chat and embedding: cheapest in the cloud, smallest locally; unknown price or size ranks last, and ties go to the model listed first; search and contents models carry no metadata to rank by, so the first listed wins).
+    - Optionally pin a model: `-d '{"provider": "openrouter", "use_case": "chat", "model": "~anthropic/claude-sonnet-latest"}'`. The `model` value is the bare `id` as listed by `GET /v1/<use case>/models`. When omitted, each scenario runs against the best-ranked served model it applies to, by the use case's own preference.
 
 **What happens**: the test works on exactly what the server serves. A provider is only loaded if it passed `Verify()` at startup; testing one that isn't loaded returns 404. For every use case the provider serves, the report first checks that the provider serves at least one model for it (the list fetched at startup), then runs the use case's scenarios on those models through the use case's own endpoint. The report has one section per use case. Restart the server to test a provider change.
 

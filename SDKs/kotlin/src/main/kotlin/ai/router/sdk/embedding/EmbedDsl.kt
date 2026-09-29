@@ -1,6 +1,6 @@
-package ai.router.sdk.dsl
+package ai.router.sdk.embedding
 
-import ai.router.sdk.models.EmbedRequest
+import ai.router.sdk.AiRouterDsl
 
 /**
  * Entry point for building an [EmbedRequest] via DSL.
@@ -17,7 +17,7 @@ public fun embedRequest(model: String, block: EmbedRequestBuilder.() -> Unit): E
     return EmbedRequestBuilder(model).apply(block).build()
 }
 
-@ChatDsl
+@AiRouterDsl
 public class EmbedRequestBuilder(private val model: String) {
     private val inputs = mutableListOf<String>()
     private var dimensions: Int? = null

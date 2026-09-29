@@ -1,7 +1,7 @@
 package ai.router.sdk.examples
 
-import ai.router.sdk.dsl.chatRequest
-import ai.router.sdk.models.decode
+import ai.router.sdk.chat.chatRequest
+import ai.router.sdk.chat.decode
 import ai.router.sdk.schema.Description
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
@@ -23,7 +23,7 @@ class ToolCallingExample {
     fun run() = runBlocking {
         newExampleClient().use { client ->
             // Initial request — the model should respond with a tool call.
-            val first = client.chat(
+            val first = client.chat.send(
                 chatRequest(CHAT_MODEL) {
                     messages {
                         user { text("What's the weather in Berlin?") }
@@ -48,7 +48,7 @@ class ToolCallingExample {
             assertTrue(params.city.isNotBlank(), "decoded tool call had blank city: $params")
 
             // Follow-up turn with the tool result attached.
-            val followUp = client.chat(
+            val followUp = client.chat.send(
                 chatRequest(CHAT_MODEL) {
                     messages {
                         user { text("What's the weather in Berlin?") }

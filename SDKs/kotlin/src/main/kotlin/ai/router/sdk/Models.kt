@@ -1,4 +1,4 @@
-package ai.router.sdk.models
+package ai.router.sdk
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
