@@ -5,6 +5,9 @@ import ai.router.sdk.models.ApiError
 import ai.router.sdk.models.ChatModel
 import ai.router.sdk.models.ChatRequest
 import ai.router.sdk.models.ChatResponse
+import ai.router.sdk.models.ContentsModel
+import ai.router.sdk.models.ContentsRequest
+import ai.router.sdk.models.ContentsResponse
 import ai.router.sdk.models.EmbedModel
 import ai.router.sdk.models.EmbedRequest
 import ai.router.sdk.models.EmbedResponse
@@ -12,6 +15,9 @@ import ai.router.sdk.models.ErrorResponse
 import ai.router.sdk.models.ModelList
 import ai.router.sdk.models.ModelRef
 import ai.router.sdk.models.ProviderType
+import ai.router.sdk.models.SearchModel
+import ai.router.sdk.models.SearchRequest
+import ai.router.sdk.models.SearchResponse
 import ai.router.sdk.models.StructuredChatRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -35,9 +41,10 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * Client for the ai-router proxy.
  *
- * Each use case has a request method ([chat], [embed]) and a model listing
- * ([listChatModels], [listEmbedModels]) whose entries' `model` strings the
- * request method accepts.
+ * Each use case has a request method ([chat], [embed], [search],
+ * [getContents]) and a model listing ([listChatModels], [listEmbedModels],
+ * [listSearchModels], [listContentsModels]) whose entries' `model` strings
+ * the request method accepts.
  *
  * ```kotlin
  * val client = AiRouterClient("http://localhost:8787")
@@ -107,6 +114,22 @@ public class AiRouterClient(
     }
 
     /**
+     * Search the web: a query in, a ranked list of pages out.
+     */
+    public suspend fun search(request: SearchRequest): SearchResponse {
+        return post("/v1/search", request)
+    }
+
+    /**
+     * Load the content of web pages: one result per requested URL, in
+     * request order. A page that fails to load carries an error instead of
+     * failing the whole request.
+     */
+    public suspend fun getContents(request: ContentsRequest): ContentsResponse {
+        return post("/v1/contents", request)
+    }
+
+    /**
      * List the models [chat] accepts, optionally narrowed by provider [type]
      * and a case-insensitive [search] substring of the model id.
      */
@@ -120,6 +143,25 @@ public class AiRouterClient(
      */
     public suspend fun listEmbedModels(type: ProviderType? = null, search: String? = null): ModelList<EmbedModel> {
         return listModels("embedding", type, search)
+    }
+
+    /**
+     * List the models [search] accepts, optionally narrowed by provider [type]
+     * and a case-insensitive [search] substring of the model id.
+     */
+    public suspend fun listSearchModels(type: ProviderType? = null, search: String? = null): ModelList<SearchModel> {
+        return listModels("search", type, search)
+    }
+
+    /**
+     * List the models [getContents] accepts, optionally narrowed by provider
+     * [type] and a case-insensitive [search] substring of the model id.
+     */
+    public suspend fun listContentsModels(
+        type: ProviderType? = null,
+        search: String? = null,
+    ): ModelList<ContentsModel> {
+        return listModels("contents", type, search)
     }
 
     override fun close() {

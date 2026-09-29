@@ -17,10 +17,12 @@ class ListModelsExample {
             // own: chat models report their features, for example.
             val chatModels = client.listChatModels()
             val embedModels = client.listEmbedModels()
+            val searchModels = client.listSearchModels()
+            val contentsModels = client.listContentsModels()
 
             assertTrue(chatModels.data.isNotEmpty(), "expected a configured server to expose at least one chat model")
             assertTrue(
-                (chatModels.data + embedModels.data).all {
+                (chatModels.data + embedModels.data + searchModels.data + contentsModels.data).all {
                     it.model.startsWith("${it.id}:") && it.model.endsWith("@${it.provider}")
                 },
                 "expected every entry's model string to qualify its id with tag and provider",

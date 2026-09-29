@@ -85,12 +85,33 @@ provider.
 
 See [EmbeddingsExample.kt](src/test/kotlin/ai/router/sdk/examples/EmbeddingsExample.kt).
 
+### Web Search
+
+Send a query and get web pages back, most relevant first. Each result has a
+URL, a title and a snippet with the parts of the page that match the query.
+`maxResults` caps how many results come back. Search models are the
+provider's search modes (e.g. `fast:cloud@exa` or `deep:cloud@exa`), which
+trade speed for depth.
+
+See [SearchExample.kt](src/test/kotlin/ai/router/sdk/examples/SearchExample.kt).
+
+### Page Contents
+
+Load one or more web pages as markdown. The response has one result per
+requested URL, in request order. A page that fails to load carries an `error`
+instead of failing the whole request. The example shows the typical agent
+flow: search, then read the top result.
+
+See [ContentsExample.kt](src/test/kotlin/ai/router/sdk/examples/ContentsExample.kt).
+
 ### Listing Models
 
 Each use case lists the models its request method accepts:
-`listChatModels()` for `chat`, `listEmbedModels()` for `embed`. Entries carry
-metadata specific to their use case; chat models, for example, report their
-features (tools, vision, reasoning, structured output). Optional filters
+`listChatModels()` for `chat`, `listEmbedModels()` for `embed`,
+`listSearchModels()` for `search` and `listContentsModels()` for
+`getContents`. Entries carry metadata specific to their use case; chat
+models, for example, report their features (tools, vision, reasoning,
+structured output). Optional filters
 narrow a listing by provider type (`cloud`/`local`) or a case-insensitive
 substring of the model id. Each entry's `model` property is the
 fully-qualified string to pass verbatim as a request's model.
@@ -125,7 +146,8 @@ Prerequisites:
   for how to build and run one.
 - A provider with the models referenced in
   [ExampleSetup.kt](src/test/kotlin/ai/router/sdk/examples/ExampleSetup.kt).
-  Adjust the constants as needed.
+  Adjust the constants as needed. The search and contents examples need the
+  server to have `AI_ROUTER_EXA_API_KEY` set.
 
 Run all examples:
 

@@ -22,6 +22,11 @@ complexity:
   # for test sources only.
   LongMethod:
     excludes: ['**/test/**']
+  # AiRouterClient has one request method and one model listing per use case
+  # (see SDKs/AGENTS.md), so its public surface grows with every use case by
+  # design. Count only that surface, not the private HTTP helpers behind it.
+  TooManyFunctions:
+    ignorePrivate: true
 
 style:
   # The example tests intentionally hard-code prompts, ports, temperatures and

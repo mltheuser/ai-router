@@ -12,6 +12,8 @@ import io.ktor.serialization.kotlinx.json.json
 internal const val SERVER_URL = "http://localhost:8787"
 internal const val CHAT_MODEL = "gemma4:31b-it-qat:local@ollama"
 internal const val EMBED_MODEL = "qwen3-embedding:4b:local@ollama"
+internal const val SEARCH_MODEL = "fast:cloud@exa"
+internal const val CONTENTS_MODEL = "auto:cloud@exa"
 
 // ─── Shared client factory ────────────────────────────────────────────
 
