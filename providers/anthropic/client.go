@@ -4,9 +4,8 @@ import "github.com/mltheuser/ai-router/httpx"
 
 const baseURL = "https://api.anthropic.com/v1"
 
-// anthropicVersion pins the API version contract via the required
-// anthropic-version header. It is a version identifier, not a release date:
-// 2023-06-01 is the current stable value and rarely changes.
+// anthropicVersion is the API version sent in the required anthropic-version
+// header. It names a version of the API contract, not a release date.
 const anthropicVersion = "2023-06-01"
 
 func newClient(apiKey string) *httpx.Client {

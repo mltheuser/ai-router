@@ -1,8 +1,5 @@
 package chat
 
-// This file holds the wire types of the chat API: what clients send to
-// POST /v1/chat and receive back. The SDKs mirror these types.
-
 // Role identifies the author of a chat message.
 type Role string
 
@@ -43,20 +40,16 @@ const (
 
 // Request is the body of POST /v1/chat.
 type Request struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
-	// Generation parameters
-	FrequencyPenalty *float64 `json:"frequency_penalty,omitempty"`
-	MaxTokens        *int     `json:"max_tokens,omitempty"`
-	PresencePenalty  *float64 `json:"presence_penalty,omitempty"`
-	Temperature      *float64 `json:"temperature,omitempty"`
-	TopP             *float64 `json:"top_p,omitempty"`
-	// Structured Output
-	ResponseFormat *ResponseFormat `json:"response_format,omitempty"`
-	// Reasoning
-	ReasoningEffort *ReasoningEffort `json:"reasoning_effort,omitempty"`
-	// Tool Calling
-	Tools []ToolDefinition `json:"tools,omitempty"`
+	Model            string           `json:"model"`
+	Messages         []Message        `json:"messages"`
+	FrequencyPenalty *float64         `json:"frequency_penalty,omitempty"`
+	MaxTokens        *int             `json:"max_tokens,omitempty"`
+	PresencePenalty  *float64         `json:"presence_penalty,omitempty"`
+	Temperature      *float64         `json:"temperature,omitempty"`
+	TopP             *float64         `json:"top_p,omitempty"`
+	ResponseFormat   *ResponseFormat  `json:"response_format,omitempty"`
+	ReasoningEffort  *ReasoningEffort `json:"reasoning_effort,omitempty"`
+	Tools            []ToolDefinition `json:"tools,omitempty"`
 }
 
 // ResponseFormatType represents the type of response format.
@@ -81,16 +74,14 @@ type JSONSchema struct {
 }
 
 // ToolDefinition describes a tool the model may call.
-// Providers wrap this in their own wire format (e.g. {"type":"function","function":{...}}).
 type ToolDefinition struct {
 	Name        string                 `json:"name"`
 	Description string                 `json:"description,omitempty"`
 	Parameters  map[string]interface{} `json:"parameters,omitempty"`
 }
 
-// ToolCall represents a tool invocation requested by the assistant.
-// ID is used for matching tool results to calls in parallel tool calling.
-// Also used on tool-result messages (role=tool) to identify which call the result answers.
+// ToolCall is a tool invocation requested by the assistant. ID matches a tool
+// result to its call.
 type ToolCall struct {
 	ID       string           `json:"id"`
 	Function ToolCallFunction `json:"function"`
@@ -170,6 +161,7 @@ type Response struct {
 
 // Usage reports the tokens a request consumed.
 type Usage struct {
+	// PromptTokens is the whole prompt, cached tokens included.
 	PromptTokens     int `json:"prompt_tokens"`
 	CompletionTokens int `json:"completion_tokens"`
 	TotalTokens      int `json:"total_tokens"`

@@ -11,14 +11,12 @@ import (
 	"github.com/mltheuser/ai-router/router/chat"
 )
 
-// Provider serves chat through the Anthropic API.
+// Provider talks to the Anthropic API.
 type Provider struct {
 	client *httpx.Client
 }
 
-// The use cases this provider serves. A use case finds its providers by
-// interface, so these checks turn a signature mismatch into a build error
-// instead of a silently missing use case.
+// The use cases this provider serves.
 var (
 	_ chat.Provider = (*Provider)(nil)
 )

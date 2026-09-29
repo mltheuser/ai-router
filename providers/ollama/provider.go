@@ -10,14 +10,12 @@ import (
 	"github.com/mltheuser/ai-router/router/embedding"
 )
 
-// Provider serves chat and embedding through a local Ollama runner.
+// Provider talks to a local Ollama runner.
 type Provider struct {
 	client *httpx.Client
 }
 
-// The use cases this provider serves. A use case finds its providers by
-// interface, so these checks turn a signature mismatch into a build error
-// instead of a silently missing use case.
+// The use cases this provider serves.
 var (
 	_ chat.Provider      = (*Provider)(nil)
 	_ embedding.Provider = (*Provider)(nil)
@@ -38,7 +36,6 @@ func (p *Provider) Type() router.ProviderType {
 	return router.Local
 }
 
-// Verify checks that Ollama is running by requesting its version.
 func (p *Provider) Verify(ctx context.Context) error {
 	return p.client.Get(ctx, "/api/version", nil)
 }

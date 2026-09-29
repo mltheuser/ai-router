@@ -8,9 +8,8 @@ import (
 	"github.com/mltheuser/ai-router/router/chat"
 )
 
-// fallbackMaxTokens is used only when the caller omits max_tokens and the
-// model's true output ceiling can't be resolved. The Anthropic Messages API
-// requires the field, and 4096 is within every Claude model's output limit.
+// fallbackMaxTokens is the max_tokens sent when the request sets none and the
+// model's own maximum is unknown. 4096 is within every Claude model's limit.
 const fallbackMaxTokens = 4096
 
 // --- Anthropic wire types (request) ---
@@ -75,9 +74,8 @@ type anthropicTool struct {
 
 type anthropicThinking struct {
 	Type string `json:"type"`
-	// Recent Claude models default Display to "omitted", which returns thinking
-	// blocks with empty text; we ask for "summarized" so the reasoning trace is
-	// actually populated.
+	// Display defaults to "omitted", which returns thinking blocks with empty
+	// text; "summarized" returns the reasoning trace.
 	Display string `json:"display,omitempty"`
 }
 
@@ -126,8 +124,6 @@ type anthropicUsage struct {
 
 // --- Chat implementation ---
 
-// Chat sends a chat completion request to the Anthropic Messages API and maps
-// the response back to the shared API type.
 func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response, error) {
 	// Anthropic requires max_tokens. An explicit value caps the response; when
 	// omitted, default to the model's own maximum output so nothing is capped
@@ -155,10 +151,9 @@ func toAnthropicRequest(req *chat.Request, maxTokens int) *anthropicChatRequest 
 	aReq := &anthropicChatRequest{
 		Model:     req.Model,
 		MaxTokens: maxTokens,
-		// Always request automatic prompt caching: a transparent cost
-		// optimization clients never opt into. Anthropic auto-places and
-		// advances the cache breakpoint and silently no-ops for prompts below
-		// the model's minimum cacheable length.
+		// Always request automatic prompt caching: it is transparent to
+		// clients. Anthropic places the cache breakpoint itself and skips
+		// prompts below the model's minimum cacheable length.
 		CacheControl: &anthropicCacheControl{Type: "ephemeral"},
 	}
 
@@ -193,10 +188,8 @@ func toAnthropicRequest(req *chat.Request, maxTokens int) *anthropicChatRequest 
 		})
 	}
 
-	// Reasoning: map the generic effort to adaptive thinking plus an effort
-	// level (the modern Claude reasoning controls). "none" leaves thinking off
-	// by omitting the parameter entirely — an explicit "disabled" is rejected by
-	// the latest models.
+	// Reasoning maps to adaptive thinking plus an effort level. "none" omits
+	// thinking entirely: some models reject an explicit "disabled".
 	if req.ReasoningEffort != nil && *req.ReasoningEffort != chat.ReasoningEffortNone {
 		aReq.Thinking = &anthropicThinking{Type: "adaptive", Display: "summarized"}
 		aReq.outputConfig().Effort = string(*req.ReasoningEffort)
@@ -211,9 +204,9 @@ func toAnthropicRequest(req *chat.Request, maxTokens int) *anthropicChatRequest 
 		}
 	}
 
-	// Sampling parameters (temperature, top_p) and the OpenAI-style frequency/
-	// presence penalties are intentionally not forwarded: current flagship Claude
-	// models reject temperature/top_p with HTTP 400 and never supported penalties.
+	// Temperature, top_p and the frequency/presence penalties are never
+	// forwarded: some Claude models reject temperature/top_p with HTTP 400, and
+	// none supports penalties.
 
 	return aReq
 }
@@ -307,9 +300,7 @@ func contentBlocks(parts []chat.ContentPart) []interface{} {
 // --- Response translation ---
 
 func mapAnthropicResponse(aResp *anthropicChatResponse) *chat.Response {
-	// Anthropic reports cached tokens (both reads and writes) SEPARATELY from
-	// input_tokens, so the full prompt size is the sum of all three. PromptTokens
-	// always means the full prompt total, including cached tokens.
+	// input_tokens excludes cached tokens, both reads and writes.
 	promptTokens := aResp.Usage.InputTokens + aResp.Usage.CacheReadInputTokens + aResp.Usage.CacheCreationInputTokens
 	resp := chat.Response{
 		Model: aResp.Model,
@@ -323,8 +314,6 @@ func mapAnthropicResponse(aResp *anthropicChatResponse) *chat.Response {
 		Message: chat.Message{Role: chat.RoleAssistant},
 	}
 
-	// The response is a list of content blocks: concatenate text and thinking,
-	// and collect tool_use blocks as tool calls.
 	var text, reasoning string
 	var toolCalls []chat.ToolCall
 	for _, b := range aResp.Content {
@@ -353,8 +342,7 @@ func mapAnthropicResponse(aResp *anthropicChatResponse) *chat.Response {
 	return &resp
 }
 
-// parseToolInput decodes a tool_use input object into a map. Anthropic already
-// returns it as a JSON object, so this never needs to string-match.
+// parseToolInput decodes a tool_use input object into a map.
 func parseToolInput(raw json.RawMessage) map[string]interface{} {
 	args := map[string]interface{}{}
 	if len(raw) > 0 {
@@ -363,8 +351,7 @@ func parseToolInput(raw json.RawMessage) map[string]interface{} {
 	return args
 }
 
-// mapStopReason maps Anthropic stop reasons to the shared FinishReason. The
-// type is passthrough-friendly, so unrecognized values are forwarded unchanged.
+// mapStopReason maps Anthropic stop reasons to the shared FinishReason.
 func mapStopReason(reason string) chat.FinishReason {
 	switch reason {
 	case "end_turn", "stop_sequence", "":

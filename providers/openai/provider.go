@@ -11,14 +11,12 @@ import (
 	"github.com/mltheuser/ai-router/router/embedding"
 )
 
-// Provider serves chat and embedding through the OpenAI API.
+// Provider talks to the OpenAI API.
 type Provider struct {
 	client *httpx.Client
 }
 
-// The use cases this provider serves. A use case finds its providers by
-// interface, so these checks turn a signature mismatch into a build error
-// instead of a silently missing use case.
+// The use cases this provider serves.
 var (
 	_ chat.Provider      = (*Provider)(nil)
 	_ embedding.Provider = (*Provider)(nil)

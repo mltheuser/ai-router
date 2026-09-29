@@ -6,7 +6,6 @@ import ai.router.sdk.Transport
 
 /**
  * The search use case: a query in, a ranked list of web pages out.
- * Reached as [ai.router.sdk.AiRouterClient.search].
  */
 public class SearchClient internal constructor(private val transport: Transport) {
 

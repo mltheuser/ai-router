@@ -34,13 +34,11 @@ type openRouterJSONSchema struct {
 	Strict      bool                   `json:"strict,omitempty"`
 }
 
-// openRouterToolDefinition wraps our flat ToolDefinition in OpenRouter's {"type":"function","function":{...}} format.
 type openRouterToolDefinition struct {
 	Type     string              `json:"type"`
 	Function chat.ToolDefinition `json:"function"`
 }
 
-// openRouterRequestMessage is the outgoing message format for OpenRouter.
 type openRouterRequestMessage struct {
 	Role       string                      `json:"role"`
 	Content    []openRouterContentPart     `json:"content"`
@@ -48,8 +46,7 @@ type openRouterRequestMessage struct {
 	ToolCallID string                      `json:"tool_call_id,omitempty"`
 }
 
-// openRouterContentPart represents one entry in the OpenRouter content array.
-// Exactly one of Text or ImageURL should be set, matching the Type field.
+// openRouterContentPart has exactly one of Text or ImageURL set, matching Type.
 type openRouterContentPart struct {
 	Type         string                     `json:"type"` // "text" or "image_url"
 	Text         string                     `json:"text,omitempty"`
@@ -65,8 +62,7 @@ type openRouterContentImageURL struct {
 	URL string `json:"url"`
 }
 
-// openRouterRequestToolCall is the outgoing tool call format for OpenRouter.
-// OpenRouter (OpenAI-compatible) serializes arguments as a JSON string.
+// openRouterRequestToolCall carries the arguments as a JSON string.
 type openRouterRequestToolCall struct {
 	ID       string                        `json:"id"`
 	Type     string                        `json:"type"`
@@ -128,8 +124,6 @@ type openRouterChatResponse struct {
 
 // --- Chat implementation ---
 
-// Chat sends a chat completion request to OpenRouter and maps the response
-// back to the shared API type.
 func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response, error) {
 	orReq := toOpenRouterRequest(req)
 
@@ -155,7 +149,6 @@ func toOpenRouterRequest(req *chat.Request) *openRouterChatRequest {
 		ReasoningEffort:  (*string)(req.ReasoningEffort),
 	}
 
-	// Wrap tools in {"type":"function","function":{...}}
 	for _, t := range req.Tools {
 		orReq.Tools = append(orReq.Tools, openRouterToolDefinition{
 			Type:     "function",
@@ -163,7 +156,6 @@ func toOpenRouterRequest(req *chat.Request) *openRouterChatRequest {
 		})
 	}
 
-	// Transform messages
 	for _, m := range req.Messages {
 		msg := openRouterRequestMessage{
 			Role:    string(m.Role),
@@ -172,7 +164,6 @@ func toOpenRouterRequest(req *chat.Request) *openRouterChatRequest {
 
 		switch m.Role {
 		case chat.RoleAssistant:
-			// Convert tool calls: serialize arguments map → JSON string
 			for _, tc := range m.ToolCalls {
 				argsJSON, _ := json.Marshal(tc.Function.Arguments)
 				msg.ToolCalls = append(msg.ToolCalls, openRouterRequestToolCall{
@@ -185,21 +176,17 @@ func toOpenRouterRequest(req *chat.Request) *openRouterChatRequest {
 				})
 			}
 		case chat.RoleTool:
-			// OpenRouter uses "tool_call_id" to match results to calls.
 			msg.ToolCallID = m.ToolCallID
 		}
 
 		orReq.Messages = append(orReq.Messages, msg)
 	}
 
-	// Request automatic prompt caching: a transparent cost optimization clients
-	// never opt into. We place a single ephemeral breakpoint on the last content
-	// block, which OpenRouter treats as the cache boundary — the entire prompt up
-	// to that point is cached, so the shared prefix is read back on the next turn.
-	// Models that cache implicitly (OpenAI, DeepSeek, Gemini 2.5) ignore the
-	// breakpoint harmlessly, and prompts below a model's minimum cacheable length
-	// silently no-op. We walk in reverse so tool-call/assistant messages with no
-	// content parts don't swallow the breakpoint.
+	// Always request prompt caching: it is transparent to clients. One
+	// breakpoint on the last content block caches the whole prompt up to it;
+	// models that cache implicitly ignore it, and prompts below a model's
+	// minimum cacheable length are not cached. The walk goes backwards past
+	// messages without content parts, such as bare tool calls.
 	for i := len(orReq.Messages) - 1; i >= 0; i-- {
 		if parts := orReq.Messages[i].Content; len(parts) > 0 {
 			parts[len(parts)-1].CacheControl = &openRouterCacheControl{Type: "ephemeral"}
@@ -210,7 +197,6 @@ func toOpenRouterRequest(req *chat.Request) *openRouterChatRequest {
 	return orReq
 }
 
-// toOpenRouterContent converts our []ContentPart to OpenRouter's content parts format.
 func toOpenRouterContent(parts []chat.ContentPart) []openRouterContentPart {
 	result := make([]openRouterContentPart, 0, len(parts))
 	for _, p := range parts {
@@ -246,7 +232,7 @@ func toOpenRouterResponseFormat(rf *chat.ResponseFormat) *openRouterResponseForm
 			Name:        rf.JSONSchema.Name,
 			Description: rf.JSONSchema.Description,
 			Schema:      rf.JSONSchema.Schema,
-			Strict:      true, // Always enforce strict mode for structured output
+			Strict:      true,
 		}
 	}
 
@@ -269,9 +255,7 @@ func mapOpenRouterResponse(orResp *openRouterChatResponse) *chat.Response {
 		resp.Usage.ReasoningTokens = orResp.Usage.CompletionTokensDetails.ReasoningTokens
 	}
 
-	// prompt_tokens already includes cached tokens,
-	// so PromptTokens stays unchanged and cached reads are surfaced
-	// separately.
+	// prompt_tokens already includes cached tokens.
 	if orResp.Usage.PromptTokensDetails != nil {
 		resp.Usage.CacheReadTokens = orResp.Usage.PromptTokensDetails.CachedTokens
 	}
@@ -291,7 +275,6 @@ func mapOpenRouterResponse(orResp *openRouterChatResponse) *chat.Response {
 		}
 		resp.FinishReason = chat.FinishReason(c.FinishReason)
 
-		// Map tool calls: parse JSON-string arguments → map
 		if len(c.Message.ToolCalls) > 0 {
 			resp.FinishReason = chat.FinishReasonToolCalls
 			for _, tc := range c.Message.ToolCalls {

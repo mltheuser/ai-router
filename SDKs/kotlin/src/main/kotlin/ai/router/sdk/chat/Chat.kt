@@ -147,8 +147,7 @@ public data class StructuredChatRequest<T>(
 
 @Serializable
 public data class ChatMessage(
-    // Plain String, not a closed enum: role is a passthrough value (the Go server models it as
-    // an open string type), so an enum would throw on any unlisted value during deserialization.
+    // A String rather than an enum, so that a role this SDK does not know still decodes.
     val role: String,
     val content: List<ContentPart>,
     @SerialName("reasoning_content") val reasoningContent: String? = null,
@@ -185,8 +184,7 @@ public data class ChatUsage(
 public data class ChatResponse(
     val model: String,
     val message: ChatMessage,
-    // Plain String, not a closed enum: finish_reason is a passthrough value (providers may return
-    // "error" or native values), so an enum would throw on an unlisted value during deserialization.
+    // A String rather than an enum: providers may return values of their own.
     @SerialName("finish_reason") val finishReason: String,
     val usage: ChatUsage,
 ) {

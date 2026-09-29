@@ -8,9 +8,9 @@ import (
 	"github.com/mltheuser/ai-router/router/search"
 )
 
-// searchTypes are Exa's search modes, which the router serves as search
-// models. Fast comes first: search models carry no metadata to rank by, so
-// the first one listed is the one tests pick.
+// searchTypes are Exa's search modes, served as search models. Fast comes
+// first: search models rank equal, so the first listed is the default pick
+// (see router.Spec.Prefer).
 var searchTypes = []string{"fast", "instant", "auto", "deep-lite", "deep", "deep-reasoning"}
 
 // --- Search wire types ---
@@ -46,7 +46,7 @@ func (p *Provider) ListSearchModels(_ context.Context) ([]search.Model, error) {
 	return models, nil
 }
 
-// Search searches with the mode the model names. Each result's snippet is its
+// Search searches in the mode the model names. A result's snippet is its
 // highlights: the excerpts Exa selects as relevant to the query.
 func (p *Provider) Search(ctx context.Context, req *search.Request) (*search.Response, error) {
 	wireReq := searchRequest{

@@ -10,8 +10,6 @@ import (
 
 // contentsModel is the one contents model: Exa's default freshness, which
 // serves a page from Exa's cache when it has one and loads it otherwise.
-// Other freshness policies (Exa's maxAgeHours) could be served as further
-// models.
 const contentsModel = "auto"
 
 // --- Contents wire types ---
@@ -51,9 +49,8 @@ func (p *Provider) ListContentsModels(_ context.Context) ([]contents.Model, erro
 	return []contents.Model{{ModelRef: router.NewModelRef(p, contentsModel)}}, nil
 }
 
-// Contents loads the requested pages as markdown. Exa answers with a list of
-// the loaded pages and a list of statuses; they are merged into one result
-// per requested URL, in request order.
+// Contents loads the requested pages as markdown, merging Exa's two lists,
+// loaded pages and per-URL statuses, into the shared results.
 func (p *Provider) Contents(ctx context.Context, req *contents.Request) (*contents.Response, error) {
 	var wireResp contentsResponse
 	if err := p.client.Post(ctx, "/contents", contentsRequest{URLs: req.URLs, Text: true}, &wireResp); err != nil {

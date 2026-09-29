@@ -11,9 +11,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// modelsResponse is the response from GET /v1/models. Each entry carries only
-// an ID and ownership data — no capabilities, context window or pricing — so
-// only the ID is decoded.
+// modelsResponse is the response from GET /v1/models, of which only the IDs
+// are used; models.yaml supplies everything else.
 type modelsResponse struct {
 	Data []struct {
 		ID string `json:"id"`

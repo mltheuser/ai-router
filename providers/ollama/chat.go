@@ -21,14 +21,13 @@ type ollamaChatRequest struct {
 	Tools    []ollamaToolDefinition `json:"tools,omitempty"`
 }
 
-// ollamaToolDefinition wraps our flat ToolDefinition in Ollama's {"type":"function","function":{...}} format.
 type ollamaToolDefinition struct {
 	Type     string              `json:"type"`
 	Function chat.ToolDefinition `json:"function"`
 }
 
-// ollamaRequestMessage is the outgoing message format for Ollama.
-// Ollama uses "tool_name" on tool result messages (not "tool_call_id").
+// ollamaRequestMessage names the tool a tool result answers by "tool_name",
+// not "tool_call_id".
 type ollamaRequestMessage struct {
 	Role      string                  `json:"role"`
 	Content   string                  `json:"content"`
@@ -37,8 +36,8 @@ type ollamaRequestMessage struct {
 	ToolName  string                  `json:"tool_name,omitempty"`
 }
 
-// ollamaRequestToolCall is the outgoing tool call format for Ollama.
-// Ollama uses an "index" field inside function, not "id" at the top level.
+// ollamaRequestToolCall identifies a call by an "index" inside function, not
+// by an "id" at the top level.
 type ollamaRequestToolCall struct {
 	Type     string                    `json:"type"`
 	Function ollamaRequestToolCallFunc `json:"function"`
@@ -92,8 +91,6 @@ type ollamaResponseToolCallFunc struct {
 
 // --- Chat implementation ---
 
-// Chat sends a chat completion request to Ollama and maps the response back
-// to the shared API type.
 func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response, error) {
 	ollamaReq := ollamaChatRequest{
 		Model:    req.Model,
@@ -102,7 +99,6 @@ func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response,
 		Tools:    wrapTools(req.Tools),
 	}
 
-	// Map generic ReasoningEffort to Ollama's "think" parameter.
 	if req.ReasoningEffort != nil {
 		if *req.ReasoningEffort == chat.ReasoningEffortNone {
 			ollamaReq.Think = false
@@ -111,7 +107,6 @@ func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response,
 		}
 	}
 
-	// Map options
 	if req.Temperature != nil || req.TopP != nil || req.MaxTokens != nil {
 		ollamaReq.Options = &ollamaOptions{
 			Temperature: req.Temperature,
@@ -120,7 +115,6 @@ func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response,
 		}
 	}
 
-	// Handle Structured Output
 	if req.ResponseFormat != nil {
 		if req.ResponseFormat.Type == chat.ResponseFormatJSONSchema && req.ResponseFormat.JSONSchema != nil {
 			ollamaReq.Format = req.ResponseFormat.JSONSchema.Schema
@@ -133,6 +127,7 @@ func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response,
 
 	err := p.client.Post(ctx, "/api/chat", ollamaReq, &ollamaResp)
 	if err != nil {
+		// Some models accept only a boolean think, not an effort level.
 		if isUnsupportedThinkValueError(err) && ollamaReq.Think != false {
 			ollamaReq.Think = true
 			if retryErr := p.client.Post(ctx, "/api/chat", ollamaReq, &ollamaResp); retryErr != nil {
@@ -148,7 +143,6 @@ func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response,
 
 // --- Request translation ---
 
-// wrapTools converts flat ToolDefinitions to Ollama's nested wire format.
 func wrapTools(tools []chat.ToolDefinition) []ollamaToolDefinition {
 	if len(tools) == 0 {
 		return nil
@@ -160,7 +154,6 @@ func wrapTools(tools []chat.ToolDefinition) []ollamaToolDefinition {
 	return result
 }
 
-// toOllamaMessages transforms shared API messages to Ollama's native format.
 func toOllamaMessages(messages []chat.Message) []ollamaRequestMessage {
 	result := make([]ollamaRequestMessage, len(messages))
 	for i, m := range messages {
@@ -172,7 +165,6 @@ func toOllamaMessages(messages []chat.Message) []ollamaRequestMessage {
 
 		switch m.Role {
 		case chat.RoleAssistant:
-			// Convert tool calls: map string ID → integer index
 			for _, tc := range m.ToolCalls {
 				idx, _ := strconv.Atoi(tc.ID) // synthetic IDs are stringified indices
 				om.ToolCalls = append(om.ToolCalls, ollamaRequestToolCall{
@@ -185,8 +177,6 @@ func toOllamaMessages(messages []chat.Message) []ollamaRequestMessage {
 				})
 			}
 		case chat.RoleTool:
-			// Ollama uses "tool_name" to identify which tool the result is for.
-			// Look up the function name from the assistant's tool calls using ToolCallID.
 			if m.ToolCallID != "" {
 				om.ToolName = findToolName(messages, m.ToolCallID)
 			}
@@ -206,7 +196,7 @@ func mapResponse(ollamaResp *ollamaChatResponse) *chat.Response {
 			PromptTokens:     ollamaResp.PromptEvalCount,
 			CompletionTokens: ollamaResp.EvalCount,
 			TotalTokens:      ollamaResp.PromptEvalCount + ollamaResp.EvalCount,
-			// Ollama has no prompt caching.
+			// Ollama reports no cached tokens.
 		},
 		FinishReason: mapFinishReason(ollamaResp.DoneReason),
 		Message: chat.Message{
@@ -219,7 +209,7 @@ func mapResponse(ollamaResp *ollamaChatResponse) *chat.Response {
 		resp.Message.ReasoningContent = ollamaResp.Message.Thinking
 	}
 
-	// Map tool calls: convert Ollama's index-based calls to ID-based shared format.
+	// Ollama identifies tool calls by index, which becomes the ID.
 	if len(ollamaResp.Message.ToolCalls) > 0 {
 		for _, tc := range ollamaResp.Message.ToolCalls {
 			resp.Message.ToolCalls = append(resp.Message.ToolCalls, chat.ToolCall{

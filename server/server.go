@@ -1,5 +1,4 @@
-// Package server exposes the use cases over HTTP. It knows no use case in
-// particular: every route is derived from the router.UseCase interface.
+// Package server exposes the use cases over HTTP.
 package server
 
 import (

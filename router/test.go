@@ -13,9 +13,7 @@ import (
 // DefaultTimeout is a scenario's execution budget unless it sets its own.
 const DefaultTimeout = 60 * time.Second
 
-// Scenario is one end-to-end check of a use case. It runs against a live
-// provider through the use case's HTTP endpoint, so it verifies the whole
-// path a client request takes.
+// Scenario is one end-to-end check of a use case.
 type Scenario[M Model] struct {
 	// Name identifies the scenario in test reports.
 	Name string
@@ -37,12 +35,10 @@ type TestRequest struct {
 	Provider string `json:"provider"`
 	// UseCase, if set, limits the test to one use case.
 	UseCase string `json:"use_case,omitempty"`
-	// Model, if set, pins the model every scenario runs against. It is the
-	// model's bare ID; the provider comes from Provider. When omitted, each
-	// scenario runs against the provider's preferred model it applies to.
+	// Model, if set, pins the model every scenario runs against by its bare
+	// ID; the provider comes from Provider.
 	Model string `json:"model,omitempty"`
-	// URL is where the server under test serves; the scenarios send their
-	// requests to URL + "/v1/<use case>".
+	// URL is where the server under test serves.
 	URL string `json:"-"`
 }
 

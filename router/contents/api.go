@@ -1,8 +1,5 @@
 package contents
 
-// This file holds the wire types of the contents API: what clients send to
-// POST /v1/contents and receive back. The SDKs mirror these types.
-
 // Request is the body of POST /v1/contents.
 type Request struct {
 	Model string   `json:"model"`

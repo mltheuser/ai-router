@@ -15,9 +15,8 @@ type testReport struct {
 	UseCases map[string]router.Report `json:"use_cases"`
 }
 
-// handleTest serves POST /v1/test: it verifies one provider end to end by
-// running every use case's scenarios against it through this server, on the
-// models the server serves.
+// handleTest serves POST /v1/test: every use case's scenarios, run against one
+// provider through this server.
 func (s *Server) handleTest(w http.ResponseWriter, r *http.Request) error {
 	var req router.TestRequest
 	if err := httpx.DecodeJSON(r, &req); err != nil {

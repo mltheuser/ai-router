@@ -6,7 +6,6 @@ import ai.router.sdk.Transport
 
 /**
  * The chat use case: a conversation in, the model's next message out.
- * Reached as [ai.router.sdk.AiRouterClient.chat].
  */
 public class ChatClient internal constructor(private val transport: Transport) {
 

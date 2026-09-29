@@ -1,8 +1,5 @@
 // Package embedding is the embedding use case: texts in, one vector per text
-// out. It owns the whole contract: the model type listed at
-// GET /v1/embedding/models, the request and response of POST /v1/embedding,
-// the Provider interface a backend implements to serve them, and the
-// scenarios that verify an implementation.
+// out.
 package embedding
 
 import (
@@ -45,7 +42,7 @@ type UseCase struct {
 }
 
 // New builds the embedding use case over the providers that implement
-// Provider. It lists their models before it returns.
+// Provider.
 func New(ctx context.Context, providers []router.Provider) *UseCase {
 	return &UseCase{router.NewBase(ctx, router.Spec[Model, Provider]{
 		Name:      "embedding",

@@ -6,7 +6,6 @@ import ai.router.sdk.Transport
 
 /**
  * The embedding use case: texts in, one vector per text out.
- * Reached as [ai.router.sdk.AiRouterClient.embedding].
  */
 public class EmbeddingClient internal constructor(private val transport: Transport) {
 

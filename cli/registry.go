@@ -15,12 +15,7 @@ import (
 	"github.com/mltheuser/ai-router/router/search"
 )
 
-// This file is the registry: the one place that knows every provider and
-// every use case. Providers and use cases know nothing of each other beyond
-// the use-case interfaces; they meet here.
-
-// cloudProviders builds each cloud provider from its API key, which is read
-// from AI_ROUTER_<NAME>_API_KEY. A provider whose key is unset is skipped.
+// cloudProviders builds each cloud provider from its API key.
 var cloudProviders = map[string]func(apiKey string) router.Provider{
 	"anthropic":  func(key string) router.Provider { return anthropic.New(key) },
 	"exa":        func(key string) router.Provider { return exa.New(key) },
@@ -28,14 +23,12 @@ var cloudProviders = map[string]func(apiKey string) router.Provider{
 	"openrouter": func(key string) router.Provider { return openrouter.New(key) },
 }
 
-// localProviders builds each local provider. One that is not running is
-// skipped.
+// localProviders builds each local provider.
 var localProviders = []func() router.Provider{
 	func() router.Provider { return ollama.New() },
 }
 
-// useCases builds every use case over the verified providers. Each serves the
-// providers that implement its interface and lists their models once.
+// useCases builds every use case over the verified providers.
 func useCases(ctx context.Context, providers []router.Provider) []router.UseCase {
 	return []router.UseCase{
 		chat.New(ctx, providers),

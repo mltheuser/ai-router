@@ -13,8 +13,6 @@ import (
 )
 
 // ListModels writes the listed models, sorted by provider and ID.
-// Optional query parameters narrow the list: type=cloud|local, and search,
-// a case-insensitive substring of the model ID.
 func (b *Base[M, P]) ListModels(w http.ResponseWriter, r *http.Request) error {
 	providerType := ProviderType(r.URL.Query().Get("type"))
 	if providerType != "" && providerType != Cloud && providerType != Local {

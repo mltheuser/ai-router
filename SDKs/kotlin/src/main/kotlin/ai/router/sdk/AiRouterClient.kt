@@ -11,12 +11,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 
 /**
- * Client for the ai-router proxy.
- *
- * The server is organized by use case, and so is the client: one property
- * per use case ([chat], [embedding], [search], [contents]), each with a
- * `send` method for the use case's request and a `listModels` method whose
- * entries' `model` strings `send` accepts.
+ * Client for the ai-router proxy, with one property per use case.
  *
  * ```kotlin
  * AiRouterClient("http://localhost:8787").use { client ->

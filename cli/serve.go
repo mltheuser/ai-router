@@ -58,11 +58,10 @@ func runServe(_ *cobra.Command, _ []string) error {
 }
 
 // verifiedProviders builds every configured provider and keeps those that
-// pass verification, sorted by name.
+// pass verification, sorted by name. Local providers are always tried.
 func verifiedProviders(ctx context.Context) []router.Provider {
 	var candidates []router.Provider
 	for name, build := range cloudProviders {
-		// Env var format: AI_ROUTER_<PROVIDER>_API_KEY (e.g. AI_ROUTER_OPENROUTER_API_KEY)
 		if key := os.Getenv(fmt.Sprintf("AI_ROUTER_%s_API_KEY", strings.ToUpper(name))); key != "" {
 			candidates = append(candidates, build(key))
 		}

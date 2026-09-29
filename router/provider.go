@@ -28,20 +28,16 @@ const (
 	Local ProviderType = "local"
 )
 
-// ModelRef is the routing identity of one model at one provider. Every use
-// case's model type embeds it, so every listed model, whatever else it
-// describes, says how to address it.
+// ModelRef is the routing identity of one model at one provider.
 type ModelRef struct {
 	ID string `json:"id"`
-	// Model is the fully-qualified string ("id:provider_type@provider") to
-	// pass verbatim as `model` in requests to address this entry.
+	// Model is the string to pass as "model" in requests.
 	Model        string       `json:"model"`
 	Provider     string       `json:"provider"`
 	ProviderType ProviderType `json:"provider_type"`
 }
 
-// NewModelRef builds the ref of the model id served by p. Providers build the
-// ref of every model they list with it.
+// NewModelRef builds the ref of the model id served by p.
 func NewModelRef(p Provider, id string) ModelRef {
 	return ModelRef{
 		ID:           id,

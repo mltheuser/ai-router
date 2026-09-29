@@ -1,9 +1,6 @@
 // Package chat is the chat use case: a conversation of messages in, the
 // model's next message out, optionally with tool calls, images, reasoning and
-// structured output. It owns the whole contract: the model type listed at
-// GET /v1/chat/models, the request and response of POST /v1/chat, the
-// Provider interface a backend implements to serve them, and the scenarios
-// that verify an implementation.
+// structured output.
 package chat
 
 import (
@@ -68,7 +65,7 @@ type UseCase struct {
 	*router.Base[Model, Provider]
 }
 
-// New builds the chat use case over the providers that implement Provider. It lists their models before it returns.
+// New builds the chat use case over the providers that implement Provider.
 func New(ctx context.Context, providers []router.Provider) *UseCase {
 	return &UseCase{router.NewBase(ctx, router.Spec[Model, Provider]{
 		Name:      "chat",

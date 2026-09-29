@@ -29,7 +29,7 @@ Model lists are fetched once, at startup, and never refreshed: restart the serve
 
 The top level separates **what the router defines** (`router/`) from **what plugs into it** (`providers/`); the rest is plumbing and entry points.
 
--   **`router/`**: Everything the router defines. Its package doc is the map.
+-   **`router/`**: Everything the router defines.
     -   `provider.go`: what every provider is (`Provider`: name, type, `Verify`) and the routing identity every listed model carries (`ModelRef`).
     -   `usecase.go`: what the server serves (`UseCase`), and how a use case declares itself (`Spec`) to get the shared machinery (`Base`).
     -   `catalog.go`, `resolve.go`, `test.go`: that machinery, written once and generic over the use case's model and provider types: model catalog and listing endpoint, model-string resolution, and the scenario runner.

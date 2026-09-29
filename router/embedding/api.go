@@ -1,8 +1,5 @@
 package embedding
 
-// This file holds the wire types of the embedding API: what clients send to
-// POST /v1/embedding and receive back. The SDKs mirror these types.
-
 // Request is the body of POST /v1/embedding.
 type Request struct {
 	Model string   `json:"model"`

@@ -1,8 +1,6 @@
-// Package debug logs the full lifecycle of API requests for troubleshooting.
-// Each logged request shows four bodies: the shared API request and response
-// (captured by Middleware at the HTTP boundary) and the provider-specific
-// request and response in between (recorded by the provider's HTTP client
-// into the Exchange that Middleware attaches to the request context).
+// Package debug logs the full lifecycle of API requests for troubleshooting:
+// the shared API request and response, and the provider-specific exchange in
+// between.
 package debug
 
 import (

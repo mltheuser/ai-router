@@ -116,13 +116,13 @@ func toResponsesRequest(req *chat.Request) *responsesRequest {
 			Name:        rf.JSONSchema.Name,
 			Description: rf.JSONSchema.Description,
 			Schema:      rf.JSONSchema.Schema,
-			Strict:      true, // Always enforce strict mode for structured output
+			Strict:      true,
 		}}
 	}
 
-	// Sampling parameters (temperature, top_p) and the frequency/presence
-	// penalties are intentionally not forwarded: current OpenAI models reject
-	// them with HTTP 400 whenever reasoning is enabled, which is the default.
+	// Temperature, top_p and the frequency/presence penalties are never
+	// forwarded: reasoning models reject them with HTTP 400 whenever reasoning
+	// is enabled, which is the default.
 
 	return oReq
 }

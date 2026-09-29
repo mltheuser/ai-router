@@ -13,7 +13,7 @@ import (
 var scenarios = []router.Scenario[Model]{
 	{
 		Name: "ranked_results",
-		// Deep research modes take up to about 40s.
+		// Deep research search modes can take tens of seconds.
 		Timeout: 2 * time.Minute,
 		Run:     runRankedResults,
 	},
@@ -46,8 +46,6 @@ func runRankedResults(ctx context.Context, endpoint, model string, res *router.R
 		res.Pass("max_results")
 	}
 
-	// Some pages have no title, so only the top result, the RFC itself, is
-	// expected to carry one.
 	if err := checkFields(resp.Results); err != nil {
 		res.Fail("result fields", err.Error())
 	} else {
@@ -65,7 +63,8 @@ func runRankedResults(ctx context.Context, endpoint, model string, res *router.R
 }
 
 // checkFields checks that every result has an absolute web URL and that the
-// top result has a title and a snippet.
+// top result has a title and a snippet. Other results may lack a title: not
+// every page has one.
 func checkFields(results []Result) error {
 	for i, r := range results {
 		u, err := url.Parse(r.URL)

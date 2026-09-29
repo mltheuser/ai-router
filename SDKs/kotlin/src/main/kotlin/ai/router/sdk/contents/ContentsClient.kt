@@ -6,7 +6,6 @@ import ai.router.sdk.Transport
 
 /**
  * The contents use case: web page URLs in, each page's content out.
- * Reached as [ai.router.sdk.AiRouterClient.contents].
  */
 public class ContentsClient internal constructor(private val transport: Transport) {
 

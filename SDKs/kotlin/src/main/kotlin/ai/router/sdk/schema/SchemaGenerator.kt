@@ -19,9 +19,6 @@ import kotlinx.serialization.serializer
 /**
  * Derives a JSON Schema from a kotlinx-serialization [SerialDescriptor].
  *
- * The generated schema can be sent as the `response_format.json_schema.schema`
- * field so the LLM returns structured output matching a `@Serializable` data class.
- *
  * Supported mappings:
  * - STRING / CHAR → `{"type": "string"}`
  * - BOOLEAN       → `{"type": "boolean"}`

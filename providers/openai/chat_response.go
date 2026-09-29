@@ -135,8 +135,7 @@ func parseArguments(raw string) map[string]interface{} {
 
 // mapFinishReason derives the shared FinishReason. The Responses API has no
 // finish reason: it reports a status (plus a reason when incomplete), and tool
-// calls are signalled by function_call items. The type is passthrough-friendly,
-// so unrecognized values are forwarded unchanged.
+// calls are signalled by function_call items.
 func mapFinishReason(oResp *responsesResponse, hasToolCalls, refused bool) chat.FinishReason {
 	var incompleteReason string
 	if oResp.IncompleteDetails != nil {

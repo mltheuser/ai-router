@@ -1,8 +1,5 @@
 // Package contents is the contents use case: web page URLs in, each page's
-// content out. It owns the whole contract: the model type listed at
-// GET /v1/contents/models, the request and response of POST /v1/contents,
-// the Provider interface a backend implements to serve them, and the
-// scenarios that verify an implementation.
+// content out.
 package contents
 
 import (
@@ -39,7 +36,7 @@ type UseCase struct {
 }
 
 // New builds the contents use case over the providers that implement
-// Provider. It lists their models before it returns.
+// Provider.
 func New(ctx context.Context, providers []router.Provider) *UseCase {
 	return &UseCase{router.NewBase(ctx, router.Spec[Model, Provider]{
 		Name:      "contents",
@@ -49,8 +46,7 @@ func New(ctx context.Context, providers []router.Provider) *UseCase {
 	}, providers)}
 }
 
-// prefer ranks no model above another: contents models carry no metadata to
-// rank by, so the first one listed wins.
+// prefer ranks all models equal: they carry no metadata to rank by.
 func prefer(_, _ Model) bool { return false }
 
 // Handle serves POST /v1/contents.

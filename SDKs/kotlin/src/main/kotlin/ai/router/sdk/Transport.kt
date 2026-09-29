@@ -17,8 +17,7 @@ import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * The two routes every use case is served on, `POST /v1/<use case>` and
- * `GET /v1/<use case>/models`, over one HTTP client. Every use-case client
- * sends its requests through it; none knows HTTP itself.
+ * `GET /v1/<use case>/models`, over one HTTP client.
  */
 internal class Transport(private val baseUrl: String, private val http: HttpClient) : AutoCloseable {
 

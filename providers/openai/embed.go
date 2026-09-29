@@ -30,7 +30,6 @@ type embedUsage struct {
 	TotalTokens  int `json:"total_tokens"`
 }
 
-// Embed generates embeddings via the OpenAI embeddings endpoint.
 func (p *Provider) Embed(ctx context.Context, req *embedding.Request) (*embedding.Response, error) {
 	wireReq := embedRequest{
 		Model:      req.Model,

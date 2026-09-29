@@ -1,8 +1,5 @@
 // Package search is the search use case: a query in, a ranked list of web
-// pages out. It owns the whole contract: the model type listed at
-// GET /v1/search/models, the request and response of POST /v1/search, the
-// Provider interface a backend implements to serve them, and the scenarios
-// that verify an implementation.
+// pages out.
 package search
 
 import (
@@ -38,7 +35,6 @@ type UseCase struct {
 }
 
 // New builds the search use case over the providers that implement Provider.
-// It lists their models before it returns.
 func New(ctx context.Context, providers []router.Provider) *UseCase {
 	return &UseCase{router.NewBase(ctx, router.Spec[Model, Provider]{
 		Name:      "search",
@@ -48,8 +44,7 @@ func New(ctx context.Context, providers []router.Provider) *UseCase {
 	}, providers)}
 }
 
-// prefer ranks no model above another: search models carry no metadata to
-// rank by, so the first one listed wins.
+// prefer ranks all models equal: they carry no metadata to rank by.
 func prefer(_, _ Model) bool { return false }
 
 // Handle serves POST /v1/search.

@@ -1,8 +1,5 @@
 package search
 
-// This file holds the wire types of the search API: what clients send to
-// POST /v1/search and receive back. The SDKs mirror these types.
-
 // Request is the body of POST /v1/search.
 type Request struct {
 	Model string `json:"model"`

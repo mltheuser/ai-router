@@ -6,13 +6,10 @@ import (
 	"sort"
 )
 
-// UseCase is what the server needs from every use case. The server derives
-// the routes from Name, so every use case is served the same way:
-//
-//	POST /v1/<name>         Handle
-//	GET  /v1/<name>/models  ListModels
+// UseCase is what the server needs from every use case.
 type UseCase interface {
-	// Name identifies the use case in routes, logs and test reports.
+	// Name identifies the use case in routes (/v1/<name>), logs and test
+	// reports.
 	Name() string
 
 	// Handle serves one request. It writes the response on success; on
@@ -46,16 +43,15 @@ type Spec[M Model, P Provider] struct {
 	// Prefer reports whether a is a better pick than b. Resolve uses it to
 	// choose between providers serving the same model, Test to choose the
 	// model a scenario runs against. a and b always share a provider type.
+	// Among models it ranks equal, the one listed first wins.
 	Prefer func(a, b M) bool
 
 	// Scenarios verify a provider's implementation end to end; see Test.
 	Scenarios []Scenario[M]
 }
 
-// Base implements the shared part of UseCase from a Spec. A use case embeds
-// it and adds Handle, which calls Resolve to pick the model and provider.
-//
-// A Base is read-only once built, so it is safe for concurrent use.
+// Base implements the shared part of UseCase from a Spec. It is read-only once
+// built, so it is safe for concurrent use.
 type Base[M Model, P Provider] struct {
 	spec      Spec[M, P]
 	providers map[string]P   // the providers serving this use case, by name

@@ -13,11 +13,8 @@ import (
 )
 
 // brindlemarkGuide is a large (>4096 token) original document about an
-// invented nation. It is sent verbatim on both turns of the multi-turn
-// scenario so the repeated prefix can trigger a provider-side prompt cache
-// read on turn 2. The invented proper nouns (capital "Velmoria", river
-// "Quillsong") cannot be answered from training data, making recall
-// meaningful and substring-checkable.
+// invented nation, long enough for providers to cache it as a prompt prefix.
+// Its invented facts cannot be answered from training data.
 //
 //go:embed resources/brindlemark_guide.md
 var brindlemarkGuide string
@@ -34,8 +31,7 @@ var scenarios = []router.Scenario[Model]{
 	{
 		Name:    "reasoning",
 		Applies: has(FeatureReasoning),
-		// High-effort traces can stream well past the default budget
-		// (observed 90s+ on some models via cloud providers).
+		// High-effort reasoning can run well past the default budget.
 		Timeout: 3 * time.Minute,
 		Run:     runReasoning,
 	},
