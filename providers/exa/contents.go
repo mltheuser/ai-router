@@ -8,15 +8,33 @@ import (
 	"github.com/mltheuser/ai-router/router/contents"
 )
 
-// contentsModel is the one contents model: Exa's default freshness, which
-// serves a page from Exa's cache when it has one and loads it otherwise.
+// contentsModel is the one contents model: Exa decides between its cache and
+// a fresh crawl, within the limits set below.
 const contentsModel = "auto"
+
+const (
+	// textVerbosity "standard" keeps more page context than Exa's default
+	// "compact"; in practice that includes the page's image links, inline.
+	textVerbosity = "standard"
+	// maxAgeHours lets Exa serve a page from its cache when it was crawled
+	// within the last day, and crawls it afresh otherwise.
+	maxAgeHours = 24
+	// livecrawlTimeoutMillis gives a fresh crawl of a very large page time to
+	// finish; Exa's default of 10 seconds is too short for some.
+	livecrawlTimeoutMillis = 30_000
+)
 
 // --- Contents wire types ---
 
 type contentsRequest struct {
-	URLs []string `json:"urls"`
-	Text bool     `json:"text"`
+	URLs             []string     `json:"urls"`
+	Text             contentsText `json:"text"`
+	MaxAgeHours      int          `json:"maxAgeHours"`
+	LivecrawlTimeout int          `json:"livecrawlTimeout"`
+}
+
+type contentsText struct {
+	Verbosity string `json:"verbosity"`
 }
 
 // contentsResponse holds the loaded pages in Results and the outcome for
@@ -49,11 +67,17 @@ func (p *Provider) ListContentsModels(_ context.Context) ([]contents.Model, erro
 	return []contents.Model{{ModelRef: router.NewModelRef(p, contentsModel)}}, nil
 }
 
-// Contents loads the requested pages as markdown, merging Exa's two lists,
-// loaded pages and per-URL statuses, into the shared results.
+// Contents loads the requested pages, merging Exa's two lists, loaded pages
+// and per-URL statuses, into the shared results.
 func (p *Provider) Contents(ctx context.Context, req *contents.Request) (*contents.Response, error) {
 	var wireResp contentsResponse
-	if err := p.client.Post(ctx, "/contents", contentsRequest{URLs: req.URLs, Text: true}, &wireResp); err != nil {
+	wireReq := contentsRequest{
+		URLs:             req.URLs,
+		Text:             contentsText{Verbosity: textVerbosity},
+		MaxAgeHours:      maxAgeHours,
+		LivecrawlTimeout: livecrawlTimeoutMillis,
+	}
+	if err := p.client.Post(ctx, "/contents", wireReq, &wireResp); err != nil {
 		return nil, err
 	}
 

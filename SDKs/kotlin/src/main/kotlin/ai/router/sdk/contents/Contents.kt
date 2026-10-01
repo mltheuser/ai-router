@@ -38,9 +38,10 @@ public data class ContentsResponse(
 
 /**
  * The content of one requested page. [url] is the URL as requested and
- * [text] the page as markdown. A page that could not be loaded has [error]
- * set, the provider's reason, and no [title] or [text]; the request as a
- * whole still succeeds.
+ * [text] the page's content, in a format up to the provider; a provider that
+ * keeps the page's images includes them inline in [text], as links. A page
+ * that could not be loaded has [error] set, the provider's reason, and no
+ * [title] or [text]; the request as a whole still succeeds.
  */
 @Serializable
 public data class ContentsResult(

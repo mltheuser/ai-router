@@ -5,18 +5,12 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/mltheuser/ai-router/router"
 )
 
 var scenarios = []router.Scenario[Model]{
-	{
-		Name: "ranked_results",
-		// Deep research search modes can take tens of seconds.
-		Timeout: 2 * time.Minute,
-		Run:     runRankedResults,
-	},
+	{Name: "ranked_results", Run: runRankedResults},
 }
 
 // runRankedResults verifies that a search returns well-formed results, honors

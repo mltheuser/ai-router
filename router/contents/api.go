@@ -20,7 +20,8 @@ type Result struct {
 	// URL is the page's URL as requested.
 	URL   string `json:"url"`
 	Title string `json:"title,omitempty"`
-	// Text is the page's content as markdown.
+	// Text is the page's content, in a format up to the provider. A provider
+	// that keeps the page's images includes them inline here, as links.
 	Text  string `json:"text,omitempty"`
 	Error string `json:"error,omitempty"`
 }

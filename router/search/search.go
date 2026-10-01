@@ -24,7 +24,7 @@ type Provider interface {
 }
 
 // Model describes a search model at one provider: one way the provider can
-// search, e.g. a fast mode or a deep research mode.
+// search, e.g. a faster or a more thorough mode.
 type Model struct {
 	router.ModelRef
 }

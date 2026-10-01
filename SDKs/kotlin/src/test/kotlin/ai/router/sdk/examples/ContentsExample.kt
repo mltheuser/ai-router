@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 class ContentsExample {
 
     @Test
-    @DisplayName("Contents: load a web page as markdown")
+    @DisplayName("Contents: load the content of a web page")
     fun run() = runBlocking {
         newExampleClient().use { client ->
             val response = client.contents.send(

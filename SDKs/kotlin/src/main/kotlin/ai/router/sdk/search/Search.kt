@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 
 /**
  * A search model at one provider, as listed by `GET /v1/search/models`: one
- * way the provider can search, e.g. a fast mode or a deep research mode.
+ * way the provider can search, e.g. a faster or a more thorough mode.
  */
 @Serializable
 public data class SearchModel(

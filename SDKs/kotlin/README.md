@@ -98,7 +98,7 @@ See [SearchExample.kt](src/test/kotlin/ai/router/sdk/examples/SearchExample.kt).
 
 ### Page Contents
 
-Load one or more web pages as markdown. The response has one result per
+Load the content of one or more web pages. The response has one result per
 requested URL, in request order. A page that fails to load carries an `error`
 instead.
 

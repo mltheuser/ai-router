@@ -11,7 +11,7 @@ import (
 // searchTypes are Exa's search modes, served as search models. Fast comes
 // first: search models rank equal, so the first listed is the default pick
 // (see router.Spec.Prefer).
-var searchTypes = []string{"fast", "instant", "auto", "deep-lite", "deep", "deep-reasoning"}
+var searchTypes = []string{"fast", "instant", "auto"}
 
 // --- Search wire types ---
 
@@ -23,7 +23,13 @@ type searchRequest struct {
 }
 
 type searchContents struct {
-	Highlights bool `json:"highlights"`
+	Highlights searchHighlights `json:"highlights"`
+}
+
+// searchHighlights asks for dynamic highlights: Exa sizes the excerpts with
+// one budget shared across all results instead of a fixed budget per result.
+type searchHighlights struct {
+	Dynamic bool `json:"dynamic"`
 }
 
 type searchResponse struct {
@@ -47,13 +53,14 @@ func (p *Provider) ListSearchModels(_ context.Context) ([]search.Model, error) {
 }
 
 // Search searches in the mode the model names. A result's snippet is its
-// highlights: the excerpts Exa selects as relevant to the query.
+// highlights: the excerpts Exa selects as relevant to the query, sized across
+// the whole result set.
 func (p *Provider) Search(ctx context.Context, req *search.Request) (*search.Response, error) {
 	wireReq := searchRequest{
 		Query:      req.Query,
 		Type:       req.Model,
 		NumResults: req.MaxResults,
-		Contents:   searchContents{Highlights: true},
+		Contents:   searchContents{Highlights: searchHighlights{Dynamic: true}},
 	}
 
 	var wireResp searchResponse
