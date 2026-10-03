@@ -1,6 +1,7 @@
 package ai.router.sdk.examples
 
 import ai.router.sdk.AiRouterClient
+import ai.router.sdk.chat.ReasoningEffort
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
@@ -11,6 +12,8 @@ import io.ktor.serialization.kotlinx.json.json
 
 internal const val SERVER_URL = "http://localhost:8787"
 internal const val CHAT_MODEL = "gemma4:31b-it-qat:local@ollama"
+
+internal val CHAT_EFFORT = ReasoningEffort.NONE
 internal const val EMBED_MODEL = "qwen3-embedding:4b:local@ollama"
 internal const val SEARCH_MODEL = "fast:cloud@exa"
 internal const val CONTENTS_MODEL = "auto:cloud@exa"

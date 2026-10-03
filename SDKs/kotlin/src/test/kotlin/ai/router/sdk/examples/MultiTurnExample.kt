@@ -13,7 +13,7 @@ class MultiTurnExample {
     fun run() = runBlocking {
         newExampleClient().use { client ->
             val response = client.chat.send(
-                chatRequest(CHAT_MODEL) {
+                chatRequest(CHAT_MODEL, CHAT_EFFORT) {
                     messages {
                         system { text("You are a helpful assistant.") }
                         user { text("My name is Alice.") }

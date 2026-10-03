@@ -75,7 +75,8 @@ See [StructuredOutputExample.kt](src/test/kotlin/ai/router/sdk/examples/Structur
 
 ### Reasoning
 
-Request a reasoning-capable model with a target effort level and read both
+Every chat request names a reasoning effort (`none`, `low`, `medium` or
+`high`); `none` turns reasoning off. With a reasoning-capable model and a level above `none`, read
 the visible answer and the model's reasoning trace separately
 (via `response.message.reasoningContent`).
 

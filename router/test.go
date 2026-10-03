@@ -8,6 +8,8 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/mltheuser/ai-router/httpx"
 )
 
 // DefaultTimeout is a scenario's execution budget unless it sets its own.
@@ -25,9 +27,9 @@ type Scenario[M Model] struct {
 	// Timeout overrides DefaultTimeout when set.
 	Timeout time.Duration
 
-	// Run exercises the endpoint at url with the fully-qualified model string
-	// and records its findings in res.
-	Run func(ctx context.Context, url, model string, res *Result)
+	// Run exercises the endpoint at url with model, whose Ref().Model is the
+	// string requests name, and records its findings in res.
+	Run func(ctx context.Context, url string, model M, res *Result)
 }
 
 // TestRequest is the body of POST /v1/test.
@@ -113,7 +115,7 @@ func (b *Base[M, P]) Test(ctx context.Context, req TestRequest) (Report, bool) {
 				timeout = DefaultTimeout
 			}
 			scCtx, cancel := context.WithTimeout(ctx, timeout)
-			sc.Run(scCtx, req.URL+"/v1/"+b.spec.Name, m.Ref().Model, &res)
+			sc.Run(scCtx, req.URL+"/v1/"+b.spec.Name, m, &res)
 			cancel()
 		}
 		report.Scenarios = append(report.Scenarios, res)
@@ -153,8 +155,9 @@ func pickModel[M Model](sc Scenario[M], models []M, pinned string, prefer func(a
 }
 
 // PostJSON is the HTTP call scenarios make: it sends body as JSON to url and
-// decodes a 200 response into a Res. Any other status becomes an error
-// carrying the response body, which explains what went wrong.
+// decodes a 200 response into a Res. Any other status becomes the *httpx.Error
+// the router served, so a scenario can tell a rejection apart from a failure;
+// a body in another shape becomes a plain error carrying it.
 func PostJSON[Res any](ctx context.Context, url string, body any) (*Res, error) {
 	data, err := json.Marshal(body)
 	if err != nil {
@@ -177,6 +180,11 @@ func PostJSON[Res any](ctx context.Context, url string, body any) (*Res, error) 
 		return nil, fmt.Errorf("reading response: %w", err)
 	}
 	if resp.StatusCode != http.StatusOK {
+		var served httpx.ErrorResponse
+		if json.Unmarshal(respBody, &served) == nil && served.Error.Message != "" {
+			served.Error.StatusCode = resp.StatusCode
+			return nil, &served.Error
+		}
 		return nil, fmt.Errorf("status %d: %s", resp.StatusCode, bytes.TrimSpace(respBody))
 	}
 

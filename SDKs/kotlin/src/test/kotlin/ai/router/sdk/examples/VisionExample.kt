@@ -19,7 +19,7 @@ class VisionExample {
 
         newExampleClient().use { client ->
             val response = client.chat.send(
-                chatRequest(CHAT_MODEL) {
+                chatRequest(CHAT_MODEL, CHAT_EFFORT) {
                     messages {
                         user {
                             text("Briefly describe this image.")

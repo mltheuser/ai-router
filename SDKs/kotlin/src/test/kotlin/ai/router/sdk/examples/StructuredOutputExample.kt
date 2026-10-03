@@ -20,7 +20,7 @@ class StructuredOutputExample {
     @DisplayName("Structured output: deserialize into a @Serializable class")
     fun run() = runBlocking {
         newExampleClient().use { client ->
-            val request = structuredChatRequest<WeatherInfo>(CHAT_MODEL) {
+            val request = structuredChatRequest<WeatherInfo>(CHAT_MODEL, CHAT_EFFORT) {
                 messages {
                     system { text("Extract weather information from the text.") }
                     user { text("It's 22°C and sunny in Berlin today.") }

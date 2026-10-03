@@ -5,10 +5,12 @@ import (
 	_ "embed"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/mltheuser/ai-router/httpx"
 	"github.com/mltheuser/ai-router/router"
 )
 
@@ -32,7 +34,7 @@ var scenarios = []router.Scenario[Model]{
 		Name:    "reasoning",
 		Applies: has(FeatureReasoning),
 		// High-effort reasoning can run well past the default budget.
-		Timeout: 3 * time.Minute,
+		Timeout: 4 * time.Minute,
 		Run:     runReasoning,
 	},
 	{Name: "tool_calling", Applies: has(FeatureTools), Run: runToolCalling},
@@ -47,14 +49,25 @@ func post(ctx context.Context, url string, req Request) (*Response, error) {
 	return router.PostJSON[Response](ctx, url, req)
 }
 
+func baseRequest(m Model) Request {
+	effort := ReasoningEffortNone
+	if m.Has(FeatureReasoning) {
+		effort = ReasoningEffortLow
+	}
+	return Request{Model: m.Model, ReasoningEffort: effort}
+}
+
 // runMultiTurn verifies multi-turn recall over a large document and observes
 // prompt-cache reads.
-func runMultiTurn(ctx context.Context, url, model string, res *router.Result) {
+func runMultiTurn(ctx context.Context, url string, m Model, res *router.Result) {
 	temperature := 0.7
 	messages := []Message{{Role: RoleUser, Content: TextContent(
 		brindlemarkGuide + "\n\nUsing only the travel guide above, what is the capital city of Brindlemark? Answer concisely.")}}
 
-	resp, err := post(ctx, url, Request{Model: model, Temperature: &temperature, Messages: messages})
+	req := baseRequest(m)
+	req.Temperature = &temperature
+	req.Messages = messages
+	resp, err := post(ctx, url, req)
 	if err != nil {
 		res.Fail("single turn chat", err.Error())
 		return
@@ -69,7 +82,8 @@ func runMultiTurn(ctx context.Context, url, model string, res *router.Result) {
 		Role:    RoleUser,
 		Content: TextContent("And which river runs through that city? Answer concisely."),
 	})
-	resp, err = post(ctx, url, Request{Model: model, Temperature: &temperature, Messages: messages})
+	req.Messages = messages
+	resp, err = post(ctx, url, req)
 	if err != nil {
 		res.Fail("multi-turn context recall", err.Error())
 		return
@@ -90,14 +104,16 @@ func runMultiTurn(ctx context.Context, url, model string, res *router.Result) {
 }
 
 // runVision verifies that the model can describe an image.
-func runVision(ctx context.Context, url, model string, res *router.Result) {
-	resp, err := post(ctx, url, Request{Model: model, Messages: []Message{{
+func runVision(ctx context.Context, url string, m Model, res *router.Result) {
+	req := baseRequest(m)
+	req.Messages = []Message{{
 		Role: RoleUser,
 		Content: []ContentPart{
 			{Type: ContentPartText, Text: "What fruit do you see in the image? Be concise."},
 			{Type: ContentPartImage, MimeType: "image/png", Base64Data: appleImageBase64},
 		},
-	}}})
+	}}
+	resp, err := post(ctx, url, req)
 	if err != nil {
 		res.Fail("image description", err.Error())
 		return
@@ -111,7 +127,7 @@ func runVision(ctx context.Context, url, model string, res *router.Result) {
 }
 
 // runStructuredOutput verifies that the response follows a JSON schema.
-func runStructuredOutput(ctx context.Context, url, model string, res *router.Result) {
+func runStructuredOutput(ctx context.Context, url string, m Model, res *router.Result) {
 	schema := map[string]interface{}{
 		"type": "object",
 		"properties": map[string]interface{}{
@@ -123,14 +139,13 @@ func runStructuredOutput(ctx context.Context, url, model string, res *router.Res
 		"additionalProperties": false,
 	}
 
-	resp, err := post(ctx, url, Request{
-		Model:    model,
-		Messages: []Message{{Role: RoleUser, Content: TextContent("It is 25 degrees celsius in Paris.")}},
-		ResponseFormat: &ResponseFormat{
-			Type:       ResponseFormatJSONSchema,
-			JSONSchema: &JSONSchema{Name: "weather_response", Schema: schema},
-		},
-	})
+	req := baseRequest(m)
+	req.Messages = []Message{{Role: RoleUser, Content: TextContent("It is 25 degrees celsius in Paris.")}}
+	req.ResponseFormat = &ResponseFormat{
+		Type:       ResponseFormatJSONSchema,
+		JSONSchema: &JSONSchema{Name: "weather_response", Schema: schema},
+	}
+	resp, err := post(ctx, url, req)
 	if err != nil {
 		res.Fail("structured JSON output", err.Error())
 		return
@@ -153,21 +168,17 @@ func runStructuredOutput(ctx context.Context, url, model string, res *router.Res
 	res.Pass("structured JSON output")
 }
 
-// runReasoning verifies that the model returns a reasoning trace.
-func runReasoning(ctx context.Context, url, model string, res *router.Result) {
+func runReasoning(ctx context.Context, url string, m Model, res *router.Result) {
 	// The prompt must be a NOVEL constraint puzzle, not a canonical
 	// brain-teaser: models with adaptive thinking (e.g. Anthropic) answer
 	// famous problems without emitting a reasoning trace, whereas a puzzle
 	// they can't pattern-match to a memorized answer reliably engages thinking.
-	effort := ReasoningEffortHigh
-	resp, err := post(ctx, url, Request{
-		Model: model,
-		Messages: []Message{{Role: RoleUser, Content: TextContent(
-			"Three friends - Ana, Ben, and Cy - each have a different pet (cat, dog, fish) and live in houses 1, 2, 3. " +
-				"Ana is not in house 1. The dog owner is in house 2. Ben owns the fish. Cy is not in house 3. " +
-				"Who owns the cat and in which house? Reason step by step.")}},
-		ReasoningEffort: &effort,
-	})
+	messages := []Message{{Role: RoleUser, Content: TextContent(
+		"Three friends - Ana, Ben, and Cy - each have a different pet (cat, dog, fish) and live in houses 1, 2, 3. " +
+			"Ana is not in house 1. The dog owner is in house 2. Ben owns the fish. Cy is not in house 3. " +
+			"Who owns the cat and in which house? Reason step by step.")}}
+
+	resp, err := post(ctx, url, Request{Model: m.Model, Messages: messages, ReasoningEffort: ReasoningEffortHigh})
 	if err != nil {
 		res.Fail("reasoning trace present", err.Error())
 		return
@@ -177,6 +188,20 @@ func runReasoning(ctx context.Context, url, model string, res *router.Result) {
 		return
 	}
 	res.Pass("reasoning trace present")
+
+	resp, err = post(ctx, url, Request{Model: m.Model, Messages: messages, ReasoningEffort: ReasoningEffortNone})
+	var rejection *httpx.Error
+	switch {
+	case errors.As(err, &rejection) && rejection.StatusCode >= 400 && rejection.StatusCode < 500:
+		res.Pass(fmt.Sprintf("reasoning off rejected by the provider: %s", rejection.Message))
+	case err != nil:
+		res.Fail("reasoning off", err.Error())
+	case resp.Usage.ReasoningTokens > 0 || resp.Message.ReasoningContent != "":
+		res.Fail("reasoning off", fmt.Sprintf("effort none still produced reasoning: %d reasoning tokens, %d characters of trace",
+			resp.Usage.ReasoningTokens, len(resp.Message.ReasoningContent)))
+	default:
+		res.Pass("reasoning off")
+	}
 }
 
 var arithmeticTools = []ToolDefinition{
@@ -195,13 +220,16 @@ var twoIntegers = map[string]interface{}{
 
 // runToolCalling verifies single and parallel tool calling: the model invokes
 // tools and incorporates their results.
-func runToolCalling(ctx context.Context, url, model string, res *router.Result) {
+func runToolCalling(ctx context.Context, url string, m Model, res *router.Result) {
 	results := map[string]string{"add": "5", "multiply": "6"}
 
 	// A parallel-capable model calls both tools at once.
 	messages := []Message{{Role: RoleUser, Content: TextContent(
 		"What is 2 + 3 and 2 * 3? You must use the add tool and the multiply tool to compute this.")}}
-	resp, err := post(ctx, url, Request{Model: model, Messages: messages, Tools: arithmeticTools})
+	req := baseRequest(m)
+	req.Tools = arithmeticTools
+	req.Messages = messages
+	resp, err := post(ctx, url, req)
 	if err != nil {
 		res.Fail("tool invocation", err.Error())
 		return
@@ -239,7 +267,8 @@ func runToolCalling(ctx context.Context, url, model string, res *router.Result) 
 				messages = append(messages, Message{Role: RoleTool, Content: TextContent(result), ToolCallID: tc.ID})
 			}
 		}
-		resp, err = post(ctx, url, Request{Model: model, Messages: messages, Tools: arithmeticTools})
+		req.Messages = messages
+		resp, err = post(ctx, url, req)
 		if err != nil {
 			res.Fail("tool result incorporation", err.Error())
 			return
@@ -259,7 +288,7 @@ func runToolCalling(ctx context.Context, url, model string, res *router.Result) 
 
 // runToolResultVision verifies that an image inside a tool result reaches the
 // model.
-func runToolResultVision(ctx context.Context, url, model string, res *router.Result) {
+func runToolResultVision(ctx context.Context, url string, m Model, res *router.Result) {
 	tools := []ToolDefinition{{
 		Name:        "take_photo",
 		Description: "Take a photo with the camera and return it as an image",
@@ -270,7 +299,10 @@ func runToolResultVision(ctx context.Context, url, model string, res *router.Res
 	// lets a model that never received the image guess "apple" and pass.
 	messages := []Message{{Role: RoleUser, Content: TextContent(
 		"Use the take_photo tool, then describe what the photo shows. Be concise.")}}
-	resp, err := post(ctx, url, Request{Model: model, Messages: messages, Tools: tools})
+	req := baseRequest(m)
+	req.Tools = tools
+	req.Messages = messages
+	resp, err := post(ctx, url, req)
 	if err != nil {
 		res.Fail("tool invocation", err.Error())
 		return
@@ -292,7 +324,8 @@ func runToolResultVision(ctx context.Context, url, model string, res *router.Res
 			ToolCallID: tc.ID,
 		})
 	}
-	resp, err = post(ctx, url, Request{Model: model, Messages: messages, Tools: tools})
+	req.Messages = messages
+	resp, err = post(ctx, url, req)
 	if err != nil {
 		res.Fail("tool result image incorporation", err.Error())
 		return

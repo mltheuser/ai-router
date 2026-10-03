@@ -188,11 +188,14 @@ func toAnthropicRequest(req *chat.Request, maxTokens int) *anthropicChatRequest 
 		})
 	}
 
-	// Reasoning maps to adaptive thinking plus an effort level. "none" omits
-	// thinking entirely: some models reject an explicit "disabled".
-	if req.ReasoningEffort != nil && *req.ReasoningEffort != chat.ReasoningEffortNone {
+	// Reasoning maps to adaptive thinking plus an effort level. "none" must
+	// disable thinking explicitly: a request without a thinking block thinks
+	// at the model's default effort.
+	if req.ReasoningEffort == chat.ReasoningEffortNone {
+		aReq.Thinking = &anthropicThinking{Type: "disabled"}
+	} else {
 		aReq.Thinking = &anthropicThinking{Type: "adaptive", Display: "summarized"}
-		aReq.outputConfig().Effort = string(*req.ReasoningEffort)
+		aReq.outputConfig().Effort = string(req.ReasoningEffort)
 	}
 
 	// Structured output: Anthropic constrains the response shape via

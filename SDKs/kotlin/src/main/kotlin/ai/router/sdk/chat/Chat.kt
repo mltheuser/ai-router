@@ -167,7 +167,7 @@ public data class ChatRequest(
     val temperature: Double? = null,
     @SerialName("top_p") val topP: Double? = null,
     @SerialName("response_format") val responseFormat: ResponseFormat? = null,
-    @SerialName("reasoning_effort") val reasoningEffort: ReasoningEffort? = null,
+    @SerialName("reasoning_effort") val reasoningEffort: ReasoningEffort,
     val tools: List<ToolDefinition>? = null,
 )
 

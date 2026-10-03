@@ -11,7 +11,8 @@ const (
 	RoleTool      Role = "tool"
 )
 
-// ReasoningEffort controls how much reasoning a model performs.
+// ReasoningEffort controls how much reasoning a model performs. A model that cannot honour the named
+// level rejects the request, and that rejection is returned as is.
 type ReasoningEffort string
 
 // Reasoning effort levels.
@@ -48,7 +49,7 @@ type Request struct {
 	Temperature      *float64         `json:"temperature,omitempty"`
 	TopP             *float64         `json:"top_p,omitempty"`
 	ResponseFormat   *ResponseFormat  `json:"response_format,omitempty"`
-	ReasoningEffort  *ReasoningEffort `json:"reasoning_effort,omitempty"`
+	ReasoningEffort  ReasoningEffort  `json:"reasoning_effort"`
 	Tools            []ToolDefinition `json:"tools,omitempty"`
 }
 

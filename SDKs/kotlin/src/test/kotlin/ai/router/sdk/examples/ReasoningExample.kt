@@ -14,11 +14,10 @@ class ReasoningExample {
     fun run() = runBlocking {
         newExampleClient().use { client ->
             val response = client.chat.send(
-                chatRequest(CHAT_MODEL) {
+                chatRequest(CHAT_MODEL, ReasoningEffort.HIGH) {
                     messages {
                         user { text("Prove that √2 is irrational.") }
                     }
-                    reasoningEffort(ReasoningEffort.HIGH)
                 }
             )
 

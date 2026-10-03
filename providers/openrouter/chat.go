@@ -18,7 +18,7 @@ type openRouterChatRequest struct {
 	Temperature      *float64                   `json:"temperature,omitempty"`
 	TopP             *float64                   `json:"top_p,omitempty"`
 	ResponseFormat   *openRouterResponseFormat  `json:"response_format,omitempty"`
-	ReasoningEffort  *string                    `json:"reasoning_effort,omitempty"`
+	ReasoningEffort  string                     `json:"reasoning_effort"`
 	Tools            []openRouterToolDefinition `json:"tools,omitempty"`
 }
 
@@ -146,7 +146,7 @@ func toOpenRouterRequest(req *chat.Request) *openRouterChatRequest {
 		Temperature:      req.Temperature,
 		TopP:             req.TopP,
 		ResponseFormat:   toOpenRouterResponseFormat(req.ResponseFormat),
-		ReasoningEffort:  (*string)(req.ReasoningEffort),
+		ReasoningEffort:  string(req.ReasoningEffort),
 	}
 
 	for _, t := range req.Tools {

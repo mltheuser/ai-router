@@ -24,7 +24,7 @@ class ToolCallingExample {
         newExampleClient().use { client ->
             // Initial request — the model should respond with a tool call.
             val first = client.chat.send(
-                chatRequest(CHAT_MODEL) {
+                chatRequest(CHAT_MODEL, CHAT_EFFORT) {
                     messages {
                         user { text("What's the weather in Berlin?") }
                     }
@@ -49,7 +49,7 @@ class ToolCallingExample {
 
             // Follow-up turn with the tool result attached.
             val followUp = client.chat.send(
-                chatRequest(CHAT_MODEL) {
+                chatRequest(CHAT_MODEL, CHAT_EFFORT) {
                     messages {
                         user { text("What's the weather in Berlin?") }
                         assistant { text("") } // assistant turn that issued the tool call

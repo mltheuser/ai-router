@@ -29,13 +29,19 @@ type anthropicModel struct {
 
 // anthropicCapabilities models only the capability sub-fields we use.
 type anthropicCapabilities struct {
-	ImageInput        anthropicCapability `json:"image_input"`
-	Thinking          anthropicCapability `json:"thinking"`
-	StructuredOutputs anthropicCapability `json:"structured_outputs"`
+	ImageInput        anthropicCapability         `json:"image_input"`
+	Thinking          anthropicThinkingCapability `json:"thinking"`
+	StructuredOutputs anthropicCapability         `json:"structured_outputs"`
 }
 
 type anthropicCapability struct {
 	Supported bool `json:"supported"`
+}
+
+type anthropicThinkingCapability struct {
+	Types struct {
+		Adaptive anthropicCapability `json:"adaptive"`
+	} `json:"types"`
 }
 
 // ListChatModels fetches all models from Anthropic. The endpoint is paginated
@@ -90,7 +96,7 @@ func features(m anthropicModel) []chat.Feature {
 	if m.Capabilities.ImageInput.Supported {
 		fs = append(fs, chat.FeatureVision)
 	}
-	if m.Capabilities.Thinking.Supported {
+	if m.Capabilities.Thinking.Types.Adaptive.Supported {
 		fs = append(fs, chat.FeatureReasoning)
 	}
 	if m.Capabilities.StructuredOutputs.Supported {

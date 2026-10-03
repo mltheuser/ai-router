@@ -113,12 +113,12 @@ func (r *Request) validate() error {
 		return httpx.NewError(http.StatusBadRequest, "messages is required")
 	}
 
-	if r.ReasoningEffort != nil {
-		switch *r.ReasoningEffort {
-		case ReasoningEffortNone, ReasoningEffortLow, ReasoningEffortMedium, ReasoningEffortHigh:
-		default:
-			return httpx.NewError(http.StatusBadRequest, "reasoning_effort must be one of: none, low, medium, high")
-		}
+	switch r.ReasoningEffort {
+	case ReasoningEffortNone, ReasoningEffortLow, ReasoningEffortMedium, ReasoningEffortHigh:
+	case "":
+		return httpx.NewError(http.StatusBadRequest, "reasoning_effort is required")
+	default:
+		return httpx.NewError(http.StatusBadRequest, "reasoning_effort must be one of: none, low, medium, high")
 	}
 
 	for _, m := range r.Messages {

@@ -14,7 +14,8 @@ var scenarios = []router.Scenario[Model]{
 
 // runBatchSimilarity verifies batch embedding, dimension control, and that
 // similar texts embed closer together than different ones.
-func runBatchSimilarity(ctx context.Context, url, model string, res *router.Result) {
+func runBatchSimilarity(ctx context.Context, url string, m Model, res *router.Result) {
+	model := m.Ref().Model
 	inputs := []string{
 		"The quick brown fox jumps over the lazy dog.",
 		"The quick brown fox jumps over the lazy cat.", // one word apart

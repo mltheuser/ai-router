@@ -24,7 +24,8 @@ const (
 // that cannot load, and a repeat of the first: one result per requested URL
 // in request order, the page's text, the failure reported on its own entry
 // without failing the request, and the repeat answered like the original.
-func runBatchWithFailure(ctx context.Context, endpoint, model string, res *router.Result) {
+func runBatchWithFailure(ctx context.Context, endpoint string, m Model, res *router.Result) {
+	model := m.Ref().Model
 	urls := []string{rfc2119, unreachable, rfc2119}
 	resp, err := router.PostJSON[Response](ctx, endpoint, Request{Model: model, URLs: urls})
 	if err != nil {

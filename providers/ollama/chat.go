@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/mltheuser/ai-router/router/chat"
 )
@@ -17,7 +16,7 @@ type ollamaChatRequest struct {
 	Stream   bool                   `json:"stream"`
 	Format   interface{}            `json:"format,omitempty"`
 	Options  *ollamaOptions         `json:"options,omitempty"`
-	Think    interface{}            `json:"think,omitempty"`
+	Think    interface{}            `json:"think"`
 	Tools    []ollamaToolDefinition `json:"tools,omitempty"`
 }
 
@@ -99,12 +98,10 @@ func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response,
 		Tools:    wrapTools(req.Tools),
 	}
 
-	if req.ReasoningEffort != nil {
-		if *req.ReasoningEffort == chat.ReasoningEffortNone {
-			ollamaReq.Think = false
-		} else {
-			ollamaReq.Think = string(*req.ReasoningEffort)
-		}
+	if req.ReasoningEffort == chat.ReasoningEffortNone {
+		ollamaReq.Think = false
+	} else {
+		ollamaReq.Think = string(req.ReasoningEffort)
 	}
 
 	if req.Temperature != nil || req.TopP != nil || req.MaxTokens != nil {
@@ -125,17 +122,8 @@ func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response,
 
 	var ollamaResp ollamaChatResponse
 
-	err := p.client.Post(ctx, "/api/chat", ollamaReq, &ollamaResp)
-	if err != nil {
-		// Some models accept only a boolean think, not an effort level.
-		if isUnsupportedThinkValueError(err) && ollamaReq.Think != false {
-			ollamaReq.Think = true
-			if retryErr := p.client.Post(ctx, "/api/chat", ollamaReq, &ollamaResp); retryErr != nil {
-				return nil, retryErr
-			}
-		} else {
-			return nil, err
-		}
+	if err := p.client.Post(ctx, "/api/chat", ollamaReq, &ollamaResp); err != nil {
+		return nil, err
 	}
 
 	return mapResponse(&ollamaResp), nil
@@ -238,11 +226,6 @@ func mapFinishReason(doneReason string) chat.FinishReason {
 	default:
 		return chat.FinishReasonStop
 	}
-}
-
-func isUnsupportedThinkValueError(err error) bool {
-	msg := err.Error()
-	return strings.Contains(msg, "think value") && strings.Contains(msg, "not supported")
 }
 
 // findToolName searches backwards through messages for the tool call matching

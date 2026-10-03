@@ -17,7 +17,8 @@ var scenarios = []router.Scenario[Model]{
 // max_results, and ranks the page the query describes near the top. The
 // query names RFC 2119, a document published in 1997 that never changes, so
 // its page is a stable expected result.
-func runRankedResults(ctx context.Context, endpoint, model string, res *router.Result) {
+func runRankedResults(ctx context.Context, endpoint string, m Model, res *router.Result) {
+	model := m.Ref().Model
 	maxResults := 5
 	resp, err := router.PostJSON[Response](ctx, endpoint, Request{
 		Model:      model,

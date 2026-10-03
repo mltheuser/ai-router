@@ -64,7 +64,7 @@ type responsesTool struct {
 }
 
 type responsesReasoning struct {
-	Effort  string `json:"effort,omitempty"`
+	Effort  string `json:"effort"`
 	Summary string `json:"summary"`
 }
 
@@ -90,11 +90,7 @@ func toResponsesRequest(req *chat.Request) *responsesRequest {
 		// Always ask for a concise reasoning summary: it is the only visible
 		// reasoning text the API returns ("auto"/"detailed" often come back
 		// empty), and it is accepted even when reasoning is off.
-		Reasoning: &responsesReasoning{Summary: "concise"},
-	}
-
-	if req.ReasoningEffort != nil {
-		oReq.Reasoning.Effort = string(*req.ReasoningEffort)
+		Reasoning: &responsesReasoning{Effort: string(req.ReasoningEffort), Summary: "concise"},
 	}
 
 	for _, m := range req.Messages {
@@ -122,7 +118,7 @@ func toResponsesRequest(req *chat.Request) *responsesRequest {
 
 	// Temperature, top_p and the frequency/presence penalties are never
 	// forwarded: reasoning models reject them with HTTP 400 whenever reasoning
-	// is enabled, which is the default.
+	// is enabled.
 
 	return oReq
 }

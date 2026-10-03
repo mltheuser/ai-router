@@ -8,7 +8,7 @@ import kotlinx.serialization.serializer
  * Entry point for building a [ChatRequest] via DSL.
  *
  * ```kotlin
- * val request = chatRequest("llama3.2:local") {
+ * val request = chatRequest("llama3.2:local", ReasoningEffort.NONE) {
  *     messages {
  *         system { text("You are a helpful assistant.") }
  *         user { text("Hello!") }
@@ -17,8 +17,12 @@ import kotlinx.serialization.serializer
  * }
  * ```
  */
-public fun chatRequest(model: String, block: ChatRequestBuilder.() -> Unit): ChatRequest {
-    return ChatRequestBuilder(model).apply(block).build()
+public fun chatRequest(
+    model: String,
+    reasoningEffort: ReasoningEffort,
+    block: ChatRequestBuilder.() -> Unit,
+): ChatRequest {
+    return ChatRequestBuilder(model, reasoningEffort).apply(block).build()
 }
 
 /**
@@ -28,7 +32,7 @@ public fun chatRequest(model: String, block: ChatRequestBuilder.() -> Unit): Cha
  * request with its deserializer so [ChatClient.send] returns a [T] directly.
  *
  * ```kotlin
- * val request = structuredChatRequest<WeatherInfo>("gpt-4:cloud") {
+ * val request = structuredChatRequest<WeatherInfo>("gpt-4:cloud", ReasoningEffort.LOW) {
  *     messages {
  *         system { text("Extract weather info.") }
  *         user { text("It's 22°C and sunny in Berlin.") }
@@ -39,9 +43,10 @@ public fun chatRequest(model: String, block: ChatRequestBuilder.() -> Unit): Cha
  */
 public inline fun <reified T> structuredChatRequest(
     model: String,
+    reasoningEffort: ReasoningEffort,
     block: ChatRequestBuilder.() -> Unit = {},
 ): StructuredChatRequest<T> {
-    val builder = ChatRequestBuilder(model).apply(block)
+    val builder = ChatRequestBuilder(model, reasoningEffort).apply(block)
     builder.applyResponseFormat(
         ResponseFormat(
             type = ResponseFormatType.JSON_SCHEMA,
@@ -57,14 +62,13 @@ public inline fun <reified T> structuredChatRequest(
 // ─── ChatRequest builder ──────────────────────────────────────────────
 
 @AiRouterDsl
-public class ChatRequestBuilder(private val model: String) {
+public class ChatRequestBuilder(private val model: String, private val reasoningEffort: ReasoningEffort) {
     private var messagesBuilder: MessagesBuilder? = null
     private var temperature: Double? = null
     private var maxTokens: Int? = null
     private var topP: Double? = null
     private var frequencyPenalty: Double? = null
     private var presencePenalty: Double? = null
-    private var reasoningEffort: ReasoningEffort? = null
     private var responseFormat: ResponseFormat? = null
     private val tools = mutableListOf<ToolDefinition>()
 
@@ -77,7 +81,6 @@ public class ChatRequestBuilder(private val model: String) {
     public fun topP(value: Double) { topP = value }
     public fun frequencyPenalty(value: Double) { frequencyPenalty = value }
     public fun presencePenalty(value: Double) { presencePenalty = value }
-    public fun reasoningEffort(value: ReasoningEffort) { reasoningEffort = value }
 
     public fun tools(block: ToolsBuilder.() -> Unit) {
         tools.addAll(ToolsBuilder().apply(block).build())
