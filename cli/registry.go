@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/mltheuser/ai-router/providers/anthropic"
+	"github.com/mltheuser/ai-router/providers/elevenlabs"
 	"github.com/mltheuser/ai-router/providers/exa"
 	"github.com/mltheuser/ai-router/providers/ollama"
 	"github.com/mltheuser/ai-router/providers/openai"
@@ -19,6 +20,7 @@ import (
 // cloudProviders builds each cloud provider from its API key.
 var cloudProviders = map[string]func(apiKey string) router.Provider{
 	"anthropic":  func(key string) router.Provider { return anthropic.New(key) },
+	"elevenlabs": func(key string) router.Provider { return elevenlabs.New(key) },
 	"exa":        func(key string) router.Provider { return exa.New(key) },
 	"openai":     func(key string) router.Provider { return openai.New(key) },
 	"openrouter": func(key string) router.Provider { return openrouter.New(key) },
