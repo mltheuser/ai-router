@@ -13,6 +13,7 @@ import (
 	"github.com/mltheuser/ai-router/router/contents"
 	"github.com/mltheuser/ai-router/router/embedding"
 	"github.com/mltheuser/ai-router/router/search"
+	"github.com/mltheuser/ai-router/router/texttospeech"
 )
 
 // cloudProviders builds each cloud provider from its API key.
@@ -35,5 +36,6 @@ func useCases(ctx context.Context, providers []router.Provider) []router.UseCase
 		embedding.New(ctx, providers),
 		search.New(ctx, providers),
 		contents.New(ctx, providers),
+		texttospeech.New(ctx, providers),
 	}
 }
