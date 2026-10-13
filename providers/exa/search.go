@@ -8,10 +8,10 @@ import (
 	"github.com/mltheuser/ai-router/router/search"
 )
 
-// searchTypes are Exa's search modes, served as search models. Fast comes
+// searchTypes are the Exa search modes served as search models. Fast comes
 // first: search models rank equal, so the first listed is the default pick
 // (see router.Spec.Prefer).
-var searchTypes = []string{"fast", "instant", "auto"}
+var searchTypes = []string{"fast", "auto", "deep", "deep-reasoning"}
 
 // --- Search wire types ---
 
