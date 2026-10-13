@@ -17,6 +17,7 @@ internal val CHAT_EFFORT = ReasoningEffort.NONE
 internal const val EMBED_MODEL = "qwen3-embedding:4b:local@ollama"
 internal const val SEARCH_MODEL = "fast:cloud@exa"
 internal const val CONTENTS_MODEL = "auto:cloud@exa"
+internal const val TEXT_TO_SPEECH_MODEL = "eleven_flash_v2_5:cloud@elevenlabs"
 
 // ─── Shared client factory ────────────────────────────────────────────
 

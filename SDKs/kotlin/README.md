@@ -105,6 +105,15 @@ instead.
 
 See [ContentsExample.kt](src/test/kotlin/ai/router/sdk/examples/ContentsExample.kt).
 
+### Text to Speech
+
+Turn a text into speech in one of a model's voices. Each text-to-speech model
+entry lists the voices it speaks in; pass a voice's id with the text. The
+response carries the audio as a base64-encoded WAV file (16-bit mono PCM),
+which `wav()` decodes.
+
+See [TextToSpeechExample.kt](src/test/kotlin/ai/router/sdk/examples/TextToSpeechExample.kt).
+
 ### Listing Models
 
 Each use case lists the models its `send` accepts (e.g.
