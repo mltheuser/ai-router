@@ -12,8 +12,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"sync"
 	"time"
+	"unicode/utf8"
 )
 
 // Exchange is the provider-specific HTTP exchange of one API request. When a
@@ -86,22 +88,22 @@ func format(r *http.Request, ex *Exchange, reqBody, respBody []byte, elapsed tim
 	fmt.Fprintf(&buf, "╠%s\n", line)
 
 	fmt.Fprintf(&buf, "║ ► INCOMING REQUEST (shared API)\n")
-	writeIndented(&buf, prettyJSON(reqBody))
+	writeIndented(&buf, renderBody(reqBody))
 	fmt.Fprintf(&buf, "╠%s\n", thin)
 
 	fmt.Fprintf(&buf, "║ ► OUTGOING PROVIDER REQUEST\n")
 	if ex.Method != "" {
 		fmt.Fprintf(&buf, "║ %s %s\n", ex.Method, ex.URL)
 	}
-	writeIndented(&buf, prettyJSON(ex.RequestBody))
+	writeIndented(&buf, renderBody(ex.RequestBody))
 	fmt.Fprintf(&buf, "╠%s\n", thin)
 
 	fmt.Fprintf(&buf, "║ ► INCOMING PROVIDER RESPONSE\n")
-	writeIndented(&buf, prettyJSON(ex.ResponseBody))
+	writeIndented(&buf, renderBody(ex.ResponseBody))
 	fmt.Fprintf(&buf, "╠%s\n", thin)
 
 	fmt.Fprintf(&buf, "║ ► OUTGOING RESPONSE (shared API)\n")
-	writeIndented(&buf, prettyJSON(respBody))
+	writeIndented(&buf, renderBody(respBody))
 	fmt.Fprintf(&buf, "╠%s\n", thin)
 
 	fmt.Fprintf(&buf, "║ Duration: %s\n", elapsed.Round(time.Millisecond))
@@ -109,15 +111,47 @@ func format(r *http.Request, ex *Exchange, reqBody, respBody []byte, elapsed tim
 	return buf.Bytes()
 }
 
-func prettyJSON(raw []byte) []byte {
+// renderBody renders a body for the log: JSON indented, with long base64
+// strings (inline audio or images) elided; other text as is; binary data
+// (e.g. audio) as its size.
+func renderBody(raw []byte) []byte {
 	if len(raw) == 0 {
 		return []byte("<empty>")
 	}
 	var buf bytes.Buffer
 	if err := json.Indent(&buf, bytes.TrimSpace(raw), "", "  "); err != nil {
-		return raw // not JSON; show as-is
+		if isBinary(raw) {
+			return fmt.Appendf(nil, "<%d bytes of binary data>", len(raw))
+		}
+		return raw
 	}
-	return buf.Bytes()
+	return elideBase64(buf.Bytes())
+}
+
+// base64String matches a JSON string holding a long base64 payload, optionally
+// as a data URI. In indented JSON, a quote, a run of base64 characters and a
+// quote can only be one whole string. Prose contains spaces and never matches.
+var base64String = regexp.MustCompile(`"(data:[^;"]+;base64,)?([A-Za-z0-9+/=_-]{1000,})"`)
+
+func elideBase64(js []byte) []byte {
+	return base64String.ReplaceAllFunc(js, func(m []byte) []byte {
+		sub := base64String.FindSubmatch(m)
+		return fmt.Appendf(nil, `"%s<base64, %d chars>"`, sub[1], len(sub[2]))
+	})
+}
+
+// isBinary reports whether data is not text: invalid UTF-8, or control
+// characters other than tab, newline and carriage return.
+func isBinary(data []byte) bool {
+	if !utf8.Valid(data) {
+		return true
+	}
+	for _, b := range data {
+		if b < 0x20 && b != '\t' && b != '\n' && b != '\r' {
+			return true
+		}
+	}
+	return false
 }
 
 func writeIndented(buf *bytes.Buffer, data []byte) {
