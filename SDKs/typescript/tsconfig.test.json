@@ -1,0 +1,6 @@
+{
+  // The examples, which run on Bun.
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "lib": ["ES2023"], "types": ["bun"] },
+  "include": ["tests"]
+}

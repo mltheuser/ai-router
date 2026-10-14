@@ -1,0 +1,53 @@
+// Biome configuration for the ai-router TypeScript SDK.
+//
+// Starts from every rule (`preset: all`), so this file only carries the
+// relaxations, each with its reason.
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "formatter": { "indentStyle": "space", "lineWidth": 100 },
+  "linter": {
+    "rules": {
+      "preset": "all",
+      "correctness": {
+        // Consumers import the sources directly and resolve them like a
+        // bundler, extensionless. A `.ts` extension would require
+        // `allowImportingTsExtensions` in every consumer's tsconfig.
+        "useImportExtensions": "off",
+        // tsc already resolves every import, and Biome cannot follow the
+        // examples' self-reference to the package by name.
+        "noUnresolvedImports": "off"
+      },
+      "style": {
+        // The types transcribe the wire format, whose fields are snake_case.
+        "useNamingConvention": {
+          "level": "on",
+          "options": {
+            "conventions": [
+              { "selector": { "kind": "typeProperty" }, "formats": ["camelCase", "snake_case"] },
+              {
+                "selector": { "kind": "objectLiteralProperty" },
+                "formats": ["camelCase", "snake_case"]
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "overrides": [
+    {
+      // The package's entry point, named by package.json's `exports`.
+      "includes": ["src/index.ts"],
+      "linter": { "rules": { "performance": { "noBarrelFile": "off" } } }
+    },
+    {
+      // The examples read as self-contained documentation: they inline
+      // prompts and limits, and print what they got back.
+      "includes": ["tests/**"],
+      "linter": {
+        "rules": { "style": { "noMagicNumbers": "off" }, "suspicious": { "noConsole": "off" } }
+      }
+    }
+  ]
+}

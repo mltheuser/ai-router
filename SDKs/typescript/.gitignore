@@ -1,0 +1,4 @@
+node_modules/
+
+# ai-router's root .gitignore ignores *.json; here the package and compiler configs are source.
+!*.json

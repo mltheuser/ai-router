@@ -1,0 +1,23 @@
+{
+  // The SDK's sources, checked against the web platform alone: `types` is
+  // empty so that neither Bun's nor Node's globals leak in. They must also
+  // check without the DOM lib, as in a Node project with @types/node.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "Preserve",
+    "types": [],
+    "noEmit": true,
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}
