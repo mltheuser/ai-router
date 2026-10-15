@@ -1,8 +1,9 @@
 // Package elevenlabs is the provider for the ElevenLabs API.
 //
 // It expects a pay-as-you-go API key with the permissions models_read,
-// voices_read and text_to_speech. The voices it serves are those in the
-// account's My Voices; add a Voice Library voice there to serve it.
+// voices_read, text_to_speech and speech_to_text. The voices it serves are
+// those in the account's My Voices; add a Voice Library voice there to serve
+// it.
 package elevenlabs
 
 import (
@@ -11,6 +12,7 @@ import (
 
 	"github.com/mltheuser/ai-router/httpx"
 	"github.com/mltheuser/ai-router/router"
+	"github.com/mltheuser/ai-router/router/speechtotext"
 	"github.com/mltheuser/ai-router/router/texttospeech"
 )
 
@@ -22,6 +24,7 @@ type Provider struct {
 // The use cases this provider serves.
 var (
 	_ texttospeech.Provider = (*Provider)(nil)
+	_ speechtotext.Provider = (*Provider)(nil)
 )
 
 // New creates a new ElevenLabs provider with the given API key.

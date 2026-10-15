@@ -12,9 +12,9 @@ import (
 	"github.com/mltheuser/ai-router/debug"
 )
 
-// Client makes requests to one upstream API: JSON bodies in, JSON or raw
-// bodies out. It records every exchange into the request's debug.Exchange, if
-// one is attached, so debug logging needs no code in the callers.
+// Client makes requests to one upstream API: JSON or form bodies in, JSON or
+// raw bodies out. It records every exchange into the request's debug.Exchange,
+// if one is attached, so debug logging needs no code in the callers.
 type Client struct {
 	baseURL string
 	headers map[string]string
@@ -74,14 +74,34 @@ func (c *Client) PostBytes(ctx context.Context, path string, body any) ([]byte, 
 	if err != nil {
 		return nil, fmt.Errorf("marshaling request: %w", err)
 	}
+	return c.post(ctx, path, "application/json", data, data)
+}
+
+// PostForm sends form as multipart/form-data, for APIs that take uploads, and
+// decodes the JSON response into result, unless result is nil.
+func (c *Client) PostForm(ctx context.Context, path string, form *Form, result any) error {
+	data, contentType, err := form.encode()
+	if err != nil {
+		return fmt.Errorf("encoding form: %w", err)
+	}
+	respBody, err := c.post(ctx, path, contentType, data, form.summary())
+	if err != nil {
+		return err
+	}
+	return decode(respBody, result)
+}
+
+// post sends data as a body of the given content type and returns the
+// response body. logBody is what the debug log shows as the request body.
+func (c *Client) post(ctx context.Context, path, contentType string, data, logBody []byte) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path, bytes.NewReader(data))
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", contentType)
 
 	if ex := debug.ExchangeFrom(ctx); ex != nil {
-		ex.RequestBody = data
+		ex.RequestBody = logBody
 	}
 	return c.do(req)
 }
