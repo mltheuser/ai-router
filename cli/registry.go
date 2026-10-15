@@ -14,6 +14,7 @@ import (
 	"github.com/mltheuser/ai-router/router/contents"
 	"github.com/mltheuser/ai-router/router/embedding"
 	"github.com/mltheuser/ai-router/router/search"
+	"github.com/mltheuser/ai-router/router/speechtotext"
 	"github.com/mltheuser/ai-router/router/texttospeech"
 )
 
@@ -39,5 +40,6 @@ func useCases(ctx context.Context, providers []router.Provider) []router.UseCase
 		search.New(ctx, providers),
 		contents.New(ctx, providers),
 		texttospeech.New(ctx, providers),
+		speechtotext.New(ctx, providers),
 	}
 }
