@@ -12,6 +12,7 @@ test("List models: fetch each use case's models, with and without filters", asyn
   const searchModels = await client.search.listModels();
   const contentsModels = await client.contents.listModels();
   const textToSpeechModels = await client.textToSpeech.listModels();
+  const speechToTextModels = await client.speechToText.listModels();
 
   const allModels: ModelRef[] = [
     ...chatModels.data,
@@ -19,6 +20,7 @@ test("List models: fetch each use case's models, with and without filters", asyn
     ...searchModels.data,
     ...contentsModels.data,
     ...textToSpeechModels.data,
+    ...speechToTextModels.data,
   ];
   for (const entry of allModels) {
     expect(entry.model).toStartWith(`${entry.id}:`);

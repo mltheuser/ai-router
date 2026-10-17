@@ -2,6 +2,7 @@ import { ChatClient } from "./chat/chatClient";
 import { ContentsClient } from "./contents/contentsClient";
 import { EmbeddingClient } from "./embedding/embeddingClient";
 import { SearchClient } from "./search/searchClient";
+import { SpeechToTextClient } from "./speechToText/speechToTextClient";
 import { TextToSpeechClient } from "./textToSpeech/textToSpeechClient";
 import { type Fetch, Transport } from "./transport";
 
@@ -29,6 +30,7 @@ export class AiRouterClient {
   readonly search: SearchClient;
   readonly contents: ContentsClient;
   readonly textToSpeech: TextToSpeechClient;
+  readonly speechToText: SpeechToTextClient;
 
   constructor(options: AiRouterClientOptions) {
     const transport = new Transport(options.baseUrl, options.fetch ?? fetch);
@@ -37,5 +39,6 @@ export class AiRouterClient {
     this.search = new SearchClient(transport);
     this.contents = new ContentsClient(transport);
     this.textToSpeech = new TextToSpeechClient(transport);
+    this.speechToText = new SpeechToTextClient(transport);
   }
 }

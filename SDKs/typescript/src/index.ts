@@ -40,6 +40,13 @@ export type { ModelFilters, ModelList, ModelRef, ProviderType } from "./models";
 export type { SearchModel, SearchRequest, SearchResponse, SearchResult } from "./search/search";
 export type { SearchClient } from "./search/searchClient";
 export type {
+  SpeechToTextModel,
+  SpeechToTextRequest,
+  SpeechToTextResponse,
+} from "./speechToText/speechToText";
+export { wavBase64 } from "./speechToText/speechToText";
+export type { SpeechToTextClient } from "./speechToText/speechToTextClient";
+export type {
   TextToSpeechModel,
   TextToSpeechRequest,
   TextToSpeechResponse,
