@@ -4,6 +4,7 @@ import ai.router.sdk.chat.ChatClient
 import ai.router.sdk.contents.ContentsClient
 import ai.router.sdk.embedding.EmbeddingClient
 import ai.router.sdk.search.SearchClient
+import ai.router.sdk.speechtotext.SpeechToTextClient
 import ai.router.sdk.texttospeech.TextToSpeechClient
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -37,6 +38,7 @@ public class AiRouterClient(
     public val search: SearchClient = SearchClient(transport)
     public val contents: ContentsClient = ContentsClient(transport)
     public val textToSpeech: TextToSpeechClient = TextToSpeechClient(transport)
+    public val speechToText: SpeechToTextClient = SpeechToTextClient(transport)
 
     override fun close() {
         transport.close()

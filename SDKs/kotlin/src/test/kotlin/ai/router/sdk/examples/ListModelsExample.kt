@@ -20,10 +20,11 @@ class ListModelsExample {
             val searchModels = client.search.listModels()
             val contentsModels = client.contents.listModels()
             val textToSpeechModels = client.textToSpeech.listModels()
+            val speechToTextModels = client.speechToText.listModels()
 
             assertTrue(chatModels.data.isNotEmpty(), "expected a configured server to expose at least one chat model")
             val allModels = chatModels.data + embedModels.data + searchModels.data + contentsModels.data +
-                textToSpeechModels.data
+                textToSpeechModels.data + speechToTextModels.data
             assertTrue(
                 allModels.all { it.model.startsWith("${it.id}:") && it.model.endsWith("@${it.provider}") },
                 "expected every entry's model string to qualify its id with tag and provider",

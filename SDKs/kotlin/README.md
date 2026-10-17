@@ -114,6 +114,17 @@ which `wav()` decodes.
 
 See [TextToSpeechExample.kt](src/test/kotlin/ai/router/sdk/examples/TextToSpeechExample.kt).
 
+### Speech to Text
+
+Turn speech into text. The request carries the audio as a base64-encoded WAV
+file of 16-bit mono PCM, at any sample rate: the format text-to-speech
+returns, so a text-to-speech response's `audio` can be passed on as is. For
+the bytes of a WAV file, `SpeechToTextRequest.fromWav` does the encoding.
+Audio in any other format is rejected with a 400. The response carries the
+transcript as `text`.
+
+See [SpeechToTextExample.kt](src/test/kotlin/ai/router/sdk/examples/SpeechToTextExample.kt).
+
 ### Listing Models
 
 Each use case lists the models its `send` accepts (e.g.
