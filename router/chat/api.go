@@ -111,8 +111,13 @@ type ContentPart struct {
 	Base64Data string          `json:"base64_data,omitempty"` // for type=image (raw base64, no data-URI prefix)
 }
 
-// TextContent creates a text-only content slice (convenience for the common case).
+// TextContent creates a text-only content slice (convenience for the common
+// case). An empty text has no part: a message without text has empty content,
+// never a text part that says nothing.
 func TextContent(text string) []ContentPart {
+	if text == "" {
+		return []ContentPart{} // encodes as [], not null
+	}
 	return []ContentPart{{Type: ContentPartText, Text: text}}
 }
 
@@ -141,7 +146,8 @@ func ImagesFromContent(parts []ContentPart) []string {
 // Message represents a message in a chat conversation.
 // Different roles use different subsets of fields:
 //   - user/system:  Role + Content (text-only or multimodal)
-//   - assistant:    Role + Content (+ ReasoningContent, ToolCalls)
+//   - assistant:    Role + Content (+ ReasoningContent, ToolCalls); Content is
+//     empty when the model wrote no text, e.g. when it only calls tools
 //   - tool:         Role + Content + ToolCallID
 type Message struct {
 	Role             Role          `json:"role"`
