@@ -40,8 +40,9 @@ See [QuickStartExample.kt](src/test/kotlin/ai/router/sdk/examples/QuickStartExam
 
 ### Multi-Turn Conversation
 
-Send a sequence of system / user / assistant messages and collect a final
-response. Demonstrates request-level sampling parameters
+Hold a conversation. Keep messages in a list, add
+each reply as received and then the next user message, and send the list
+again. Demonstrates request-level sampling parameters
 (`temperature`, `maxTokens`, …).
 
 See [MultiTurnExample.kt](src/test/kotlin/ai/router/sdk/examples/MultiTurnExample.kt).
@@ -58,7 +59,8 @@ See [VisionExample.kt](src/test/kotlin/ai/router/sdk/examples/VisionExample.kt).
 Define a tool whose parameters are a `@Serializable` class — the SDK derives
 the JSON Schema automatically. The example walks through the full round-trip:
 issue the call, decode the model's tool call into the typed class, and send
-the tool result back as a follow-up turn. Annotate fields with
+the model's reply as received, which carries the call, back with the tool's
+result as a follow-up turn. Annotate fields with
 [`@Description`](src/main/kotlin/ai/router/sdk/schema/Description.kt) to give
 the model human-readable hints.
 
