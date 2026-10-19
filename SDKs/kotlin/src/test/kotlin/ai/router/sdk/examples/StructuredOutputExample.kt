@@ -1,6 +1,7 @@
 package ai.router.sdk.examples
 
 import ai.router.sdk.chat.structuredChatRequest
+import ai.router.sdk.schema.NoAdditionalProperties
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.DisplayName
@@ -9,7 +10,9 @@ import kotlin.test.assertTrue
 
 class StructuredOutputExample {
 
+    // Anthropic and OpenAI accept only objects that rule out further properties.
     @Serializable
+    @NoAdditionalProperties
     data class WeatherInfo(
         val city: String,
         val tempCelsius: Double,

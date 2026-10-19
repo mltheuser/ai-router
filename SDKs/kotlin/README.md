@@ -69,7 +69,10 @@ See [ToolCallingExample.kt](src/test/kotlin/ai/router/sdk/examples/ToolCallingEx
 Declare the response shape as a `@Serializable` class and use
 `structuredChatRequest`. The SDK generates the schema, sets the
 `response_format`, and deserializes the response into the typed class — no
-manual JSON wrangling.
+manual JSON wrangling. Annotate a class with
+[`@NoAdditionalProperties`](src/main/kotlin/ai/router/sdk/schema/NoAdditionalProperties.kt)
+to rule out properties beyond those declared; some providers, such as
+Anthropic and OpenAI, require it of every object in the schema.
 
 See [StructuredOutputExample.kt](src/test/kotlin/ai/router/sdk/examples/StructuredOutputExample.kt).
 

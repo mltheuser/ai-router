@@ -27,7 +27,8 @@ import kotlinx.serialization.serializer
  * - ENUM          → `{"type": "string", "enum": [...]}`
  * - LIST          → `{"type": "array", "items": ...}`
  * - MAP           → `{"type": "object", "additionalProperties": ...}`
- * - CLASS/OBJECT  → `{"type": "object", "properties": {...}, "required": [...]}`
+ * - CLASS/OBJECT  → `{"type": "object", "properties": {...}, "required": [...]}`,
+ *   plus `"additionalProperties": false` if annotated [NoAdditionalProperties]
  */
 @OptIn(ExperimentalSerializationApi::class)
 public object SchemaGenerator {
@@ -128,6 +129,9 @@ public object SchemaGenerator {
         }
         if (requiredNames.isNotEmpty()) {
             put("required", JsonArray(requiredNames))
+        }
+        if (d.annotations.any { it is NoAdditionalProperties }) {
+            put("additionalProperties", false)
         }
     }
 }
