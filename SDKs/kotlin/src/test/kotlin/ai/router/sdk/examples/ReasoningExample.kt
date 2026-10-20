@@ -1,5 +1,6 @@
 package ai.router.sdk.examples
 
+import ai.router.sdk.AiRouterClient
 import ai.router.sdk.chat.ReasoningEffort
 import ai.router.sdk.chat.chatRequest
 import kotlinx.coroutines.runBlocking
@@ -12,7 +13,7 @@ class ReasoningExample {
     @Test
     @DisplayName("Reasoning: separate reasoning trace from the final answer")
     fun run() = runBlocking {
-        newExampleClient().use { client ->
+        AiRouterClient(SERVER_URL).use { client ->
             val response = client.chat.send(
                 chatRequest(CHAT_MODEL, ReasoningEffort.HIGH) {
                     messages {

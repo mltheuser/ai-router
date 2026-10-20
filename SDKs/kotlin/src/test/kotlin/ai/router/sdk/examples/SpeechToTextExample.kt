@@ -1,5 +1,6 @@
 package ai.router.sdk.examples
 
+import ai.router.sdk.AiRouterClient
 import ai.router.sdk.speechtotext.SpeechToTextRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
@@ -17,7 +18,7 @@ class SpeechToTextExample {
             "sentence.wav missing from src/test/resources"
         }.use { it.readBytes() }
 
-        newExampleClient().use { client ->
+        AiRouterClient(SERVER_URL).use { client ->
             val response = client.speechToText.send(SpeechToTextRequest.fromWav(SPEECH_TO_TEXT_MODEL, wav))
 
             println("Transcript: ${response.text}")

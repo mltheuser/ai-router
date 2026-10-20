@@ -1,5 +1,6 @@
 package ai.router.sdk.examples
 
+import ai.router.sdk.AiRouterClient
 import ai.router.sdk.chat.structuredChatRequest
 import ai.router.sdk.schema.NoAdditionalProperties
 import kotlinx.coroutines.runBlocking
@@ -22,7 +23,7 @@ class StructuredOutputExample {
     @Test
     @DisplayName("Structured output: deserialize into a @Serializable class")
     fun run() = runBlocking {
-        newExampleClient().use { client ->
+        AiRouterClient(SERVER_URL).use { client ->
             val request = structuredChatRequest<WeatherInfo>(CHAT_MODEL, CHAT_EFFORT) {
                 messages {
                     system { text("Extract weather information from the text.") }

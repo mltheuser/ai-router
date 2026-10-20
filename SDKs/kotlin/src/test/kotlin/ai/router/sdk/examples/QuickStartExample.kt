@@ -1,5 +1,6 @@
 package ai.router.sdk.examples
 
+import ai.router.sdk.AiRouterClient
 import ai.router.sdk.chat.chatRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
@@ -11,7 +12,7 @@ class QuickStartExample {
     @Test
     @DisplayName("Quick start: send a chat request and read the response")
     fun run() = runBlocking {
-        newExampleClient().use { client ->
+        AiRouterClient(SERVER_URL).use { client ->
             val response = client.chat.send(
                 chatRequest(CHAT_MODEL, CHAT_EFFORT) {
                     messages {

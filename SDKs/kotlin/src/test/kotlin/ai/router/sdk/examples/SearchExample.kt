@@ -1,5 +1,6 @@
 package ai.router.sdk.examples
 
+import ai.router.sdk.AiRouterClient
 import ai.router.sdk.search.SearchRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
@@ -11,7 +12,7 @@ class SearchExample {
     @Test
     @DisplayName("Search: find web pages for a query, most relevant first")
     fun run() = runBlocking {
-        newExampleClient().use { client ->
+        AiRouterClient(SERVER_URL).use { client ->
             val response = client.search.send(
                 SearchRequest(
                     model = SEARCH_MODEL,

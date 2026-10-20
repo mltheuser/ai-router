@@ -1,5 +1,6 @@
 package ai.router.sdk.examples
 
+import ai.router.sdk.AiRouterClient
 import ai.router.sdk.chat.ChatMessage
 import ai.router.sdk.chat.ContentPart
 import ai.router.sdk.chat.ContentPartType
@@ -14,7 +15,7 @@ class MultiTurnExample {
     @Test
     @DisplayName("Multi-turn conversation with sampling parameters")
     fun run() = runBlocking {
-        newExampleClient().use { client ->
+        AiRouterClient(SERVER_URL).use { client ->
             val request = chatRequest(CHAT_MODEL, CHAT_EFFORT) {
                 messages {
                     system { text("You are a helpful assistant.") }

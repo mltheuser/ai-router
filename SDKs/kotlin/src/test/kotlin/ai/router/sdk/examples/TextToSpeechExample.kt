@@ -1,5 +1,6 @@
 package ai.router.sdk.examples
 
+import ai.router.sdk.AiRouterClient
 import ai.router.sdk.texttospeech.TextToSpeechRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
@@ -11,7 +12,7 @@ class TextToSpeechExample {
     @Test
     @DisplayName("Text to speech: speak a sentence in one of the model's voices")
     fun run() = runBlocking {
-        newExampleClient().use { client ->
+        AiRouterClient(SERVER_URL).use { client ->
             // The model's entry lists the voices it speaks in.
             val entry = client.textToSpeech.listModels().data.first { it.model == TEXT_TO_SPEECH_MODEL }
             val voice = entry.voices.first()

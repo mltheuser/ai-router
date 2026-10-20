@@ -2,6 +2,9 @@ package ai.router.sdk
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
@@ -11,15 +14,24 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * The two routes every use case is served on, `POST /v1/<use case>` and
- * `GET /v1/<use case>/models`, over one HTTP client.
+ * `GET /v1/<use case>/models`, over the SDK's one HTTP client.
  */
-internal class Transport(private val baseUrl: String, private val http: HttpClient) : AutoCloseable {
+internal class Transport(private val baseUrl: String) : AutoCloseable {
+
+    private val http: HttpClient = HttpClient(CIO) {
+        install(ContentNegotiation) { json(json) }
+        install(HttpTimeout) {
+            requestTimeoutMillis = REQUEST_TIMEOUT_MILLIS
+            connectTimeoutMillis = CONNECT_TIMEOUT_MILLIS
+        }
+    }
 
     suspend inline fun <reified Req, reified Res> send(useCase: String, request: Req): Res {
         val response = http.post("$baseUrl/v1/$useCase") {
@@ -60,10 +72,15 @@ internal class Transport(private val baseUrl: String, private val http: HttpClie
     }
 
     companion object {
+        /** Lenient on decode, so a field the router adds later does not break this SDK. */
         val json: Json = Json {
             ignoreUnknownKeys = true
             encodeDefaults = false
             isLenient = true
         }
+
+        // LLM calls can run long; allow up to 10 minutes per request.
+        private const val REQUEST_TIMEOUT_MILLIS = 600_000L
+        private const val CONNECT_TIMEOUT_MILLIS = 10_000L
     }
 }

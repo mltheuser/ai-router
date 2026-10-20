@@ -151,11 +151,10 @@ See [ErrorHandlingExample.kt](src/test/kotlin/ai/router/sdk/examples/ErrorHandli
 
 ### Configuration
 
-Pass a pre-built Ktor `HttpClient` to `AiRouterClient(...)` to take full
-control of timeouts, logging, engine choice, etc. The client must have JSON
-content negotiation installed. The example tests in this repo all build
-their client through a shared factory that demonstrates this pattern — see
-[ExampleSetup.kt](src/test/kotlin/ai/router/sdk/examples/ExampleSetup.kt).
+`AiRouterClient(baseUrl)` takes the server's base URL and nothing else: the
+SDK brings its own HTTP setup, with a 10-second connect timeout and a
+10-minute request timeout for slow model calls. To bound a call more tightly,
+wrap it in `withTimeout`, which cancels the request.
 
 ## Testing
 

@@ -6,32 +6,25 @@ import ai.router.sdk.embedding.EmbeddingClient
 import ai.router.sdk.search.SearchClient
 import ai.router.sdk.speechtotext.SpeechToTextClient
 import ai.router.sdk.texttospeech.TextToSpeechClient
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.serialization.kotlinx.json.json
 
 /**
  * Client for the ai-router proxy, with one property per use case.
  *
  * ```kotlin
  * AiRouterClient("http://localhost:8787").use { client ->
- *     val response = client.chat.send(request)
- *     println(response.textContent)
+ *     val models = client.chat.listModels()
  * }
  * ```
  *
+ * The client brings its own HTTP setup: a 10-second connect timeout and a
+ * 10-minute request timeout, long enough for slow model calls. Bound a call
+ * more tightly with `withTimeout`, which cancels the request.
+ *
  * @param baseUrl Root URL of the ai-router server (e.g. `http://localhost:8787`).
- * @param httpClient Optional pre-configured Ktor [HttpClient] with JSON content
- * negotiation installed. If not provided, a default CIO client is created.
  */
-public class AiRouterClient(
-    baseUrl: String,
-    httpClient: HttpClient = defaultHttpClient(),
-) : AutoCloseable {
+public class AiRouterClient(baseUrl: String) : AutoCloseable {
 
-    private val transport = Transport(baseUrl, httpClient)
+    private val transport = Transport(baseUrl)
 
     public val chat: ChatClient = ChatClient(transport)
     public val embedding: EmbeddingClient = EmbeddingClient(transport)
@@ -42,21 +35,5 @@ public class AiRouterClient(
 
     override fun close() {
         transport.close()
-    }
-
-    private companion object {
-        // LLM calls can run long; allow up to 10 minutes per request.
-        private const val REQUEST_TIMEOUT_MILLIS = 600_000L
-        private const val CONNECT_TIMEOUT_MILLIS = 10_000L
-
-        private fun defaultHttpClient(): HttpClient = HttpClient(CIO) {
-            install(ContentNegotiation) {
-                json(Transport.json)
-            }
-            install(HttpTimeout) {
-                requestTimeoutMillis = REQUEST_TIMEOUT_MILLIS
-                connectTimeoutMillis = CONNECT_TIMEOUT_MILLIS
-            }
-        }
     }
 }

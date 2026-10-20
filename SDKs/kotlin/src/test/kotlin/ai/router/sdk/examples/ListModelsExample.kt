@@ -1,5 +1,6 @@
 package ai.router.sdk.examples
 
+import ai.router.sdk.AiRouterClient
 import ai.router.sdk.ProviderType
 import ai.router.sdk.chat.ChatFeature
 import kotlinx.coroutines.runBlocking
@@ -12,7 +13,7 @@ class ListModelsExample {
     @Test
     @DisplayName("List models: fetch each use case's models, with and without filters")
     fun run() = runBlocking {
-        newExampleClient().use { client ->
+        AiRouterClient(SERVER_URL).use { client ->
             // Every use case lists its own models, each with metadata of its
             // own: chat models report their features, for example.
             val chatModels = client.chat.listModels()

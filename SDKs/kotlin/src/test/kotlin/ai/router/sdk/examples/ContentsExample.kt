@@ -1,5 +1,6 @@
 package ai.router.sdk.examples
 
+import ai.router.sdk.AiRouterClient
 import ai.router.sdk.contents.ContentsRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
@@ -11,7 +12,7 @@ class ContentsExample {
     @Test
     @DisplayName("Contents: load the content of a web page")
     fun run() = runBlocking {
-        newExampleClient().use { client ->
+        AiRouterClient(SERVER_URL).use { client ->
             val response = client.contents.send(
                 ContentsRequest(
                     model = CONTENTS_MODEL,

@@ -20,6 +20,12 @@ client per use case as a property named after the use case
 grows with the number of use cases beyond one property on the top-level
 client.
 
+The top-level client takes the server's base URL and nothing else: the SDK
+owns its HTTP setup (timeouts, JSON handling), so a caller cannot configure it
+into a state the SDK does not work in. The TypeScript SDK still accepts a
+custom `fetch`, and its examples share a client factory built on it,
+pending its alignment with this rule.
+
 Adding a use case to the server means adding a module to each SDK and one
 property to its top-level client.
 
@@ -43,15 +49,12 @@ trigger a failure and assert on the SDK's exception/result shape.
 
 ## Shared setup file
 
-In the same directory as the examples, one file holds:
-
-- `SERVER_URL`, and one model constant per use case (`CHAT_MODEL`,
-  `EMBED_MODEL`, ...). Pick a `CHAT_MODEL` with every chat feature (vision,
-  reasoning, tools, structured output) — every chat example shares it. Add
-  more constants only on a real capability gap.
-- A client factory used by every example, configured with a custom HTTP
-  layer (timeouts, etc.). This exercises the "custom HTTP client"
-  configuration path on every test run instead of needing a separate test.
+In the same directory as the examples, one file holds `SERVER_URL`, and one
+model constant per use case (`CHAT_MODEL`, `EMBED_MODEL`, ...). Pick a
+`CHAT_MODEL` with every chat feature (vision, reasoning, tools, structured
+output) — every chat example shares it. Add more constants only on a real
+capability gap. Each example constructs its own client from `SERVER_URL`, so
+it reads as self-contained usage.
 
 ## Test resources
 

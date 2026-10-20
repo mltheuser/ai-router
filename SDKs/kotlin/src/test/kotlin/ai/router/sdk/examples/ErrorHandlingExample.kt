@@ -1,5 +1,6 @@
 package ai.router.sdk.examples
 
+import ai.router.sdk.AiRouterClient
 import ai.router.sdk.AiRouterException
 import ai.router.sdk.chat.ReasoningEffort
 import ai.router.sdk.chat.chatRequest
@@ -16,7 +17,7 @@ class ErrorHandlingExample {
     fun run() {
         val ex = assertThrows(AiRouterException::class.java) {
             runBlocking {
-                newExampleClient().use { client ->
+                AiRouterClient(SERVER_URL).use { client ->
                     client.chat.send(
                         chatRequest("does-not-exist:local@nonexistent", ReasoningEffort.NONE) {
                             messages { user { text("hi") } }
