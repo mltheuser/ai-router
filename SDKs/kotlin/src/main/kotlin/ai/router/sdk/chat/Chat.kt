@@ -2,7 +2,6 @@ package ai.router.sdk.chat
 
 import ai.router.sdk.ModelRef
 import ai.router.sdk.ProviderType
-import ai.router.sdk.Transport
 import ai.router.sdk.schema.SchemaGenerator
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -148,9 +147,13 @@ public data class ToolCall(
     val id: String,
     val function: ToolCallFunction,
 ) {
-    /** The call's arguments, decoded with the serializer of the tool's parameters. */
+    /**
+     * The call's arguments, decoded with the serializer of the tool's
+     * parameters. Decoding is strict and throws a `SerializationException`
+     * on arguments that do not match them, e.g. a key they do not declare.
+     */
     public fun <T> decode(serializer: KSerializer<T>): T =
-        Transport.json.decodeFromJsonElement(serializer, function.arguments)
+        Json.decodeFromJsonElement(serializer, function.arguments)
 }
 
 // ─── Structured output ────────────────────────────────────────────────

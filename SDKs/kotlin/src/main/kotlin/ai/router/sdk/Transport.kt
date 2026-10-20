@@ -26,7 +26,9 @@ import kotlinx.serialization.json.jsonPrimitive
 internal class Transport(private val baseUrl: String) : AutoCloseable {
 
     private val http: HttpClient = HttpClient(CIO) {
-        install(ContentNegotiation) { json(json) }
+        // The default Json, strict on decode: these types mirror the router's
+        // wire format and change with it, so an undeclared field is a mismatch.
+        install(ContentNegotiation) { json(Json) }
         install(HttpTimeout) {
             requestTimeoutMillis = REQUEST_TIMEOUT_MILLIS
             connectTimeoutMillis = CONNECT_TIMEOUT_MILLIS
@@ -48,7 +50,7 @@ internal class Transport(private val baseUrl: String) : AutoCloseable {
     ): ModelList<M> {
         val response = http.get("$baseUrl/v1/$useCase/models") {
             // The query value is the type's wire name, the @SerialName it serializes to.
-            type?.let { parameter("type", json.encodeToJsonElement(it).jsonPrimitive.content) }
+            type?.let { parameter("type", Json.encodeToJsonElement(it).jsonPrimitive.content) }
             search?.let { parameter("search", it) }
         }
         return decode(response)
@@ -71,14 +73,7 @@ internal class Transport(private val baseUrl: String) : AutoCloseable {
         http.close()
     }
 
-    companion object {
-        /** Lenient on decode, so a field the router adds later does not break this SDK. */
-        val json: Json = Json {
-            ignoreUnknownKeys = true
-            encodeDefaults = false
-            isLenient = true
-        }
-
+    private companion object {
         // LLM calls can run long; allow up to 10 minutes per request.
         private const val REQUEST_TIMEOUT_MILLIS = 600_000L
         private const val CONNECT_TIMEOUT_MILLIS = 10_000L
