@@ -2,11 +2,12 @@ package ai.router.sdk.examples
 
 import ai.router.sdk.AiRouterClient
 import ai.router.sdk.chat.ChatMessage
+import ai.router.sdk.chat.ChatRole
+import ai.router.sdk.chat.ChatSettings
 import ai.router.sdk.chat.ContentPart
-import ai.router.sdk.chat.ContentPartType
-import ai.router.sdk.chat.chatRequest
-import ai.router.sdk.chat.decode
+import ai.router.sdk.chat.ToolDefinition
 import ai.router.sdk.schema.Description
+import ai.router.sdk.schema.SchemaGenerator
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.DisplayName
@@ -22,42 +23,39 @@ class ToolCallingExample {
     )
 
     @Test
-    @DisplayName("Tool calling: define a tool, decode the call, send the result back")
+    @DisplayName("Tool calling: define a tool, decode the calls, send the results back")
     fun run() = runBlocking {
         AiRouterClient(SERVER_URL).use { client ->
-            val request = chatRequest(CHAT_MODEL, CHAT_EFFORT) {
-                messages {
-                    user { text("What's the weather in Berlin?") }
-                }
-                tools {
-                    tool<WeatherParams>("get_weather", "Get current weather for a city")
-                }
-            }
-
-            // The model should answer with a call of the tool.
-            val first = client.chat.send(request)
-            val toolCall = checkNotNull(first.message.toolCalls?.firstOrNull()) {
-                "model produced no tool call (finish_reason=${first.finishReason})"
-            }
-            val params = toolCall.decode<WeatherParams>()
-            assertTrue(params.city.isNotBlank(), "decoded tool call had blank city: $params")
-
-            // The conversation continues with the model's reply as received, which
-            // carries the call, and the tool's result for that call.
-            val history = request.messages.toMutableList()
-            history += first.message
-            history += ChatMessage(
-                role = "tool",
-                content = listOf(
-                    ContentPart(type = ContentPartType.TEXT, text = """{"temp_celsius": 22, "condition": "sunny"}"""),
-                ),
-                toolCallId = toolCall.id,
+            val getWeather = ToolDefinition(
+                name = "get_weather",
+                description = "Get current weather for a city",
+                parameters = SchemaGenerator.generate(WeatherParams.serializer()),
             )
-            val followUp = client.chat.send(request.copy(messages = history))
+            val settings = ChatSettings(CHAT_MODEL, CHAT_EFFORT, tools = listOf(getWeather))
+            val conversation = mutableListOf(
+                ChatMessage(ChatRole.USER, listOf(ContentPart.Text("What's the weather in Berlin?"))),
+            )
 
-            println("Answer: ${followUp.textContent}")
+            // The reply carries the model's calls; it joins the conversation as received.
+            val reply = client.chat.send(settings, conversation).message
+            conversation += reply
+            assertTrue(reply.toolCalls.isNotEmpty(), "model produced no tool call")
+
+            // Every call needs its result before the conversation can continue.
+            for (call in reply.toolCalls) {
+                val params = call.decode(WeatherParams.serializer())
+                assertTrue(params.city.isNotBlank(), "decoded tool call had blank city: $params")
+                conversation += ChatMessage(
+                    role = ChatRole.TOOL,
+                    content = listOf(ContentPart.Text("""{"temp_celsius": 22, "condition": "sunny"}""")),
+                    toolCallId = call.id,
+                )
+            }
+            val followUp = client.chat.send(settings, conversation)
+
+            println("Answer: ${followUp.message.text}")
             assertTrue(
-                followUp.textContent.isNotBlank(),
+                followUp.message.text.isNotBlank(),
                 "expected a non-empty follow-up reply (finish_reason=${followUp.finishReason})",
             )
         }

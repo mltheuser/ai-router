@@ -1,7 +1,10 @@
 package ai.router.sdk.examples
 
 import ai.router.sdk.AiRouterClient
-import ai.router.sdk.chat.chatRequest
+import ai.router.sdk.chat.ChatMessage
+import ai.router.sdk.chat.ChatRole
+import ai.router.sdk.chat.ChatSettings
+import ai.router.sdk.chat.ContentPart
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -20,18 +23,20 @@ class VisionExample {
 
         AiRouterClient(SERVER_URL).use { client ->
             val response = client.chat.send(
-                chatRequest(CHAT_MODEL, CHAT_EFFORT) {
-                    messages {
-                        user {
-                            text("Briefly describe this image.")
-                            image(mimeType = "image/png", base64Data = imageBase64)
-                        }
-                    }
-                }
+                ChatSettings(CHAT_MODEL, CHAT_EFFORT),
+                listOf(
+                    ChatMessage(
+                        ChatRole.USER,
+                        listOf(
+                            ContentPart.Text("Briefly describe this image."),
+                            ContentPart.Image(mimeType = "image/png", base64Data = imageBase64),
+                        ),
+                    ),
+                ),
             )
 
             assertTrue(
-                response.textContent.isNotBlank(),
+                response.message.text.isNotBlank(),
                 "expected non-empty text content (finish_reason=${response.finishReason})",
             )
         }

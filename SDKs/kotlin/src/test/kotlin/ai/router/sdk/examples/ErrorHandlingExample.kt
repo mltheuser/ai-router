@@ -2,8 +2,11 @@ package ai.router.sdk.examples
 
 import ai.router.sdk.AiRouterClient
 import ai.router.sdk.AiRouterException
+import ai.router.sdk.chat.ChatMessage
+import ai.router.sdk.chat.ChatRole
+import ai.router.sdk.chat.ChatSettings
+import ai.router.sdk.chat.ContentPart
 import ai.router.sdk.chat.ReasoningEffort
-import ai.router.sdk.chat.chatRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.DisplayName
@@ -19,9 +22,8 @@ class ErrorHandlingExample {
             runBlocking {
                 AiRouterClient(SERVER_URL).use { client ->
                     client.chat.send(
-                        chatRequest("does-not-exist:local@nonexistent", ReasoningEffort.NONE) {
-                            messages { user { text("hi") } }
-                        }
+                        ChatSettings("does-not-exist:local@nonexistent", ReasoningEffort.NONE),
+                        listOf(ChatMessage(ChatRole.USER, listOf(ContentPart.Text("hi")))),
                     )
                 }
             }

@@ -9,15 +9,9 @@ import ai.router.sdk.Transport
  */
 public class ChatClient internal constructor(private val transport: Transport) {
 
-    /** Send a chat request. Build one with [chatRequest]. */
-    public suspend fun send(request: ChatRequest): ChatResponse = transport.send(USE_CASE, request)
-
-    /**
-     * Send a structured chat request and decode the response directly into
-     * [T]. Build one with [structuredChatRequest].
-     */
-    public suspend fun <T> send(request: StructuredChatRequest<T>): T =
-        Transport.json.decodeFromString(request.serializer, send(request.inner).textContent)
+    /** The model's next message in the conversation [messages], answered as [settings] say. */
+    public suspend fun send(settings: ChatSettings, messages: List<ChatMessage>): ChatResponse =
+        transport.send(USE_CASE, ChatRequest(settings, messages))
 
     /**
      * List the models [send] accepts, optionally narrowed by provider [type]

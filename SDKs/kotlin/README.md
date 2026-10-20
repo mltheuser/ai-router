@@ -1,8 +1,9 @@
 # ai-router Kotlin SDK
 
-Kotlin SDK for the [ai-router](../../) proxy. Build requests with a
-type-safe DSL, send them to a local or remote proxy, and consume responses —
-including structured output via `@Serializable` classes.
+Kotlin SDK for the [ai-router](../../) proxy. Send requests to a local or
+remote proxy and consume typed responses. Request and response types follow
+the server's wire format; tool parameters and structured output are declared
+as `@Serializable` classes.
 
 Every documented usage pattern is backed by a runnable example in
 [src/test/kotlin/ai/router/sdk/examples/](src/test/kotlin/ai/router/sdk/examples/).
@@ -33,6 +34,14 @@ for the use case's request and `listModels(...)` for the models it accepts.
 A minimal end-to-end usage of the SDK: connect to the proxy, send one chat
 request, read the text response.
 
+A chat request has two halves. The conversation is a plain
+`List<ChatMessage>`: each message has a role (`ChatRole`) and a list of
+content parts (`ContentPart.Text`, `ContentPart.Image`). `ChatSettings` holds
+everything else the wire request carries: the model, the reasoning effort,
+tools, the response format and the sampling parameters.
+`client.chat.send(settings, messages)` returns the model's next message, and
+`message.text` its text parts.
+
 See [QuickStartExample.kt](src/test/kotlin/ai/router/sdk/examples/QuickStartExample.kt).
 
 > Append `@<provider>` to a model string to pin a request to a specific
@@ -40,41 +49,49 @@ See [QuickStartExample.kt](src/test/kotlin/ai/router/sdk/examples/QuickStartExam
 
 ### Multi-Turn Conversation
 
-Hold a conversation. Keep messages in a list, add
-each reply as received and then the next user message, and send the list
-again. Demonstrates request-level sampling parameters
-(`temperature`, `maxTokens`, …).
+Hold a conversation as a `MutableList<ChatMessage>`: add each reply
+(`response.message`) as received, then the next user message, and send the
+list again. Settings are a plain value, so a conversation may change model or
+effort between requests. Demonstrates the sampling parameters (`temperature`,
+`maxTokens`, …) of `ChatSettings`.
 
 See [MultiTurnExample.kt](src/test/kotlin/ai/router/sdk/examples/MultiTurnExample.kt).
 
 ### Vision (Multimodal)
 
-Attach an image alongside a text prompt. The image is passed inline as
-base64-encoded bytes with an explicit MIME type.
+Attach an image alongside a text prompt: a user message with a text part and
+an image part. The image is passed inline as base64-encoded bytes with an
+explicit MIME type.
 
 See [VisionExample.kt](src/test/kotlin/ai/router/sdk/examples/VisionExample.kt).
 
 ### Tool Calling
 
-Define a tool whose parameters are a `@Serializable` class — the SDK derives
-the JSON Schema automatically. The example walks through the full round-trip:
-issue the call, decode the model's tool call into the typed class, and send
-the model's reply as received, which carries the call, back with the tool's
-result as a follow-up turn. Annotate fields with
-[`@Description`](src/main/kotlin/ai/router/sdk/schema/Description.kt) to give
-the model human-readable hints.
+Define a tool whose parameters are a `@Serializable` class:
+`SchemaGenerator.generate(serializer)` derives its JSON Schema. Annotate fields
+with [`@Description`](src/main/kotlin/ai/router/sdk/schema/Description.kt) to
+give the model human-readable hints. The example walks through the full
+round-trip: add the model's reply, which carries its calls, to the
+conversation as received, decode each call with `call.decode(serializer)`,
+and add one tool message (`toolCallId = call.id`) per call before sending
+again. A model may call several tools at once; each call needs its result.
 
 See [ToolCallingExample.kt](src/test/kotlin/ai/router/sdk/examples/ToolCallingExample.kt).
 
 ### Structured Output
 
-Declare the response shape as a `@Serializable` class and use
-`structuredChatRequest`. The SDK generates the schema, sets the
-`response_format`, and deserializes the response into the typed class — no
-manual JSON wrangling. Annotate a class with
+Declare the response shape as a `@Serializable` class and set
+`ResponseFormat(serializer)` as the settings' `responseFormat`. The SDK
+generates the schema from the class and sends it; the response is an ordinary
+response, which may also carry tool calls. `responseFormat.decode(response)`
+reads the answer into the class, strictly: text that does not match the
+schema throws. The schema carries exactly what the class declares. Annotate a
+class with
 [`@NoAdditionalProperties`](src/main/kotlin/ai/router/sdk/schema/NoAdditionalProperties.kt)
 to rule out properties beyond those declared; some providers, such as
-Anthropic and OpenAI, require it of every object in the schema.
+Anthropic and OpenAI, require it of every object in the schema, and OpenAI
+also every property in `required`, which a property with a default value or
+a nullable type is not.
 
 See [StructuredOutputExample.kt](src/test/kotlin/ai/router/sdk/examples/StructuredOutputExample.kt).
 

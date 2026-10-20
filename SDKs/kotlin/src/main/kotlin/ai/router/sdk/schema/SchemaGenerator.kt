@@ -1,6 +1,7 @@
 package ai.router.sdk.schema
 
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
@@ -14,10 +15,9 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
-import kotlinx.serialization.serializer
 
 /**
- * Derives a JSON Schema from a kotlinx-serialization [SerialDescriptor].
+ * Derives a JSON Schema from a kotlinx-serialization [KSerializer]'s descriptor.
  *
  * Supported mappings:
  * - STRING / CHAR → `{"type": "string"}`
@@ -33,19 +33,9 @@ import kotlinx.serialization.serializer
 @OptIn(ExperimentalSerializationApi::class)
 public object SchemaGenerator {
 
-    /**
-     * Generate a JSON Schema [JsonObject] for the reified type [T].
-     */
-    public inline fun <reified T> generate(): JsonObject =
-        generate(serializer<T>().descriptor)
-
-    /**
-     * Generate a JSON Schema [JsonObject] for an explicit [descriptor] —
-     * for call sites where the type is not reifiable, e.g. a serializer
-     * held generically.
-     */
-    public fun generate(descriptor: SerialDescriptor): JsonObject =
-        descriptorToSchema(descriptor)
+    /** The JSON Schema of the values [serializer] encodes. */
+    public fun generate(serializer: KSerializer<*>): JsonObject =
+        descriptorToSchema(serializer.descriptor)
 
     private fun descriptorToSchema(descriptor: SerialDescriptor): JsonObject {
         // Unwrap nullable wrapper — its single element is the real descriptor.
