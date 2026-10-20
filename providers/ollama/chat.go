@@ -71,7 +71,6 @@ type ollamaChatResponse struct {
 }
 
 type ollamaMessage struct {
-	Role      string                   `json:"role"`
 	Content   string                   `json:"content"`
 	Thinking  string                   `json:"thinking,omitempty"`
 	ToolCalls []ollamaResponseToolCall `json:"tool_calls,omitempty"`
@@ -188,7 +187,7 @@ func mapResponse(ollamaResp *ollamaChatResponse) *chat.Response {
 		},
 		FinishReason: mapFinishReason(ollamaResp.DoneReason),
 		Message: chat.Message{
-			Role:    chat.Role(ollamaResp.Message.Role),
+			Role:    chat.RoleAssistant,
 			Content: chat.TextContent(ollamaResp.Message.Content),
 		},
 	}

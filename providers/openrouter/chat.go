@@ -83,7 +83,6 @@ type openRouterChatChoice struct {
 }
 
 type openRouterMessage struct {
-	Role      string                       `json:"role"`
 	Content   string                       `json:"content"`
 	Reasoning string                       `json:"reasoning,omitempty"`
 	Thinking  string                       `json:"thinking,omitempty"`
@@ -249,6 +248,7 @@ func mapOpenRouterResponse(orResp *openRouterChatResponse) *chat.Response {
 			CompletionTokens: orResp.Usage.CompletionTokens,
 			TotalTokens:      orResp.Usage.TotalTokens,
 		},
+		Message: chat.Message{Role: chat.RoleAssistant},
 	}
 
 	if orResp.Usage.CompletionTokensDetails != nil {
@@ -268,11 +268,8 @@ func mapOpenRouterResponse(orResp *openRouterChatResponse) *chat.Response {
 			reasoning = c.Message.Thinking
 		}
 
-		resp.Message = chat.Message{
-			Role:             chat.Role(c.Message.Role),
-			Content:          chat.TextContent(c.Message.Content),
-			ReasoningContent: reasoning,
-		}
+		resp.Message.Content = chat.TextContent(c.Message.Content)
+		resp.Message.ReasoningContent = reasoning
 		resp.FinishReason = chat.FinishReason(c.FinishReason)
 
 		if len(c.Message.ToolCalls) > 0 {
