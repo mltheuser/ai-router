@@ -15,7 +15,6 @@ import kotlin.test.assertTrue
 
 class StructuredOutputExample {
 
-    // Anthropic and OpenAI accept only objects that rule out further properties.
     @Serializable
     @NoAdditionalProperties
     data class WeatherInfo(

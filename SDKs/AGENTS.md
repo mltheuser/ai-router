@@ -12,15 +12,7 @@ use-case client with two methods: `send`, the use case's request, and
 `listModels`, returning that model type. The model types share one interface
 for the routing fields (`id`, `model`, `provider`, `provider_type`).
 
-Types follow the wire format, so the server's API documentation describes
-the SDK too; a convenience earns its place only by serving how the SDK is
-used in practice, and each thing has one way of doing it. Chat shows where
-this leads: a conversation is a plain list of messages that a caller holds
-and grows, so the chat client's `send` takes the messages and, apart from
-them, the settings of everything else the request carries (Kotlin:
-`send(settings, messages)`). The Kotlin SDK's chat follows this. Pending
-their alignment, the Kotlin embedding use case still carries a request
-builder, and the TypeScript SDK's chat still takes one request object.
+Types follow the wire format.
 
 The top-level client only wires things together: it exposes one use-case
 client per use case as a property named after the use case
@@ -31,9 +23,7 @@ client.
 
 The top-level client takes the server's base URL and nothing else: the SDK
 owns its HTTP setup (timeouts, JSON handling), so a caller cannot configure it
-into a state the SDK does not work in. The TypeScript SDK still accepts a
-custom `fetch`, and its examples share a client factory built on it,
-pending its alignment with this rule.
+into a state the SDK does not work in.
 
 Adding a use case to the server means adding a module to each SDK and one
 property to its top-level client.
@@ -60,10 +50,8 @@ trigger a failure and assert on the SDK's exception/result shape.
 
 In the same directory as the examples, one file holds `SERVER_URL`, and one
 model constant per use case (`CHAT_MODEL`, `EMBED_MODEL`, ...). Pick a
-`CHAT_MODEL` with every chat feature (vision, reasoning, tools, structured
-output) — every chat example shares it. Add more constants only on a real
-capability gap. Each example constructs its own client from `SERVER_URL`, so
-it reads as self-contained usage.
+`CHAT_MODEL` with every chat feature (vision, reasoning, ...) — every example shares it. Add more constants only on a real
+capability gap.
 
 ## Test resources
 

@@ -18,17 +18,6 @@ import kotlinx.serialization.json.putJsonObject
 
 /**
  * Derives a JSON Schema from a kotlinx-serialization [KSerializer]'s descriptor.
- *
- * Supported mappings:
- * - STRING / CHAR → `{"type": "string"}`
- * - BOOLEAN       → `{"type": "boolean"}`
- * - BYTE/SHORT/INT/LONG → `{"type": "integer"}`
- * - FLOAT/DOUBLE  → `{"type": "number"}`
- * - ENUM          → `{"type": "string", "enum": [...]}`
- * - LIST          → `{"type": "array", "items": ...}`
- * - MAP           → `{"type": "object", "additionalProperties": ...}`
- * - CLASS/OBJECT  → `{"type": "object", "properties": {...}, "required": [...]}`,
- *   plus `"additionalProperties": false` if annotated [NoAdditionalProperties]
  */
 @OptIn(ExperimentalSerializationApi::class)
 public object SchemaGenerator {

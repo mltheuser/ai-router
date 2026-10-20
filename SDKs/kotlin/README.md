@@ -1,9 +1,6 @@
 # ai-router Kotlin SDK
 
-Kotlin SDK for the [ai-router](../../) proxy. Send requests to a local or
-remote proxy and consume typed responses. Request and response types follow
-the server's wire format; tool parameters and structured output are declared
-as `@Serializable` classes.
+Kotlin SDK for the [ai-router](../../) proxy.
 
 Every documented usage pattern is backed by a runnable example in
 [src/test/kotlin/ai/router/sdk/examples/](src/test/kotlin/ai/router/sdk/examples/).
@@ -33,14 +30,6 @@ for the use case's request and `listModels(...)` for the models it accepts.
 
 A minimal end-to-end usage of the SDK: connect to the proxy, send one chat
 request, read the text response.
-
-A chat request has two halves. The conversation is a plain
-`List<ChatMessage>`: each message has a role (`ChatRole`) and a list of
-content parts (`ContentPart.Text`, `ContentPart.Image`). `ChatSettings` holds
-everything else the wire request carries: the model, the reasoning effort,
-tools, the response format and the sampling parameters.
-`client.chat.send(settings, messages)` returns the model's next message, and
-`message.text` its text parts.
 
 See [QuickStartExample.kt](src/test/kotlin/ai/router/sdk/examples/QuickStartExample.kt).
 
@@ -84,14 +73,9 @@ Declare the response shape as a `@Serializable` class and set
 `ResponseFormat(serializer)` as the settings' `responseFormat`. The SDK
 generates the schema from the class and sends it; the response is an ordinary
 response, which may also carry tool calls. `responseFormat.decode(response)`
-reads the answer into the class, strictly: text that does not match the
-schema throws. The schema carries exactly what the class declares. Annotate a
-class with
-[`@NoAdditionalProperties`](src/main/kotlin/ai/router/sdk/schema/NoAdditionalProperties.kt)
-to rule out properties beyond those declared; some providers, such as
-Anthropic and OpenAI, require it of every object in the schema, and OpenAI
-also every property in `required`, which a property with a default value or
-a nullable type is not.
+reads the answer into the class, strictly. The schema carries exactly what the class declares. Annotate a
+class with [`@NoAdditionalProperties`](src/main/kotlin/ai/router/sdk/schema/NoAdditionalProperties.kt)
+to rule out properties beyond those declared; some providers require it.
 
 See [StructuredOutputExample.kt](src/test/kotlin/ai/router/sdk/examples/StructuredOutputExample.kt).
 

@@ -10,16 +10,6 @@ import ai.router.sdk.texttospeech.TextToSpeechClient
 /**
  * Client for the ai-router proxy, with one property per use case.
  *
- * ```kotlin
- * AiRouterClient("http://localhost:8787").use { client ->
- *     val models = client.chat.listModels()
- * }
- * ```
- *
- * The client brings its own HTTP setup: a 10-second connect timeout and a
- * 10-minute request timeout, long enough for slow model calls. Bound a call
- * more tightly with `withTimeout`, which cancels the request.
- *
  * @param baseUrl Root URL of the ai-router server (e.g. `http://localhost:8787`).
  */
 public class AiRouterClient(baseUrl: String) : AutoCloseable {

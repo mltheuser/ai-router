@@ -19,15 +19,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonPrimitive
 
-/**
- * The two routes every use case is served on, `POST /v1/<use case>` and
- * `GET /v1/<use case>/models`, over the SDK's one HTTP client.
- */
 internal class Transport(private val baseUrl: String) : AutoCloseable {
 
     private val http: HttpClient = HttpClient(CIO) {
-        // The default Json, strict on decode: these types mirror the router's
-        // wire format and change with it, so an undeclared field is a mismatch.
         install(ContentNegotiation) { json(Json) }
         install(HttpTimeout) {
             requestTimeoutMillis = REQUEST_TIMEOUT_MILLIS
