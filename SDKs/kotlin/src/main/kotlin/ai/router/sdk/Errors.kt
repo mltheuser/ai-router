@@ -12,11 +12,9 @@ public data class ApiError(
     val code: String? = null,
 )
 
-/**
- * Top-level error response wrapper.
- */
+/** The body of a non-2xx response. */
 @Serializable
-public data class ErrorResponse(
+internal data class ErrorResponse(
     val error: ApiError,
 )
 

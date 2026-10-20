@@ -9,7 +9,6 @@ import ai.router.sdk.Transport
  */
 public class SearchClient internal constructor(private val transport: Transport) {
 
-    /** Send a search request. */
     public suspend fun send(request: SearchRequest): SearchResponse = transport.send(USE_CASE, request)
 
     /**

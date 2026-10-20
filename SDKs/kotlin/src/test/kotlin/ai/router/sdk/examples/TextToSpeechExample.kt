@@ -5,6 +5,7 @@ import ai.router.sdk.texttospeech.TextToSpeechRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import java.util.Base64
 import kotlin.test.assertTrue
 
 class TextToSpeechExample {
@@ -25,7 +26,7 @@ class TextToSpeechExample {
                 )
             )
 
-            val wav = response.wav()
+            val wav = Base64.getDecoder().decode(response.audio)
             println("${voice.name}: ${wav.size} bytes of WAV audio")
             assertTrue(wav.isNotEmpty(), "expected audio")
         }

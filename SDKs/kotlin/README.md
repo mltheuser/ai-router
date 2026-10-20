@@ -90,9 +90,8 @@ See [ReasoningExample.kt](src/test/kotlin/ai/router/sdk/examples/ReasoningExampl
 
 ### Embeddings
 
-Each `batch(...)` call corresponds to one embedding in the response. The
-optional `dimensions(...)` clause requests a specific embedding size from the
-provider.
+Each text of `input` corresponds to one embedding in the response. The
+optional `dimensions` requests a specific embedding size from the provider.
 
 See [EmbeddingsExample.kt](src/test/kotlin/ai/router/sdk/examples/EmbeddingsExample.kt).
 
@@ -115,8 +114,7 @@ See [ContentsExample.kt](src/test/kotlin/ai/router/sdk/examples/ContentsExample.
 
 Turn a text into speech in one of a model's voices. Each text-to-speech model
 entry lists the voices it speaks in; pass a voice's id with the text. The
-response carries the audio as a base64-encoded WAV file (16-bit mono PCM),
-which `wav()` decodes.
+response carries the audio as a base64-encoded WAV file (16-bit mono PCM).
 
 See [TextToSpeechExample.kt](src/test/kotlin/ai/router/sdk/examples/TextToSpeechExample.kt).
 
@@ -124,8 +122,7 @@ See [TextToSpeechExample.kt](src/test/kotlin/ai/router/sdk/examples/TextToSpeech
 
 Turn speech into text. The request carries the audio as a base64-encoded WAV
 file of 16-bit mono PCM, at any sample rate: the format text-to-speech
-returns, so a text-to-speech response's `audio` can be passed on as is. For
-the bytes of a WAV file, `SpeechToTextRequest.fromWav` does the encoding.
+returns, so a text-to-speech response's `audio` can be passed on as is.
 Audio in any other format is rejected with a 400. The response carries the
 transcript as `text`.
 

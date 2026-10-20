@@ -1,7 +1,7 @@
 package ai.router.sdk.examples
 
 import ai.router.sdk.AiRouterClient
-import ai.router.sdk.embedding.embedRequest
+import ai.router.sdk.embedding.EmbeddingRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -15,15 +15,14 @@ class EmbeddingsExample {
     fun run() = runBlocking {
         AiRouterClient(SERVER_URL).use { client ->
             val response = client.embedding.send(
-                embedRequest(EMBED_MODEL) {
-                    batch("First document to embed")
-                    batch("Second document to embed")
-                    batch("Third document to embed")
-                    dimensions(768)
-                }
+                EmbeddingRequest(
+                    model = EMBED_MODEL,
+                    input = listOf("First document to embed", "Second document to embed", "Third document to embed"),
+                    dimensions = 768,
+                )
             )
 
-            assertEquals(3, response.data.size, "expected one embedding per batch")
+            assertEquals(3, response.data.size, "expected one embedding per input text")
             response.data.forEach { item ->
                 assertTrue(
                     item.embedding.isNotEmpty(),

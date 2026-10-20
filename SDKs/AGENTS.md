@@ -9,8 +9,10 @@ The server is organized by use case (e.g. chat, embedding), and so is every
 SDK. Each use case gets its own module holding its
 request/response types, a model type with the use case's own metadata, and a
 use-case client with two methods: `send`, the use case's request, and
-`listModels`, returning that model type. The model types share one interface
-for the routing fields (`id`, `model`, `provider`, `provider_type`).
+`listModels`, returning that model type. Types are named after the use case
+(`EmbeddingRequest`, `EmbeddingResponse`, `EmbeddingModel`). The model types
+share one interface for the routing fields (`id`, `model`, `provider`,
+`provider_type`).
 
 Types follow the wire format.
 

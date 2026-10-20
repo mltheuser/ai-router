@@ -4,7 +4,6 @@ import ai.router.sdk.ModelRef
 import ai.router.sdk.ProviderType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import java.util.Base64
 
 /**
  * A text-to-speech model at one provider, as listed by
@@ -33,27 +32,3 @@ public data class TextToSpeechVoice(
     val id: String,
     val name: String,
 )
-
-/**
- * Text-to-speech request: [text] spoken in [voice], the id of one of the
- * voices listed in [model]'s entry.
- */
-@Serializable
-public data class TextToSpeechRequest(
-    val model: String,
-    val voice: String,
-    val text: String,
-)
-
-/**
- * Text-to-speech response. [audio] is a base64-encoded WAV file of 16-bit
- * mono PCM, at a sample rate up to the provider; [wav] decodes it.
- */
-@Serializable
-public data class TextToSpeechResponse(
-    val model: String,
-    val audio: String,
-) {
-    /** The audio as the bytes of a WAV file. */
-    public fun wav(): ByteArray = Base64.getDecoder().decode(audio)
-}

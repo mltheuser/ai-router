@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
  * The cost field is per million input tokens; `null` means unknown and `0.0` means free.
  */
 @Serializable
-public data class EmbedModel(
+public data class EmbeddingModel(
     override val id: String,
     override val model: String,
     override val provider: String,
@@ -20,38 +20,3 @@ public data class EmbedModel(
     @SerialName("cost_per_m_input") val costPerMInput: Double? = null,
     @SerialName("size_bytes") val sizeBytes: Long? = null,
 ) : ModelRef
-
-/**
- * Embedding request.
- */
-@Serializable
-public data class EmbedRequest(
-    val model: String,
-    val input: List<String>,
-    val dimensions: Int? = null,
-)
-
-/**
- * Embedding response: one [EmbedData] per input text.
- */
-@Serializable
-public data class EmbedResponse(
-    val model: String,
-    val data: List<EmbedData>,
-    val usage: EmbedUsage,
-)
-
-/**
- * The vector of the input text at [index].
- */
-@Serializable
-public data class EmbedData(
-    val index: Int,
-    val embedding: List<Double>,
-)
-
-@Serializable
-public data class EmbedUsage(
-    @SerialName("prompt_tokens") val promptTokens: Int,
-    @SerialName("total_tokens") val totalTokens: Int,
-)

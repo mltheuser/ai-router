@@ -5,6 +5,7 @@ import ai.router.sdk.speechtotext.SpeechToTextRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import java.util.Base64
 import kotlin.test.assertTrue
 
 class SpeechToTextExample {
@@ -19,7 +20,9 @@ class SpeechToTextExample {
         }.use { it.readBytes() }
 
         AiRouterClient(SERVER_URL).use { client ->
-            val response = client.speechToText.send(SpeechToTextRequest.fromWav(SPEECH_TO_TEXT_MODEL, wav))
+            val response = client.speechToText.send(
+                SpeechToTextRequest(SPEECH_TO_TEXT_MODEL, Base64.getEncoder().encodeToString(wav))
+            )
 
             println("Transcript: ${response.text}")
             assertTrue(response.text.isNotBlank(), "expected a transcript")

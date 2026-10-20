@@ -10,7 +10,6 @@ import ai.router.sdk.Transport
  */
 public class TextToSpeechClient internal constructor(private val transport: Transport) {
 
-    /** Send a text-to-speech request. */
     public suspend fun send(request: TextToSpeechRequest): TextToSpeechResponse = transport.send(USE_CASE, request)
 
     /**
