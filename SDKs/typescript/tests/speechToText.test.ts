@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { AiRouterClient, wavBase64 } from "ai-router-sdk";
+import { AiRouterClient } from "ai-router-sdk";
 import { file } from "bun";
 import { SERVER_URL, SPEECH_TO_TEXT_MODEL } from "./setup";
 
@@ -11,7 +11,7 @@ test("Speech to text: transcribe a WAV file", async () => {
 
   const response = await client.speechToText.send({
     model: SPEECH_TO_TEXT_MODEL,
-    audio: wavBase64(wav),
+    audio: wav.toBase64(),
   });
 
   console.log(`Transcript: ${response.text}`);

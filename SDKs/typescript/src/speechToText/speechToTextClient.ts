@@ -1,6 +1,8 @@
 import type { ModelFilters, ModelList } from "../models";
 import type { CallOptions, Transport } from "../transport";
-import type { SpeechToTextModel, SpeechToTextRequest, SpeechToTextResponse } from "./speechToText";
+import type { SpeechToTextModel } from "./speechToTextModel";
+import type { SpeechToTextRequest } from "./speechToTextRequest";
+import type { SpeechToTextResponse } from "./speechToTextResponse";
 
 const USE_CASE = "speech-to-text";
 

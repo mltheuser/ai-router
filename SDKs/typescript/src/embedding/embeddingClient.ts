@@ -1,6 +1,8 @@
 import type { ModelFilters, ModelList } from "../models";
 import type { CallOptions, Transport } from "../transport";
-import type { EmbeddingModel, EmbeddingRequest, EmbeddingResponse } from "./embedding";
+import type { EmbeddingModel } from "./embeddingModel";
+import type { EmbeddingRequest } from "./embeddingRequest";
+import type { EmbeddingResponse } from "./embeddingResponse";
 
 const USE_CASE = "embedding";
 

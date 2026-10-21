@@ -17,25 +17,3 @@ export interface TextToSpeechVoice {
   id: string;
   name: string;
 }
-
-/** The body of `POST /v1/text-to-speech`: `text` spoken in `voice`, one of the model's voices. */
-export interface TextToSpeechRequest {
-  model: string;
-  voice: string;
-  text: string;
-}
-
-/**
- * The answer to a text-to-speech request. `audio` is a base64-encoded WAV
- * file of 16-bit mono PCM, at a sample rate up to the provider; {@link wavBytes}
- * decodes it.
- */
-export interface TextToSpeechResponse {
-  model: string;
-  audio: string;
-}
-
-/** The response's audio as the bytes of a WAV file. */
-export function wavBytes(response: TextToSpeechResponse): Uint8Array {
-  return Uint8Array.from(atob(response.audio), (char) => char.charCodeAt(0));
-}

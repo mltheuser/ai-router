@@ -81,10 +81,8 @@ Declare the response shape as a schema and set
 response is an ordinary response, which may also carry tool calls.
 `responseFormat.decode(response)` reads the answer, validated by the schema,
 as the schema's type; a mismatch throws `DecodeError`. The schema is sent
-exactly as the library converts it; some providers require every object to
-rule out further properties (`z.strictObject`), every property to be
-required (`.nullable()` instead of `.optional()`), and no numeric bounds
-(`z.number()`, not `z.int()`).
+exactly as the library converts it; some providers require more of it than
+others, e.g. objects that rule out further properties (`z.strictObject`).
 
 See [structuredOutput.test.ts](tests/structuredOutput.test.ts).
 
@@ -125,8 +123,7 @@ See [contents.test.ts](tests/contents.test.ts).
 
 Turn a text into speech in one of a model's voices. Each text-to-speech model
 entry lists the voices it speaks in; pass a voice's id with the text. The
-response carries the audio as a base64-encoded WAV file (16-bit mono PCM),
-which `wavBytes` decodes.
+response carries the audio as a base64-encoded WAV file (16-bit mono PCM).
 
 See [textToSpeech.test.ts](tests/textToSpeech.test.ts).
 
@@ -134,9 +131,8 @@ See [textToSpeech.test.ts](tests/textToSpeech.test.ts).
 
 Turn speech into text. The request carries the audio as a base64-encoded WAV
 file of 16-bit mono PCM, at any sample rate: the format text-to-speech
-returns, so a text-to-speech response's `audio` can be passed on as is. For
-the bytes of a WAV file, `wavBase64` does the encoding. Audio in any other
-format is rejected with a 400. The response carries the transcript as `text`.
+returns, so a text-to-speech response's `audio` can be passed on as is.
+Audio in any other format is rejected with a 400. The response carries the transcript as `text`.
 
 See [speechToText.test.ts](tests/speechToText.test.ts).
 

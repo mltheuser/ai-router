@@ -1,6 +1,8 @@
 import type { ModelFilters, ModelList } from "../models";
 import type { CallOptions, Transport } from "../transport";
-import type { SearchModel, SearchRequest, SearchResponse } from "./search";
+import type { SearchModel } from "./searchModel";
+import type { SearchRequest } from "./searchRequest";
+import type { SearchResponse } from "./searchResponse";
 
 const USE_CASE = "search";
 

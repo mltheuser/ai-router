@@ -1,6 +1,8 @@
 import type { ModelFilters, ModelList } from "../models";
 import type { CallOptions, Transport } from "../transport";
-import type { ContentsModel, ContentsRequest, ContentsResponse } from "./contents";
+import type { ContentsModel } from "./contentsModel";
+import type { ContentsRequest } from "./contentsRequest";
+import type { ContentsResponse } from "./contentsResponse";
 
 const USE_CASE = "contents";
 

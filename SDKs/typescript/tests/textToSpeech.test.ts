@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { AiRouterClient, wavBytes } from "ai-router-sdk";
+import { AiRouterClient } from "ai-router-sdk";
 import { SERVER_URL, TEXT_TO_SPEECH_MODEL } from "./setup";
 
 test("Text to speech: speak a sentence in one of the model's voices", async () => {
@@ -18,7 +18,7 @@ test("Text to speech: speak a sentence in one of the model's voices", async () =
     text: "Hello from the ai-router TypeScript SDK.",
   });
 
-  const wav = wavBytes(response);
+  const wav = Uint8Array.fromBase64(response.audio);
   console.log(`${voice.name}: ${wav.length} bytes of WAV audio`);
   expect(new TextDecoder().decode(wav.subarray(0, 4))).toBe("RIFF");
 });
