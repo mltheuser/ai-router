@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
-import { wavBytes } from "ai-router-sdk";
-import { newExampleClient, TEXT_TO_SPEECH_MODEL } from "./setup";
+import { AiRouterClient, wavBytes } from "ai-router-sdk";
+import { SERVER_URL, TEXT_TO_SPEECH_MODEL } from "./setup";
 
 test("Text to speech: speak a sentence in one of the model's voices", async () => {
-  const client = newExampleClient();
+  const client = new AiRouterClient(SERVER_URL);
 
   // The model's entry lists the voices it speaks in.
   const { data } = await client.textToSpeech.listModels();

@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test";
-import { EMBED_MODEL, newExampleClient } from "./setup";
+import { AiRouterClient } from "ai-router-sdk";
+import { EMBED_MODEL, SERVER_URL } from "./setup";
 
 test("Embeddings: embed several texts in a single call", async () => {
-  const client = newExampleClient();
+  const client = new AiRouterClient(SERVER_URL);
 
   const response = await client.embedding.send({
     model: EMBED_MODEL,

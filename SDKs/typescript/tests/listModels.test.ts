@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
-import type { ModelRef } from "ai-router-sdk";
-import { newExampleClient } from "./setup";
+import { AiRouterClient, type ModelRef } from "ai-router-sdk";
+import { SERVER_URL } from "./setup";
 
 test("List models: fetch each use case's models, with and without filters", async () => {
-  const client = newExampleClient();
+  const client = new AiRouterClient(SERVER_URL);
 
   // Every use case lists its own models, each with metadata of its own: chat
   // models report their features, for example.

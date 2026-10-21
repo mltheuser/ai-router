@@ -1,5 +1,5 @@
 import type { ModelFilters, ModelList } from "../models";
-import type { Transport } from "../transport";
+import type { CallOptions, Transport } from "../transport";
 import type { TextToSpeechModel, TextToSpeechRequest, TextToSpeechResponse } from "./textToSpeech";
 
 const USE_CASE = "text-to-speech";
@@ -15,12 +15,12 @@ export class TextToSpeechClient {
     this.#transport = transport;
   }
 
-  send(request: TextToSpeechRequest): Promise<TextToSpeechResponse> {
-    return this.#transport.send(USE_CASE, request);
+  send(request: TextToSpeechRequest, options?: CallOptions): Promise<TextToSpeechResponse> {
+    return this.#transport.send(USE_CASE, request, options);
   }
 
   /** The models {@link send} accepts, each with its voices. */
-  listModels(filters?: ModelFilters): Promise<ModelList<TextToSpeechModel>> {
-    return this.#transport.listModels(USE_CASE, filters);
+  listModels(filters?: ModelFilters, options?: CallOptions): Promise<ModelList<TextToSpeechModel>> {
+    return this.#transport.listModels(USE_CASE, filters, options);
   }
 }

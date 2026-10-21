@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { parseStructuredOutput } from "ai-router-sdk";
-import { CHAT_EFFORT, CHAT_MODEL, newExampleClient } from "./setup";
+import { AiRouterClient, parseStructuredOutput } from "ai-router-sdk";
+import { CHAT_EFFORT, CHAT_MODEL, SERVER_URL } from "./setup";
 
 interface WeatherInfo {
   city: string;
@@ -9,7 +9,7 @@ interface WeatherInfo {
 }
 
 test("Structured output: parse the response into a typed object", async () => {
-  const client = newExampleClient();
+  const client = new AiRouterClient(SERVER_URL);
 
   const response = await client.chat.send({
     model: CHAT_MODEL,

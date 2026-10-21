@@ -19,7 +19,7 @@ export type {
 } from "./chat/chat";
 export { chatReasoning, chatText, parseStructuredOutput } from "./chat/chat";
 export type { ChatClient } from "./chat/chatClient";
-export { AiRouterClient, type AiRouterClientOptions } from "./client";
+export { AiRouterClient } from "./client";
 export type {
   ContentsModel,
   ContentsRequest,
@@ -54,4 +54,4 @@ export type {
 } from "./textToSpeech/textToSpeech";
 export { wavBytes } from "./textToSpeech/textToSpeech";
 export type { TextToSpeechClient } from "./textToSpeech/textToSpeechClient";
-export type { Fetch } from "./transport";
+export type { CallOptions } from "./transport";

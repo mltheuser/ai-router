@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { type ChatMessage, chatText, type ToolDefinition } from "ai-router-sdk";
-import { CHAT_EFFORT, CHAT_MODEL, newExampleClient } from "./setup";
+import { AiRouterClient, type ChatMessage, chatText, type ToolDefinition } from "ai-router-sdk";
+import { CHAT_EFFORT, CHAT_MODEL, SERVER_URL } from "./setup";
 
 // A tool's parameters are a plain JSON Schema object.
 const getWeather: ToolDefinition = {
@@ -17,7 +17,7 @@ const getWeather: ToolDefinition = {
 };
 
 test("Tool calling: define a tool, read the call, send the result back", async () => {
-  const client = newExampleClient();
+  const client = new AiRouterClient(SERVER_URL);
   const question: ChatMessage = {
     role: "user",
     content: [{ type: "text", text: "What's the weather in Berlin?" }],

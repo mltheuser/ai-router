@@ -4,25 +4,14 @@ import { EmbeddingClient } from "./embedding/embeddingClient";
 import { SearchClient } from "./search/searchClient";
 import { SpeechToTextClient } from "./speechToText/speechToTextClient";
 import { TextToSpeechClient } from "./textToSpeech/textToSpeechClient";
-import { type Fetch, Transport } from "./transport";
-
-/** The configuration of an {@link AiRouterClient}. */
-export interface AiRouterClientOptions {
-  /** Root URL of the ai-router server, e.g. `http://localhost:8787`. */
-  baseUrl: string;
-  /**
-   * The HTTP layer every request goes through, e.g. to add timeouts or
-   * logging. Defaults to the global `fetch`.
-   */
-  fetch?: Fetch;
-}
+import { Transport } from "./transport";
 
 /**
  * Client for the ai-router proxy, with one property per use case.
  *
  * A non-2xx response rejects with an `AiRouterError`; a failure of `fetch`
- * itself (e.g. the server is unreachable, or a timeout aborts the request)
- * rejects with that failure as is.
+ * itself (e.g. the server is unreachable, or the call was cancelled or timed
+ * out) rejects with that failure as is.
  */
 export class AiRouterClient {
   readonly chat: ChatClient;
@@ -32,8 +21,9 @@ export class AiRouterClient {
   readonly textToSpeech: TextToSpeechClient;
   readonly speechToText: SpeechToTextClient;
 
-  constructor(options: AiRouterClientOptions) {
-    const transport = new Transport(options.baseUrl, options.fetch ?? fetch);
+  /** @param baseUrl Root URL of the ai-router server, e.g. `http://localhost:8787`. */
+  constructor(baseUrl: string) {
+    const transport = new Transport(baseUrl);
     this.chat = new ChatClient(transport);
     this.embedding = new EmbeddingClient(transport);
     this.search = new SearchClient(transport);

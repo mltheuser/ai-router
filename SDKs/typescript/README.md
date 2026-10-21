@@ -145,18 +145,17 @@ See [listModels.test.ts](tests/listModels.test.ts).
 Non-2xx responses reject with `AiRouterError`, which carries the HTTP
 `status`, the decoded error body as `apiError` (`type`, `message` and an
 optional `code`), and a message of the form `"<type>: <message>"`. A failure
-of `fetch` itself, such as an unreachable server or an aborted request,
+of `fetch` itself, such as an unreachable server or a cancelled call,
 rejects with that failure as is.
 
 See [errorHandling.test.ts](tests/errorHandling.test.ts).
 
 ### Configuration
 
-Pass your own `fetch` to `new AiRouterClient({ baseUrl, fetch })` to take full
-control of the HTTP layer: timeouts, logging, retries, etc. Without it, the
-client uses the global `fetch`. The example tests in this repo all build
-their client through a shared factory that demonstrates this pattern with a
-timeout — see [setup.ts](tests/setup.ts).
+`new AiRouterClient(baseUrl)` takes the server's base URL and nothing else;
+the SDK times a request out after 10 minutes. Every call takes an optional
+`{ signal }` as its last argument to cancel it sooner, e.g.
+`AbortSignal.timeout(30_000)`.
 
 ## Testing
 

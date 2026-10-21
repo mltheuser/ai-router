@@ -1,5 +1,5 @@
 import type { ModelFilters, ModelList } from "../models";
-import type { Transport } from "../transport";
+import type { CallOptions, Transport } from "../transport";
 import type { SpeechToTextModel, SpeechToTextRequest, SpeechToTextResponse } from "./speechToText";
 
 const USE_CASE = "speech-to-text";
@@ -13,12 +13,12 @@ export class SpeechToTextClient {
   }
 
   /** Audio that is not a WAV file of 16-bit mono PCM is rejected with a 400. */
-  send(request: SpeechToTextRequest): Promise<SpeechToTextResponse> {
-    return this.#transport.send(USE_CASE, request);
+  send(request: SpeechToTextRequest, options?: CallOptions): Promise<SpeechToTextResponse> {
+    return this.#transport.send(USE_CASE, request, options);
   }
 
   /** The models {@link send} accepts. */
-  listModels(filters?: ModelFilters): Promise<ModelList<SpeechToTextModel>> {
-    return this.#transport.listModels(USE_CASE, filters);
+  listModels(filters?: ModelFilters, options?: CallOptions): Promise<ModelList<SpeechToTextModel>> {
+    return this.#transport.listModels(USE_CASE, filters, options);
   }
 }

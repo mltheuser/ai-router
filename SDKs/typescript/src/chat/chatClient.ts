@@ -1,5 +1,5 @@
 import type { ModelFilters, ModelList } from "../models";
-import type { Transport } from "../transport";
+import type { CallOptions, Transport } from "../transport";
 import type { ChatModel, ChatRequest, ChatResponse } from "./chat";
 
 const USE_CASE = "chat";
@@ -12,12 +12,12 @@ export class ChatClient {
     this.#transport = transport;
   }
 
-  send(request: ChatRequest): Promise<ChatResponse> {
-    return this.#transport.send(USE_CASE, request);
+  send(request: ChatRequest, options?: CallOptions): Promise<ChatResponse> {
+    return this.#transport.send(USE_CASE, request, options);
   }
 
   /** The models {@link send} accepts. */
-  listModels(filters?: ModelFilters): Promise<ModelList<ChatModel>> {
-    return this.#transport.listModels(USE_CASE, filters);
+  listModels(filters?: ModelFilters, options?: CallOptions): Promise<ModelList<ChatModel>> {
+    return this.#transport.listModels(USE_CASE, filters, options);
   }
 }

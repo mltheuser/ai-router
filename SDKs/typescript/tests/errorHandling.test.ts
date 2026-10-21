@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
-import { AiRouterError } from "ai-router-sdk";
-import { newExampleClient } from "./setup";
+import { AiRouterClient, AiRouterError } from "ai-router-sdk";
+import { SERVER_URL } from "./setup";
 
-test("Error handling: non-2xx responses reject with AiRouterError", async () => {
-  const client = newExampleClient();
+test("Error handling: a non-2xx response rejects with AiRouterError, a cancelled call with its abort reason", async () => {
+  const client = new AiRouterClient(SERVER_URL);
 
   const error = await client.chat
     .send({
@@ -19,4 +19,12 @@ test("Error handling: non-2xx responses reject with AiRouterError", async () => 
   expect(error.status).toBeWithin(400, 600);
   expect(error.apiError.type).not.toBeEmpty();
   expect(error.apiError.message).not.toBeEmpty();
+
+  // Every call takes an optional signal; this one is cancelled before it starts.
+  const cancelled = await client.chat
+    .listModels({}, { signal: AbortSignal.abort() })
+    .catch((reason: unknown) => reason);
+
+  expect(cancelled).toBeInstanceOf(DOMException);
+  expect((cancelled as DOMException).name).toBe("AbortError");
 });

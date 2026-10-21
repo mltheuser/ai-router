@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
-import { chatText } from "ai-router-sdk";
-import { CHAT_EFFORT, CHAT_MODEL, newExampleClient } from "./setup";
+import { AiRouterClient, chatText } from "ai-router-sdk";
+import { CHAT_EFFORT, CHAT_MODEL, SERVER_URL } from "./setup";
 
 test("Multi-turn conversation with sampling parameters", async () => {
-  const client = newExampleClient();
+  const client = new AiRouterClient(SERVER_URL);
 
   const response = await client.chat.send({
     model: CHAT_MODEL,

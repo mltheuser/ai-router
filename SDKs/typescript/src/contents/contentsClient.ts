@@ -1,5 +1,5 @@
 import type { ModelFilters, ModelList } from "../models";
-import type { Transport } from "../transport";
+import type { CallOptions, Transport } from "../transport";
 import type { ContentsModel, ContentsRequest, ContentsResponse } from "./contents";
 
 const USE_CASE = "contents";
@@ -13,12 +13,12 @@ export class ContentsClient {
   }
 
   /** A page that fails to load carries an error in its result instead of failing the request. */
-  send(request: ContentsRequest): Promise<ContentsResponse> {
-    return this.#transport.send(USE_CASE, request);
+  send(request: ContentsRequest, options?: CallOptions): Promise<ContentsResponse> {
+    return this.#transport.send(USE_CASE, request, options);
   }
 
   /** The models {@link send} accepts. */
-  listModels(filters?: ModelFilters): Promise<ModelList<ContentsModel>> {
-    return this.#transport.listModels(USE_CASE, filters);
+  listModels(filters?: ModelFilters, options?: CallOptions): Promise<ModelList<ContentsModel>> {
+    return this.#transport.listModels(USE_CASE, filters, options);
   }
 }

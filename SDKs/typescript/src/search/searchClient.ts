@@ -1,5 +1,5 @@
 import type { ModelFilters, ModelList } from "../models";
-import type { Transport } from "../transport";
+import type { CallOptions, Transport } from "../transport";
 import type { SearchModel, SearchRequest, SearchResponse } from "./search";
 
 const USE_CASE = "search";
@@ -12,12 +12,12 @@ export class SearchClient {
     this.#transport = transport;
   }
 
-  send(request: SearchRequest): Promise<SearchResponse> {
-    return this.#transport.send(USE_CASE, request);
+  send(request: SearchRequest, options?: CallOptions): Promise<SearchResponse> {
+    return this.#transport.send(USE_CASE, request, options);
   }
 
   /** The models {@link send} accepts. */
-  listModels(filters?: ModelFilters): Promise<ModelList<SearchModel>> {
-    return this.#transport.listModels(USE_CASE, filters);
+  listModels(filters?: ModelFilters, options?: CallOptions): Promise<ModelList<SearchModel>> {
+    return this.#transport.listModels(USE_CASE, filters, options);
   }
 }

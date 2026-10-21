@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test";
-import { newExampleClient, SEARCH_MODEL } from "./setup";
+import { AiRouterClient } from "ai-router-sdk";
+import { SEARCH_MODEL, SERVER_URL } from "./setup";
 
 test("Search: find web pages for a query, most relevant first", async () => {
-  const client = newExampleClient();
+  const client = new AiRouterClient(SERVER_URL);
 
   const response = await client.search.send({
     model: SEARCH_MODEL,

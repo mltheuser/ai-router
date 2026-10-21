@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
-import { chatReasoning, chatText } from "ai-router-sdk";
-import { CHAT_MODEL, newExampleClient } from "./setup";
+import { AiRouterClient, chatReasoning, chatText } from "ai-router-sdk";
+import { CHAT_MODEL, SERVER_URL } from "./setup";
 
 test("Reasoning: separate the reasoning trace from the final answer", async () => {
-  const client = newExampleClient();
+  const client = new AiRouterClient(SERVER_URL);
 
   const response = await client.chat.send({
     model: CHAT_MODEL,

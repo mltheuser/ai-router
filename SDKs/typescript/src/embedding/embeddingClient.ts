@@ -1,5 +1,5 @@
 import type { ModelFilters, ModelList } from "../models";
-import type { Transport } from "../transport";
+import type { CallOptions, Transport } from "../transport";
 import type { EmbeddingModel, EmbeddingRequest, EmbeddingResponse } from "./embedding";
 
 const USE_CASE = "embedding";
@@ -12,12 +12,12 @@ export class EmbeddingClient {
     this.#transport = transport;
   }
 
-  send(request: EmbeddingRequest): Promise<EmbeddingResponse> {
-    return this.#transport.send(USE_CASE, request);
+  send(request: EmbeddingRequest, options?: CallOptions): Promise<EmbeddingResponse> {
+    return this.#transport.send(USE_CASE, request, options);
   }
 
   /** The models {@link send} accepts. */
-  listModels(filters?: ModelFilters): Promise<ModelList<EmbeddingModel>> {
-    return this.#transport.listModels(USE_CASE, filters);
+  listModels(filters?: ModelFilters, options?: CallOptions): Promise<ModelList<EmbeddingModel>> {
+    return this.#transport.listModels(USE_CASE, filters, options);
   }
 }

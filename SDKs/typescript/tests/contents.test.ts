@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test";
-import { CONTENTS_MODEL, newExampleClient } from "./setup";
+import { AiRouterClient } from "ai-router-sdk";
+import { CONTENTS_MODEL, SERVER_URL } from "./setup";
 
 test("Contents: load the content of a web page", async () => {
-  const client = newExampleClient();
+  const client = new AiRouterClient(SERVER_URL);
 
   const response = await client.contents.send({
     model: CONTENTS_MODEL,

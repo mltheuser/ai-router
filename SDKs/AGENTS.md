@@ -25,7 +25,8 @@ client.
 
 The top-level client takes the server's base URL and nothing else: the SDK
 owns its HTTP setup (timeouts, JSON handling), so a caller cannot configure it
-into a state the SDK does not work in.
+into a state the SDK does not work in. A call is cancelled the language's own
+way: a Kotlin coroutine, a TypeScript `AbortSignal` passed per call.
 
 Adding a use case to the server means adding a module to each SDK and one
 property to its top-level client.
