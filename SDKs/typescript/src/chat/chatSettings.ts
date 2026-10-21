@@ -6,7 +6,7 @@ export interface ChatSettings {
   model: string;
   reasoning_effort: ReasoningEffort;
   tools?: ToolDefinition[];
-  response_format?: ResponseFormat<unknown>;
+  response_format?: ResponseFormat;
   temperature?: number;
   top_p?: number;
   max_tokens?: number;

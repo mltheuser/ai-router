@@ -2,9 +2,10 @@
 
 TypeScript SDK for the [ai-router](../../) proxy. Requests and responses are
 plain objects typed after the wire format, sent with `fetch` to a local or
-remote proxy. The SDK has no runtime dependencies and uses only web-platform
-globals (`fetch`, `URL`, `AbortSignal`, …), so it runs wherever those exist:
-Node, Bun or a browser.
+remote proxy. Its one runtime dependency is [Zod](https://zod.dev), for tool
+parameters and structured output; otherwise it uses only web-platform globals
+(`fetch`, `URL`, `AbortSignal`, …), so it runs wherever those exist: Node, Bun
+or a browser.
 
 Every documented usage pattern is backed by a runnable example in
 [tests/](tests/).
@@ -63,26 +64,24 @@ See [vision.test.ts](tests/vision.test.ts).
 
 ### Tool Calling
 
-Declare a tool's parameters with a schema library that implements
-[Standard Schema](https://standardschema.dev) and its JSON Schema conversion,
-such as Zod: `toJsonSchema(schema)` fills the tool's `parameters`. The example
-walks through the full round-trip: add the model's reply, which carries its
-calls, to the conversation as received, decode each call with
-`decodeToolCall(call, schema)`, and add one tool message (`tool_call_id`) per
-call before sending again. A model may call several tools at once; each call
+Declare a tool's parameters as a Zod schema: `toJsonSchema(schema)` fills the
+tool's `parameters`. The example walks through the full round-trip: add the
+model's reply, which carries its calls, to the conversation as received,
+decode each call with `decodeToolCall(call, schema)`, and add one tool
+message (`tool_call_id`) per call before sending again. A model may call several tools at once; each call
 needs its result.
 
 See [toolCalling.test.ts](tests/toolCalling.test.ts).
 
 ### Structured Output
 
-Declare the response shape as a schema and set
+Declare the response shape as a Zod schema and set
 `new ResponseFormat(schema, { name })` as the settings' `response_format`. The
 response is an ordinary response, which may also carry tool calls.
-`responseFormat.decode(response)` reads the answer, validated by the schema,
-as the schema's type; a mismatch throws `DecodeError`. The schema is sent
-exactly as the library converts it; some providers require more of it than
-others, e.g. objects that rule out further properties (`z.strictObject`).
+`responseFormat.decode(response)` reads the answer, parsed by the schema, as
+the schema's type; a mismatch throws a `ZodError`. The schema is sent exactly
+as Zod converts it; some providers require more of it than others, e.g.
+objects that rule out further properties (`z.strictObject`).
 
 See [structuredOutput.test.ts](tests/structuredOutput.test.ts).
 
