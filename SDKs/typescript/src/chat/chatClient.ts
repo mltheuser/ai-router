@@ -1,6 +1,10 @@
 import type { ModelFilters, ModelList } from "../models";
 import type { CallOptions, Transport } from "../transport";
-import type { ChatModel, ChatRequest, ChatResponse } from "./chat";
+import type { ChatMessage } from "./chatMessage";
+import type { ChatModel } from "./chatModel";
+import { chatRequest } from "./chatRequest";
+import type { ChatResponse } from "./chatResponse";
+import type { ChatSettings } from "./chatSettings";
 
 const USE_CASE = "chat";
 
@@ -12,8 +16,13 @@ export class ChatClient {
     this.#transport = transport;
   }
 
-  send(request: ChatRequest, options?: CallOptions): Promise<ChatResponse> {
-    return this.#transport.send(USE_CASE, request, options);
+  /** The model's next message in the conversation `messages`, answered as `settings` say. */
+  send(
+    settings: ChatSettings,
+    messages: ChatMessage[],
+    options?: CallOptions,
+  ): Promise<ChatResponse> {
+    return this.#transport.send(USE_CASE, chatRequest(settings, messages), options);
   }
 
   /** The models {@link send} accepts. */

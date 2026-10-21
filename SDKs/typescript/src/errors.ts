@@ -5,7 +5,7 @@ export interface ApiError {
   code?: string;
 }
 
-/** The wrapper around {@link ApiError} on the wire. */
+/** The body of a non-2xx response. */
 export interface ErrorResponse {
   error: ApiError;
 }

@@ -3,8 +3,8 @@
 TypeScript SDK for the [ai-router](../../) proxy. Requests and responses are
 plain objects typed after the wire format, sent with `fetch` to a local or
 remote proxy. The SDK has no runtime dependencies and uses only web-platform
-globals (`fetch`, `URL`, `atob`, …), so it runs wherever those exist: Node,
-Bun or a browser.
+globals (`fetch`, `URL`, `AbortSignal`, …), so it runs wherever those exist:
+Node, Bun or a browser.
 
 Every documented usage pattern is backed by a runnable example in
 [tests/](tests/).
@@ -39,7 +39,7 @@ JSON. Responses are typed but not validated: the SDK trusts the server.
 ### Quick Start
 
 A minimal end-to-end usage of the SDK: connect to the proxy, send one chat
-request, read the text response with `chatText`.
+request, read the text response with `messageText`.
 
 See [quickStart.test.ts](tests/quickStart.test.ts).
 
@@ -48,9 +48,9 @@ See [quickStart.test.ts](tests/quickStart.test.ts).
 
 ### Multi-Turn Conversation
 
-Send a sequence of system / user / assistant messages and collect a final
-response. Demonstrates request-level sampling parameters
-(`temperature`, `max_tokens`, …).
+Hold a conversation as a `ChatMessage[]`: add each reply (`response.message`)
+as received, then the next user message, and send the array again. Demonstrates
+the sampling parameters (`temperature`, `max_tokens`, …) of `ChatSettings`.
 
 See [multiTurn.test.ts](tests/multiTurn.test.ts).
 
@@ -63,17 +63,28 @@ See [vision.test.ts](tests/vision.test.ts).
 
 ### Tool Calling
 
-Define a tool whose parameters are a plain JSON Schema object. The example
-walks through the full round-trip: issue the call, read the model's tool call
-and its arguments, and send the tool result back as a follow-up turn.
+Declare a tool's parameters with a schema library that implements
+[Standard Schema](https://standardschema.dev) and its JSON Schema conversion,
+such as Zod: `toJsonSchema(schema)` fills the tool's `parameters`. The example
+walks through the full round-trip: add the model's reply, which carries its
+calls, to the conversation as received, decode each call with
+`decodeToolCall(call, schema)`, and add one tool message (`tool_call_id`) per
+call before sending again. A model may call several tools at once; each call
+needs its result.
 
 See [toolCalling.test.ts](tests/toolCalling.test.ts).
 
 ### Structured Output
 
-Describe the response shape as a JSON Schema in the request's
-`response_format`, and parse the response with `parseStructuredOutput`. The
-parsed JSON is cast to the type you name, not validated against the schema.
+Declare the response shape as a schema and set
+`new ResponseFormat(schema, { name })` as the settings' `response_format`. The
+response is an ordinary response, which may also carry tool calls.
+`responseFormat.decode(response)` reads the answer, validated by the schema,
+as the schema's type; a mismatch throws `DecodeError`. The schema is sent
+exactly as the library converts it; some providers require every object to
+rule out further properties (`z.strictObject`), every property to be
+required (`.nullable()` instead of `.optional()`), and no numeric bounds
+(`z.number()`, not `z.int()`).
 
 See [structuredOutput.test.ts](tests/structuredOutput.test.ts).
 
@@ -82,7 +93,8 @@ See [structuredOutput.test.ts](tests/structuredOutput.test.ts).
 Every chat request names a reasoning effort (`none`, `low`, `medium` or
 `high`); `none` turns reasoning off. With a reasoning-capable model and a
 level above `none`, read the visible answer and the model's reasoning trace
-separately (via `chatText` and `chatReasoning`).
+separately (via `messageText(response.message)` and
+`response.message.reasoning_content`).
 
 See [reasoning.test.ts](tests/reasoning.test.ts).
 

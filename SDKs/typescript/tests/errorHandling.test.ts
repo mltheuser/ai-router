@@ -6,11 +6,9 @@ test("Error handling: a non-2xx response rejects with AiRouterError, a cancelled
   const client = new AiRouterClient(SERVER_URL);
 
   const error = await client.chat
-    .send({
-      model: "does-not-exist:local@nonexistent",
-      reasoning_effort: "none",
-      messages: [{ role: "user", content: [{ type: "text", text: "hi" }] }],
-    })
+    .send({ model: "does-not-exist:local@nonexistent", reasoning_effort: "none" }, [
+      { role: "user", content: [{ type: "text", text: "hi" }] },
+    ])
     .catch((reason: unknown) => reason);
 
   if (!(error instanceof AiRouterError)) {

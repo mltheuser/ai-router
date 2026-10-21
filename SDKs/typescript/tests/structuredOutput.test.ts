@@ -1,45 +1,32 @@
 import { expect, test } from "bun:test";
-import { AiRouterClient, parseStructuredOutput } from "ai-router-sdk";
+import { AiRouterClient, ResponseFormat } from "ai-router-sdk";
+import { z } from "zod";
 import { CHAT_EFFORT, CHAT_MODEL, SERVER_URL } from "./setup";
 
-interface WeatherInfo {
-  city: string;
-  temp_celsius: number;
-  condition: string;
-}
+// What some providers require: every object rules out further properties, and
+// every property is required, a missing value being null.
+const WeatherInfo = z.strictObject({
+  city: z.string(),
+  temp_celsius: z.number(),
+  condition: z.string().nullable(),
+});
 
-test("Structured output: parse the response into a typed object", async () => {
+test("Structured output: decode the answer into a typed, validated object", async () => {
   const client = new AiRouterClient(SERVER_URL);
+  const weatherFormat = new ResponseFormat(WeatherInfo, { name: "weather_info" });
 
-  const response = await client.chat.send({
-    model: CHAT_MODEL,
-    reasoning_effort: CHAT_EFFORT,
-    messages: [
+  const response = await client.chat.send(
+    { model: CHAT_MODEL, reasoning_effort: CHAT_EFFORT, response_format: weatherFormat },
+    [
       {
         role: "system",
         content: [{ type: "text", text: "Extract weather information from the text." }],
       },
       { role: "user", content: [{ type: "text", text: "It's 22°C and sunny in Berlin today." }] },
     ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "weather_info",
-        schema: {
-          type: "object",
-          properties: {
-            city: { type: "string" },
-            temp_celsius: { type: "number" },
-            condition: { type: "string" },
-          },
-          required: ["city", "temp_celsius", "condition"],
-          additionalProperties: false,
-        },
-      },
-    },
-  });
+  );
 
-  const weather = parseStructuredOutput<WeatherInfo>(response);
+  const weather = weatherFormat.decode(response);
 
   expect(weather.city, JSON.stringify(weather)).not.toBeEmpty();
 });
