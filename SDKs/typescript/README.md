@@ -24,6 +24,8 @@ source; your bundler (e.g. esbuild) compiles it along with your own code.
 }
 ```
 
+> First install the SDK's dependencies, in this folder: `bun install --production`
+
 Your tsconfig needs `moduleResolution` `bundler` (implied by `module`
 `Preserve`), and the fetch types from either the `DOM` lib or `@types/node`.
 
