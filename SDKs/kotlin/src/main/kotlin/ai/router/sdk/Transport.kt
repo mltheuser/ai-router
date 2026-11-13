@@ -68,8 +68,8 @@ internal class Transport(private val baseUrl: String) : AutoCloseable {
     }
 
     private companion object {
-        // LLM calls can run long; allow up to 10 minutes per request.
-        private const val REQUEST_TIMEOUT_MILLIS = 600_000L
+        // LLM calls can run long; allow up to 60 minutes per request.
+        private const val REQUEST_TIMEOUT_MILLIS = 3_600_000L
         private const val CONNECT_TIMEOUT_MILLIS = 10_000L
     }
 }

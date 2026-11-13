@@ -55,7 +55,7 @@ func New(cfg Config) *Server {
 		Addr:         cfg.Addr,
 		Handler:      logRequests(mux),
 		ReadTimeout:  10 * time.Minute,
-		WriteTimeout: 10 * time.Minute,
+		WriteTimeout: 60 * time.Minute,
 		IdleTimeout:  60 * time.Second,
 	}
 	return s

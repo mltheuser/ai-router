@@ -35,7 +35,7 @@ func NewClient(baseURL string, options ...Option) *Client {
 	c := &Client{
 		baseURL: baseURL,
 		headers: make(map[string]string),
-		http:    &http.Client{Timeout: 10 * time.Minute},
+		http:    &http.Client{Timeout: 60 * time.Minute},
 	}
 	for _, opt := range options {
 		opt(c)

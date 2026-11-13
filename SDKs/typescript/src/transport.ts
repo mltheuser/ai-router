@@ -1,8 +1,8 @@
 import { AiRouterError, type ApiError, type ErrorResponse } from "./errors";
 import type { ModelFilters, ModelList, ModelRef } from "./models";
 
-/** LLM calls can run long; allow up to 10 minutes per request. */
-const REQUEST_TIMEOUT_MILLIS = 600_000;
+/** LLM calls can run long; allow up to 60 minutes per request. */
+const REQUEST_TIMEOUT_MILLIS = 3_600_000;
 
 /** Reads a 2xx response's body as `T`; any other status throws {@link AiRouterError}. */
 async function decode<T>(response: Response): Promise<T> {

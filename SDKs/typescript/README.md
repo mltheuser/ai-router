@@ -162,7 +162,7 @@ See [errorHandling.test.ts](tests/errorHandling.test.ts).
 ### Configuration
 
 `new AiRouterClient(baseUrl)` takes the server's base URL and nothing else;
-the SDK times a request out after 10 minutes, unless the runtime's `fetch`
+the SDK times a request out after 60 minutes, unless the runtime's `fetch`
 gives up first (Node's and Bun's do after 5 minutes without a response). Every
 call takes an optional `{ signal }` as its last argument to cancel it sooner,
 e.g. `AbortSignal.timeout(30_000)`.

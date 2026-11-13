@@ -151,7 +151,7 @@ See [ErrorHandlingExample.kt](src/test/kotlin/ai/router/sdk/examples/ErrorHandli
 
 `AiRouterClient(baseUrl)` takes the server's base URL and nothing else: the
 SDK brings its own HTTP setup, with a 10-second connect timeout and a
-10-minute request timeout for slow model calls. To bound a call more tightly,
+60-minute request timeout for slow model calls. To bound a call more tightly,
 wrap it in `withTimeout`, which cancels the request.
 
 ## Testing
