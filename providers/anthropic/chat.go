@@ -3,14 +3,14 @@ package anthropic
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
 	"strings"
 
+	"github.com/mltheuser/ai-router/httpx"
 	"github.com/mltheuser/ai-router/router/chat"
 )
-
-// fallbackMaxTokens is the max_tokens sent when the request sets none and the
-// model's own maximum is unknown. 4096 is within every Claude model's limit.
-const fallbackMaxTokens = 4096
 
 // --- Anthropic wire types (request) ---
 
@@ -125,14 +125,9 @@ type anthropicUsage struct {
 // --- Chat implementation ---
 
 func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response, error) {
-	// Anthropic requires max_tokens. An explicit value caps the response; when
-	// omitted, default to the model's own maximum output so nothing is capped
-	// below the model's ceiling.
-	var maxTokens int
-	if req.MaxTokens != nil {
-		maxTokens = *req.MaxTokens
-	} else {
-		maxTokens = p.modelMaxTokens(ctx, req.Model)
+	maxTokens, err := p.maxTokens(ctx, req)
+	if err != nil {
+		return nil, err
 	}
 
 	aReq := toAnthropicRequest(req, maxTokens)
@@ -143,6 +138,23 @@ func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response,
 	}
 
 	return mapAnthropicResponse(&aResp), nil
+}
+
+// maxTokens is the max_tokens Anthropic requires on every request: the
+// request's own, or else the model's output limit.
+func (p *Provider) maxTokens(ctx context.Context, req *chat.Request) (int, error) {
+	if req.MaxTokens != nil {
+		return *req.MaxTokens, nil
+	}
+	var m anthropicModel
+	if err := p.client.Get(ctx, "/models/"+url.PathEscape(req.Model), &m); err != nil {
+		return 0, fmt.Errorf("looking up the output limit of model '%s': %w", req.Model, err)
+	}
+	if m.MaxTokens <= 0 {
+		return 0, httpx.NewError(http.StatusBadGateway, fmt.Sprintf(
+			"the Models API reports no output limit for model '%s'", req.Model))
+	}
+	return m.MaxTokens, nil
 }
 
 // --- Request translation ---

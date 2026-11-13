@@ -4,7 +4,6 @@ package anthropic
 import (
 	"context"
 	"fmt"
-	"net/url"
 
 	"github.com/mltheuser/ai-router/httpx"
 	"github.com/mltheuser/ai-router/router"
@@ -26,15 +25,6 @@ func New(apiKey string) *Provider {
 	return &Provider{
 		client: newClient(apiKey),
 	}
-}
-
-// modelMaxTokens returns the model's maximum output-token count.
-func (p *Provider) modelMaxTokens(ctx context.Context, model string) int {
-	var m anthropicModel
-	if err := p.client.Get(ctx, "/models/"+url.PathEscape(model), &m); err != nil || m.MaxTokens <= 0 {
-		return fallbackMaxTokens
-	}
-	return m.MaxTokens
 }
 
 func (p *Provider) Name() string {
