@@ -26,15 +26,9 @@ public object SchemaGenerator {
     public fun generate(serializer: KSerializer<*>): JsonObject =
         descriptorToSchema(serializer.descriptor)
 
-    private fun descriptorToSchema(descriptor: SerialDescriptor): JsonObject {
-        // Unwrap nullable wrapper — its single element is the real descriptor.
-        val d = if (descriptor.isNullable && descriptor.elementsCount > 0) {
-            descriptor.getElementDescriptor(0)
-        } else {
-            descriptor
-        }
-
-        return when (d.kind) {
+    /** A nullable type has the schema of its non-null form: an absent property stands for null. */
+    private fun descriptorToSchema(d: SerialDescriptor): JsonObject =
+        when (d.kind) {
             is PrimitiveKind -> primitiveSchema(d.kind as PrimitiveKind)
 
             // ── Enum ──────────────────────────────────────────────────
@@ -66,7 +60,6 @@ public object SchemaGenerator {
 
             else -> buildJsonObject { put("type", "string") }
         }
-    }
 
     private fun primitiveSchema(kind: PrimitiveKind): JsonObject = buildJsonObject {
         val type = when (kind) {
