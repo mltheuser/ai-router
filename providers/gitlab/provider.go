@@ -3,9 +3,10 @@
 //
 // The gateway forwards request and response bodies unchanged, so the chat
 // mapping is a copy of the anthropic provider's. What differs is around it:
-// authentication goes through a short-lived token (see token.go), and the
-// proxy has no models endpoint, so the served models are hard-coded (see
-// models.go).
+// authentication goes through a short-lived token (see token.go), responses
+// are streamed from the gateway to outlast a timeout in front of it (see
+// stream.go), and the proxy has no models endpoint, so the served models are
+// hard-coded (see models.go).
 package gitlab
 
 import (

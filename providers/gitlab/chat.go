@@ -132,12 +132,13 @@ func (p *Provider) Chat(ctx context.Context, req *chat.Request) (*chat.Response,
 	if err != nil {
 		return nil, err
 	}
-	var aResp anthropicChatResponse
-	if err := client.Post(ctx, "/messages", aReq, &aResp); err != nil {
+	// Streamed to outlast Cloudflare's timeout; see stream.go.
+	aResp, err := postMessages(ctx, client, aReq)
+	if err != nil {
 		return nil, err
 	}
 
-	return mapAnthropicResponse(&aResp), nil
+	return mapAnthropicResponse(aResp), nil
 }
 
 // outputLimit is the max_tokens Anthropic requires on every request: the
