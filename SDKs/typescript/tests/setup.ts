@@ -5,7 +5,7 @@ import type { ReasoningEffort } from "ai-router-sdk";
 export const SERVER_URL = "http://localhost:8787";
 export const CHAT_MODEL = "claude-sonnet-5-5:cloud@gitlab";
 export const CHAT_EFFORT: ReasoningEffort = "low";
-export const EMBED_MODEL = "text-embedding-3-small:cloud@openai";
+export const EMBED_MODEL = "embeddinggemma-2:latest:local@ollama";
 export const SEARCH_MODEL = "fast:cloud@exa";
 export const CONTENTS_MODEL = "auto:cloud@exa";
 export const TEXT_TO_SPEECH_MODEL = "eleven_flash_v2_5:cloud@elevenlabs";
