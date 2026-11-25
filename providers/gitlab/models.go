@@ -23,11 +23,13 @@ type model struct {
 // models are the models this provider serves. The proxy has no models
 // endpoint, so they are listed by hand: each must be on the gateway's
 // allow-list (the proxy_provider: anthropic entries in ai-assist's
-// ai_gateway/model_selection/models.yml), whose context and output limits
-// these copy.
+// ai_gateway/model_selection/models.yml). The limits are Anthropic's, as its
+// Models API reports them; the max_tokens in models.yml is GitLab's default
+// for its own calls and can be lower.
 var models = []model{
 	{id: "claude-opus-5-5", contextWindow: 1_000_000, maxTokens: 128_000},
 	{id: "claude-fable-5-2", contextWindow: 1_000_000, maxTokens: 128_000},
+	{id: "claude-sonnet-5-5", contextWindow: 1_000_000, maxTokens: 128_000},
 }
 
 // features are the chat features of every listed model.
