@@ -5,7 +5,7 @@ import ai.router.sdk.chat.ReasoningEffort
 // ─── Server + model targets ───────────────────────────────────────────
 
 internal const val SERVER_URL = "http://localhost:8787"
-internal const val CHAT_MODEL = "claude-sonnet-5-5:cloud@anthropic"
+internal const val CHAT_MODEL = "claude-sonnet-5-5:cloud@gitlab"
 
 internal val CHAT_EFFORT = ReasoningEffort.LOW
 internal const val EMBED_MODEL = "text-embedding-3-small:cloud@openai"

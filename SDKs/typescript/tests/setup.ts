@@ -3,7 +3,7 @@ import type { ReasoningEffort } from "ai-router-sdk";
 // ─── Server + model targets ───────────────────────────────────────────
 
 export const SERVER_URL = "http://localhost:8787";
-export const CHAT_MODEL = "claude-sonnet-5-5:cloud@anthropic";
+export const CHAT_MODEL = "claude-sonnet-5-5:cloud@gitlab";
 export const CHAT_EFFORT: ReasoningEffort = "low";
 export const EMBED_MODEL = "text-embedding-3-small:cloud@openai";
 export const SEARCH_MODEL = "fast:cloud@exa";
